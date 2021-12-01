@@ -1,2 +1,2 @@
 # tablevis
-The implementation of the complex table visualizations
+The repository of visualizations for complex tablular data
