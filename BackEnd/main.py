@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from dataset.tabular_data_collection import load_tabular_dataset, get_tabular_dataset
 
 import os, random
 
@@ -7,14 +8,18 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADER'] = 'Content-Type'
 
-@app.route('/tabledata', methods=['GET'])
+@app.route('/tabulardata', methods=['GET'])
 @cross_origin()
 def getTabularData():
-    tabularData = request.args.get('tabularData')
-    return {"processed_tabledata": "table"}
+    print('request.args', request.args)
+    tabular_dataset = get_tabular_dataset()
+    print('tabular_dataset', tabular_dataset)
+    tabular_name_list = request.args.get('tabularData[]')
+    print('tabular_name_list[]', tabular_name_list)
+    return {"data": tabular_dataset}
 
 if __name__ == "__main__":
     print('run 0.0.0.0:14449')
-    # app.run(threaded=True, host='0.0.0.0', port=14453)
+    load_tabular_dataset()
     app.run(host='0.0.0.0', port=14449)
 

@@ -1,5 +1,5 @@
 <template>
-  <div id="app1=">
+  <div id="app" v-if="!loadingData">
     <el-menu
         class="el-menu-demo"
         mode="horizontal"
@@ -10,37 +10,67 @@
         <el-menu-item class='labelIcon' id="title">
           {{appName}}
         </el-menu-item>
-        <el-tooltip class='labelIcon' v-for="operation in operationArray" :key="operation" :content="operation" effect="light">
+        <el-tooltip class='labelIcon' v-for="operation in operationArray" 
+          :key="operation" :content="operation" effect="light"
+          @click="datasetDialogVisible=true">
           <el-menu-item :index="operation">
             {{operation}}
           </el-menu-item>
         </el-tooltip>
     </el-menu>
     <div class = "content-container">
-      <HelloWorld></HelloWorld>
+      <TableView></TableView>
     </div>
+    <el-dialog title="Dataset" id="dataset-dialog" :visible.sync="datasetDialogVisible">
+      <DataDialog
+        :datasetDialogKey="datasetDialogKey"
+        @closeDataDialog="closeDataDialog">
+      </DataDialog>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 
-import HelloWorld from './components/HelloWorld.vue'
+import TableView from './views/TableView.vue'
+import { getTabularDataset } from '@/communication/communicator.js'
+import { Dataset } from '@/dataset/dataset.js'
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    TableView
   },
   data() {
     return {
-      appName: "Information Hiding",
-      operationArray: ['#operation', '#operation'],
+      appName: "TableVis",
+      operationArray: ['Data'],
       activeIndex: '',
+      datasetDialogVisible: false,
+      datasetDialogKey: 0,
+      loadingData: true
     }
+  },
+  beforeMount: function() {
+    let self = this
+    window.sysDatasetObj = new Dataset()
+    let tabularDataDeferObj = $.Deferred()
+    $.when(tabularDataDeferObj).then(function() {
+      self.loadingData = false
+    })
+    let tabularDataList = ['*']
+    // initialize the tabular dataset
+    getTabularDataset(tabularDataList, function(processed_dataset) {
+      console.log('processed_dataset', processed_dataset)
+      tabularDataDeferObj.resolve()
+    })
   },
   methods: {
     iconClass(operation) {
       return 'icon-' + operation
+    },
+    closeDataDialog() {
+
     }
   }
 }
