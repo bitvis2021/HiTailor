@@ -4,7 +4,7 @@ The repository of visualizations for complex tablular data
 # The fontend of this project
 ## change to the frontend folder
 ```
-cd FrontEnd
+cd ./FrontEnd
 ```
 
 ## Project setup
@@ -34,5 +34,11 @@ npm run lint
 
 # The backend of this project
 ```
-cd BackEnd
+cd ./BackEnd
+```
+### install the python dependency
+
+### run the server
+```
+python main.py
 ```
