@@ -1,6 +1,17 @@
 # tablevis
 The repository of visualizations for complex tablular data
 
+# The backend of this project
+```
+cd ./BackEnd
+```
+### install the python dependency
+
+### run the server
+```
+python main.py
+```
+
 # The fontend of this project
 ## change to the frontend folder
 ```
@@ -32,13 +43,3 @@ npm run test
 npm run lint
 ```
 
-# The backend of this project
-```
-cd ./BackEnd
-```
-### install the python dependency
-
-### run the server
-```
-python main.py
-```
