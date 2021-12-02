@@ -1,11 +1,11 @@
 export function Dataset () {
-    this.tabularDataset = null
+    this.tabularDatasetList = []
 }
 
 Dataset.prototype = {
     init: function() {
     },
-    updateTabularDataset: function() {
-        
+    updateTabularDatasetList: function(processed_tabular_datalist) {
+        this.tabularDatasetList = processed_tabular_datalist
     }
 }

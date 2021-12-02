@@ -11,6 +11,8 @@ export function getTabularDataset(tabularDataList, getTabularDataCallback) {
         timeout: 5000
     })
     .then((res) => {
-        getTabularDataCallback(res['data'])
+        let tabularDatasetList = res['data']['data']
+        console.log('tabularDatasetList', tabularDatasetList)
+        getTabularDataCallback(tabularDatasetList)
     })
 }

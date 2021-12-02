@@ -1,21 +1,20 @@
 <template>
-    <div id = 'data-dialog'>
+    <div id = 'dataset-dialog'>
         <div class = "content-container">
             <el-upload
-              class="upload-demo"
-              drag
-              action="http://127.0.0.1:14452/"
-              :http-request="getFile"
-              :auto-upload="true"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :before-upload="onBeforeUpload"
-              :on-success="handleUploadSuccess"
-              :file-list="fileList"
-              :show-file-list="false"
-              multiple
-              v-if="!disableUpload">
-              <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
+                class="upload-demo"
+                drag
+                action="http://127.0.0.1:14452/"
+                :http-request="getFile"
+                :auto-upload="true"
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-upload="onBeforeUpload"
+                :on-success="handleUploadSuccess"
+                :file-list="fileList"
+                :show-file-list="false"
+                multiple>
+                <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
             </el-upload>
             <span class = "inner-label">Your Dateset:</span>
             <el-table 
@@ -24,7 +23,7 @@
                 :default-sort = "{prop: 'date', order: 'descending'}"
                 @row-dblclick="dataTableRowDBClick"
                 @row-click="dataTableRowClick"
-                :data="treeDataArray"
+                :data="tabularDatasetList"
                 max-height="170"
                 border
                 stripe
@@ -36,14 +35,14 @@
                   >
                 </el-table-column>
                 <el-table-column
-                  property="nodenum"
-                  label="NodeNum"
+                  property="row"
+                  label="row"
                   sortable
                   >
                 </el-table-column>
                 <el-table-column
-                  property="depth"
-                  label="Depth"
+                  property="column"
+                  label="column"
                   sortable
                   show-overflow-tooltip>
                 </el-table-column>
@@ -55,9 +54,8 @@
                   <template slot-scope="scope">
                     <el-button
                       size="mini"
-                      :disabled="scope.row.username !== userInfoName"
                       @click="handleDelete(scope.$index, scope.row)">
-                        <span class="icon iconfont icon-iconfontshanchu"></span>
+                        <i class="el-icon-delete"></i>
                     </el-button>
                   </template>
                 </el-table-column>
@@ -72,8 +70,6 @@
 
 <script>
   import { mapState, mapMutations } from 'vuex'
-  import { getTreeDataInfo } from '@/data-processing/get_tree_data_info.js'
-  import { processTabularData } from '@/communication/sendData.js'
 
   export default {
     name: 'DataDialog',
@@ -84,7 +80,7 @@
        fileList: [],
        selectedTabularDataName: null,
        tempSelection: null,
-       treeDataArray: sysDatasetObj.getTreeDatasetArray()
+       tabularDatasetList: sysDatasetObj.tabularDatasetList
       } 
     },
     watch: {
@@ -105,7 +101,6 @@
     },
     computed: {
         ...mapState([
-          'userInfoName'
         ])
     },
     methods: {
@@ -114,7 +109,7 @@
         dataTableRowClick: function(row) {
             let fileName = row.filename
             this.tempSelection = fileName
-            //  设置当前选中的层次结构数据名称
+            //  update the selected tabular dataset
             this.setCurrent(fileName)
         },
         closeDataDialog: function() {
@@ -122,7 +117,7 @@
         },
         confirmSelection: function() {
             let self = this
-            //  更新外部选择的层次结构数据
+            //  confirm the selected tabular dataset
             if (this.tempSelection != null) {
                 let selectionExisted = (this.treeDataArray.map(function(e) { return e.filename; })
                         .indexOf(this.tempSelection) !== -1)
@@ -139,58 +134,43 @@
             console.log('upload file ok')
         },
         onBeforeUpload: function(file) {
-            let self = this
-            const isJSON = file.type === 'application/json';
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            let fileNameArray = this.getFileNameArray()
-            let notExisted = (fileNameArray.indexOf(file.name) === -1)
-            if (!isJSON) {
-              this.$message.error('The uploaded file must be JSON format!');
-              return
-            }
-            if (!isLt2M) {
-              this.$message.error('The file size can not exceed 2MB!');
-              return
-            }
-            if (!notExisted) {
-              this.$message.error('The file name is existed!');   
-              return 
-            }
-            var reader = new FileReader();
-            reader.readAsText(file, 'utf-8');
-            reader.onload = function(e) {
-                let treeJsonObj = JSON.parse(this.result)
-                let username = self.userInfoName
-                let filename = file.name
-                let treeInfoObj = getTreeDataInfo(treeJsonObj, username, filename)
-                self.treeDataArray.push(treeInfoObj)
-                if (self.userInfoName !== 'Login') {
-                    console.log('treeInfoObj', treeInfoObj)
-                    // 如果用户名不是'Login
-                    // addTreeDataset(treeInfoObj, self.addDataCallback)
-                }
-            }
-            return (isJSON && isLt2M && notExisted);
+            // let self = this
+            // const isJSON = file.type === 'application/json';
+            // const isLt2M = file.size / 1024 / 1024 < 2;
+            // let fileNameArray = this.getExistedFileNameArray()
+            // let notExisted = (fileNameArray.indexOf(file.name) === -1)
+            // if (!isJSON) {
+            //   this.$message.error('The uploaded file must be JSON format!');
+            //   return
+            // }
+            // if (!isLt2M) {
+            //   this.$message.error('The file size can not exceed 2MB!');
+            //   return
+            // }
+            // if (!notExisted) {
+            //   this.$message.error('The file name is existed!');   
+            //   return 
+            // }
+            // var reader = new FileReader();
+            // reader.readAsText(file, 'utf-8');
+            // reader.onload = function(e) {
+                
+            // }
+            // return (isJSON && isLt2M && notExisted);
         },
-        getFileNameArray: function() {
+        getExistedFileNameArray: function() {
             let fileNameArray = []
-            for (let i = 0;i < this.treeDataArray.length;i++) {
-                fileNameArray.push(this.treeDataArray[i].filename)
-            }
-            return fileNameArray
         },
         handlePreview: function(file) {
         },
         handleUploadSuccess: function(res, file) {
-            console.log('upload success!')
         },
         addDataCallback: function(resData) {
-            this.promptMessage(resData.type, resData.message)
         },
         handleRemove: function() {
         },
         handleDelete: function(index, row) {
-            this.treeDataArray.splice(index, 1)
+            this.tabularDatasetList.splice(index, 1)
             let dataObj = {
                 username: row.username,
                 filename: row.filename,
@@ -198,17 +178,15 @@
             }
             this.selectedTabularDataName = null
             this.tempSelection = null
-            // removeTreeDataset(dataObj, this.removeDataCallback)
         },
         removeDataCallback: function(resData) {
             this.promptMessage(resData.type, resData.message)
         },
         setCurrent(fileName) {
-            //  根据selectedDataset的属性值得到选择的数据集所处的位置
-            for (let i = 0; i < this.treeDataArray.length; i++) {
-                let treeDataObj = this.treeDataArray[i]
+            for (let i = 0; i < this.tabularDatasetList.length; i++) {
+                let treeDataObj = this.tabularDatasetList[i]
                 if (treeDataObj.fileName === fileName) {
-                    let row = this.treeDataArray[i]
+                    let row = this.tabularDatasetList[i]
                     this.$refs.treeDataTable.setCurrentRow(row);
                 }
             }
@@ -227,7 +205,10 @@
   }
 </script>
 <style lang="less">
-  #data-dialog {
+  #dataset-dialog {
+    .el-dialog__body {
+      padding: 5px 20px !important;
+    }
     .el-table td, .el-table th {
         padding: 1px 0 !important;
     }
@@ -248,23 +229,26 @@
   }
 </style>
 <style scoped lang="less">
-  #data-dialog {
-      .inner-label {
-        margin-top: 10px;
-        margin-bottom: 10px;
-        font-size: 1.2rem;
+  #dataset-dialog {
+    padding-bottom: 5px;
+    .inner-label {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+    .content-container {
+      margin-bottom: 10px;
+      text-align: left;
+      position: relative;
+      height: 230px;
+      top: 0px;
+    }
+    .dialog-footer {
+      text-align: right;
+      .el-button {
+        padding: 6px 10px;
+        border-radius: 0px;
       }
-      .content-container {
-        margin-top: 10px;
-        margin-bottom: 10px;
-        text-align: left;
-      }
-      .dialog-footer {
-        text-align: right;
-        .el-button {
-          padding: 6px 10px;
-          border-radius: 0px;
-        }
-      }
+    }
   }
 </style>

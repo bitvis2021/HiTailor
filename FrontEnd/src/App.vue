@@ -11,9 +11,8 @@
           {{appName}}
         </el-menu-item>
         <el-tooltip class='labelIcon' v-for="operation in operationArray" 
-          :key="operation" :content="operation" effect="light"
-          @click="datasetDialogVisible=true">
-          <el-menu-item :index="operation">
+          :key="operation" :content="operation" effect="light">
+          <el-menu-item :index="operation" @click="changeDialogVisible(operation)">
             {{operation}}
           </el-menu-item>
         </el-tooltip>
@@ -35,16 +34,17 @@
 import TableView from './views/TableView.vue'
 import { getTabularDataset } from '@/communication/communicator.js'
 import { Dataset } from '@/dataset/dataset.js'
+import DataDialog from '@/views/dialogs/DataDialog.vue'
 
 export default {
   name: 'app',
   components: {
-    TableView
+    TableView, DataDialog
   },
   data() {
     return {
       appName: "TableVis",
-      operationArray: ['Data'],
+      operationArray: ['dataset'],
       activeIndex: '',
       datasetDialogVisible: false,
       datasetDialogKey: 0,
@@ -60,8 +60,9 @@ export default {
     })
     let tabularDataList = ['*']
     // initialize the tabular dataset
-    getTabularDataset(tabularDataList, function(processed_dataset) {
-      console.log('processed_dataset', processed_dataset)
+    getTabularDataset(tabularDataList, function(processed_tabular_datalist) {
+      console.log('processed_tabular_datalist', processed_tabular_datalist)
+      sysDatasetObj.updateTabularDatasetList(processed_tabular_datalist)
       tabularDataDeferObj.resolve()
     })
   },
@@ -71,6 +72,12 @@ export default {
     },
     closeDataDialog() {
 
+    },
+    changeDialogVisible(panel_name) {
+      console.log('panel_name', panel_name)
+      if (panel_name === "dataset") {
+        this.datasetDialogVisible=true
+      }
     }
   }
 }
