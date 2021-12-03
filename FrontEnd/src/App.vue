@@ -66,6 +66,9 @@ export default {
       tabularDataDeferObj.resolve()
     })
   },
+  mounted: function() {
+    
+  },
   methods: {
     iconClass(operation) {
       return 'icon-' + operation
