@@ -60,7 +60,8 @@ export default {
     })
     let tabularDataList = ['*']
     // initialize the tabular dataset
-    getTabularDataset(tabularDataList, function(processed_tabular_datalist) {
+    getTabularDataset(tabularDataList, function(processed_tabular_datalist_str) {
+      let processed_tabular_datalist = JSON.parse(processed_tabular_datalist_str)
       console.log('processed_tabular_datalist', processed_tabular_datalist)
       sysDatasetObj.updateTabularDatasetList(processed_tabular_datalist)
       tabularDataDeferObj.resolve()

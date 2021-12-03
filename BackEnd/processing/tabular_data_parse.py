@@ -1,7 +1,6 @@
 from openpyxl import load_workbook, cell
 
-
-class ParsedCell:
+class parse_cell:
     def __init__(self, start, value, dtype):
         self.start = start  # 起始坐标
         self.end = start  # 终止坐标，若非MergedCell则end = start
@@ -9,10 +8,10 @@ class ParsedCell:
         self.dtype = dtype  # 数据类型
 
     def __repr__(self):     # 用于测试输出
-        return "(" + str(self.start) + ", " + str(self.end) + ") : " + str(self.value)
+        return "{" + "\"start\":" + str(self.start) + "," + "\"end\":" + str(self.end) + "," + "\"value\":" + "\"" + str(self.value) + "\""+ "}"
+        # return "(" + str(self.start) + "," + str(self.end) + "): " + str(self.value)
 
-
-class ParsedSheet:
+class parse_sheet:
     def __init__(self, path, name):
         wb = load_workbook(path)
         self.sheet = wb[name]
@@ -25,11 +24,11 @@ class ParsedSheet:
             r = list()  # 记录一行所有的cell，构成一个list
             for c in row:
                 if isinstance(c, cell.Cell):     # 当前不是被合并的单元格，被合并的类名为MergedCell
-                    pc = ParsedCell(c.column - 1, c.value, c.data_type)
+                    pc = parse_cell(c.column - 1, c.value, c.data_type)
                     r.append(pc)    # 将当前单元格加入行
                 else:   # 当前是被合并的单元格
                     if c.column < 3:    # 位于当前行开始部分，作为表头的MergedCell需要特殊考虑(设其坐标<3)
-                        pc = ParsedCell(c.column - 1, c.value, c.data_type)
+                        pc = parse_cell(c.column - 1, c.value, c.data_type)
                         r.append(pc)
                     else:
                         r[-1].end += 1     # cell的结束坐标+1

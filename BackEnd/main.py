@@ -11,12 +11,11 @@ app.config['CORS_HEADER'] = 'Content-Type'
 @app.route('/tabulardata', methods=['GET'])
 @cross_origin()
 def getTabularData():
-    print('request.args', request.args)
     tabular_dataset = get_tabular_dataset()
-    print('tabular_dataset', tabular_dataset)
+    print('tabular_dataset', str(tabular_dataset))
     tabular_name_list = request.args.get('tabularData[]')
     print('tabular_name_list[]', tabular_name_list)
-    return {"data": tabular_dataset}
+    return {"data": str(tabular_dataset)}
 
 if __name__ == "__main__":
     print('run 0.0.0.0:14449')

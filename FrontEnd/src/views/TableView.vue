@@ -1,6 +1,15 @@
 <template>
   <div class="table-view">
-    
+    <svg class="table-view-svg">
+      <g v-for="(row, rowindex) in tabularDatasetList" 
+        :transform="'translate(0,'+ rowindex * cellHeight +')'">
+        <rect v-for="(column, columnindex) in row" 
+          class="table-cell"
+          :x="columnindex*cellWidth" :width="cellWidth"
+          y="0" :height="cellHeight">
+        </rect>
+      </g>
+    </svg>
   </div>
 </template>
 
@@ -10,11 +19,20 @@
 export default {
   name: 'TableView',
   props: {
-    msg: String
+  },
+  data() {
+    return {
+      cellWidth: 40,
+      cellHeight: 20,
+      tabularDatasetList: sysDatasetObj.tabularDatasetList
+    }
   },
   watch: {
       displayMode: function() {
       }
+  },
+  mounted: function() {
+    console.log('this.tabularDatasetList', this.tabularDatasetList)
   },
   computed: {
     ...mapState([
@@ -26,18 +44,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
+.table-view {
+  height: 100%;
+  width: 100%;
+  .table-view-svg {
+    height: 100%;
+    width: 100%;
+    .table-cell {
+      fill: #eeeeee;
+      stroke: white;
+    }
+  }
 }
 </style>
