@@ -54,7 +54,6 @@
           y="0" 
           :width="cal_range(column.start, column.end+1, columnWidthList)"
           :height="rowHeightList[rowindex]"
-          :class="{'selected-cell': check_cell_is_selected(rowindex, columnindex)}"
           @click="change_selected_cell(rowindex, columnindex)"
           >
         </rect>
@@ -67,6 +66,14 @@
             {{get_substring(column.value, column.start, column.end, columnindex, row)}}
         </text>
       </g>
+
+      <!-- selected cell -->
+      <rect class="selected-cell"
+        :x="cellWidth + cal_range(0, tabularDatasetList[selectedCell.row][selectedCell.column].start, columnWidthList)" 
+        :y="cellHeight + cal_range(0, selectedCell.row, rowHeightList)" 
+        :width="cal_range(tabularDatasetList[selectedCell.row][selectedCell.column].start, tabularDatasetList[selectedCell.row][selectedCell.column].end+1, columnWidthList)"
+        :height="rowHeightList[selectedCell.row]">
+      </rect>
     </svg>
   </div>
 </template>
@@ -90,7 +97,7 @@ export default {
       columnWidthList: null,
       rowHeightList: null,
 
-      isSelectedCell: [false,false]
+      selectedCell: {row:0, column:0}
     }
   },
 
@@ -170,7 +177,7 @@ export default {
 
 
     check_cell_is_selected(row, column) {
-      if (row == this.isSelectedCell[0] && column == this.isSelectedCell[1]) {
+      if (row == this.selectedCell.row && column == this.selectedCell.column) {
         return true
       }
       else {
@@ -179,8 +186,7 @@ export default {
     },
 
     change_selected_cell(row, column){
-      this.isSelectedCell = [row, column]
-      bringto
+      this.selectedCell = {row, column}
     }
   },
 
@@ -268,19 +274,16 @@ export default {
       fill: white;
       stroke: lightslategrey;
       stroke-width: 0.2px;
-      z-index: -1;
     }
     .table-cell-text {
       font-family: "Lucida";
       text-anchor: start;
-      z-index: -100;
     }
     .selected-cell {
-      stroke:rgb(14, 38, 58);
-      stroke-width: 0.3px;
-      z-index: 1;
+      stroke: steelblue;
+      fill: none;
+      stroke-width: 1px;
     }
-
       
   }
 }
