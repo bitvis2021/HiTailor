@@ -10,14 +10,14 @@
         <rect v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
             class="table-mark"
             x="0"
-            :y="cal_position(0, rowindex, rowHeightList) + cellHeight" 
+            :y="cal_range(0, rowindex, rowHeightList) + cellHeight" 
             :width="cellWidth"
-            :height="cal_position(rowindex, rowindex+1, rowHeightList)">
+            :height="cal_range(rowindex, rowindex+1, rowHeightList)">
         </rect>
         <text v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
             class="table-mark-text" 
             :x="cellWidth/2"
-            :y="cal_position(0, rowindex, rowHeightList) + cellHeight + markTextPaddingY" >
+            :y="cal_range(0, rowindex, rowHeightList) + cellHeight + markTextPaddingY" >
           {{rowindex + 1}}
         </text>
       </g>
@@ -25,37 +25,37 @@
       <g> 
         <rect v-for="(column, columnindex) in columnWidthList" :key="column.index"
             class="table-mark"
-            :x="cal_position(0, columnindex, columnWidthList) + cellWidth"
+            :x="cal_range(0, columnindex, columnWidthList) + cellWidth"
             y="0" 
-            :width="cal_position(columnindex, columnindex+1, columnWidthList)"
+            :width="cal_range(columnindex, columnindex+1, columnWidthList)"
             :height="cellHeight"
             >
             {{cal_column_mark(columnindex)}}
         </rect>
         <text v-for="(column, columnindex) in columnWidthList" :key="column.index"
               class="table-mark-text" 
-              :x="cal_position(0, columnindex, columnWidthList) + cellWidth + columnWidthList[columnindex]/2"
+              :x="cal_range(0, columnindex, columnWidthList) + cellWidth + columnWidthList[columnindex]/2"
               :y="markTextPaddingY">
           {{cal_column_mark(columnindex)}}
         </text>
       </g>
 
       <g v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
-        :transform="'translate(' + cellWidth + ',' + (cal_position(0, rowindex, rowHeightList) + cellHeight) + ')'">
+        :transform="'translate(' + cellWidth + ',' + (cal_range(0, rowindex, rowHeightList) + cellHeight) + ')'">
         <rect v-for="(column, columnindex) in row" :key="column.index"
           class="table-cell"
-          :x="cal_position(0, column.start, columnWidthList)"
+          :x="cal_range(0, column.start, columnWidthList)"
           y="0" 
-          :width="cal_position(column.start, column.end+1, columnWidthList)"
+          :width="cal_range(column.start, column.end+1, columnWidthList)"
           :height="rowHeightList[rowindex]"
           @click="">
         </rect>
         <text v-for="(column, columnindex) in row" :key="column.index"
           v-if="column.value != 'None'"
           class="table-cell-text"
-          :x="cal_position(0, column.start, columnWidthList) + textPaddingX" :y="textPaddingY"
+          :x="cal_range(0, column.start, columnWidthList) + textPaddingX" :y="textPaddingY"
           >
-            {{get_substring(row, columnindex)}}
+            {{get_substring(column.value, column.start, column.end, columnindex, row)}}
         </text>
       </g>
     </svg>
@@ -73,7 +73,7 @@ export default {
 
   data() {
     return {
-      cellWidth: 80,
+      cellWidth: 70,
       cellHeight: 30,
       textPaddingX: 5,
       textPaddingY: 20,
@@ -91,7 +91,7 @@ export default {
         'UPDATE_DISPLAY_MODE'
     ]),
 
-    cal_position(start, end, list) {
+    cal_range(start, end, list) {
       var res = 0
       for (var i=start; i<end; i++) {
         res = res + list[i]
@@ -109,17 +109,25 @@ export default {
       return res
     },
 
-    get_substring(row, index) {
-      var text = row[index].value
+    get_substring(text, start, end, index, row) {
       var textLength = this.get_text_width(text)
-      if (textLength < this.columnWidthList[index]) {
+      var cellLength = this.cal_range(start, end+1, this.columnWidthList) - this.textPaddingX
+      if (textLength < cellLength) { 
         return text
       }
-      else if (textLength < (this.columnWidthList[index]+this.columnWidthList[index+1]) && row[index+1].value == 'None') {
-        return text
+      else if ( index+1 < row.length && row[index+1].value=='None')   // the cell after it is none
+      {
+        cellLength += this.cal_range(row[index+1].start, row[index+1].end+1, this.columnWidthList)
+        if (textLength < cellLength) {
+          return text
+        }
+        else {
+          var textNum = this.cal_text_num(text, cellLength)
+          return text.substring(0, textNum)
+        }
       }
       else {
-        var textNum = this.cal_text_num(text, index)
+        var textNum = this.cal_text_num(text, cellLength)
         return text.substring(0, textNum)
       }
       
@@ -129,8 +137,8 @@ export default {
     get_text_width(t) {  
       var text = document.createElement("span")
       document.body.appendChild(text)
-      text.style.font = "times new roman";
-      text.style.fontSize = 16 + "px";
+      text.style.font = "Lucida";
+      text.style.fontSize = "100%";
       text.style.height = 'auto';
       text.style.width = 'auto';
       text.style.position = 'absolute';
@@ -142,17 +150,15 @@ export default {
       return res
     },
 
-    cal_text_num(text, index) {
+    cal_text_num(text, clen) {
       for (var i=0; i<text.length; i++) {
         var tlen = this.get_text_width(text.substring(0,i+1))
-        if (tlen >= this.columnWidthList[index]) {
+        if (tlen >= clen) {
+          // console.log("text,clen,i,tlen", text, tlen, clen,i)
           return i
         }
       }
-    },
-
-
-    
+    }
   },
 
 
@@ -235,6 +241,7 @@ export default {
       stroke-width: 0.2px;
     }
     .table-mark-text{
+      font-family: "Lucida";
       fill:black;
       font-size:105%;
       text-anchor: middle;
@@ -245,7 +252,7 @@ export default {
       stroke-width: 0.2px;
     }
     .table-cell-text{
-      font-size: 16px;
+      font-family: "Lucida";
       text-anchor: start;
     }
 
