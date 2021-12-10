@@ -55,7 +55,7 @@
           class="table-cell-text"
           :x="cal_position(0, column.start, columnWidthList) + textPaddingX" :y="textPaddingY"
           >
-            {{column.value}}
+            {{get_substring(row, columnindex)}}
         </text>
       </g>
     </svg>
@@ -69,9 +69,11 @@ export default {
   name: 'TableView',
   props: {
   },
+
+
   data() {
     return {
-      cellWidth: 70,
+      cellWidth: 80,
       cellHeight: 30,
       textPaddingX: 5,
       textPaddingY: 20,
@@ -82,10 +84,13 @@ export default {
       rowHeightList: null
     }
   },
+
+
   methods: {
     ...mapMutations([
         'UPDATE_DISPLAY_MODE'
     ]),
+
     cal_position(start, end, list) {
       var res = 0
       for (var i=start; i<end; i++) {
@@ -93,7 +98,8 @@ export default {
       }
       return res
     },
-     cal_column_mark(index) {
+    
+    cal_column_mark(index) {
       var res = ""
       var first = parseInt(index / 26)
       if(first > 0) {
@@ -101,46 +107,113 @@ export default {
       }
       res += String.fromCharCode(65+(index % 26))
       return res
-    }
+    },
+
+    get_substring(row, index) {
+      var text = row[index].value
+      var textLength = this.get_text_width(text)
+      if (textLength < this.columnWidthList[index]) {
+        return text
+      }
+      else if (textLength < (this.columnWidthList[index]+this.columnWidthList[index+1]) && row[index+1].value == 'None') {
+        return text
+      }
+      else {
+        var textNum = this.cal_text_num(text, index)
+        return text.substring(0, textNum)
+      }
+      
+
+    },
+
+    get_text_width(t) {  
+      var text = document.createElement("span")
+      document.body.appendChild(text)
+      text.style.font = "times new roman";
+      text.style.fontSize = 16 + "px";
+      text.style.height = 'auto';
+      text.style.width = 'auto';
+      text.style.position = 'absolute';
+      text.style.whiteSpace = 'no-wrap';
+      text.innerHTML = t
+      var res = Math.ceil(text.clientWidth)
+      document.body.removeChild(text)
+
+      return res
+    },
+
+    cal_text_num(text, index) {
+      for (var i=0; i<text.length; i++) {
+        var tlen = this.get_text_width(text.substring(0,i+1))
+        if (tlen >= this.columnWidthList[index]) {
+          return i
+        }
+      }
+    },
+
+
+    
   },
+
+
   watch: {
       displayMode: function() {
       }
   },
+
+
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList
     this.columnWidthList = []
     this.rowHeightList = []
-    // calculate the column width based on dataset
+    
+    // // calculate the column width based on dataset
+    // var row = this.tabularDatasetList[0]
+    // var item
+    // for (item in row) {
+    //   var lengthList = row[item].length, len
+    //   for (len in lengthList) {
+    //     var length = lengthList[len] * this.letterLength
+    //     if (length >= this.cellWidth) {
+    //       this.columnWidthList.push(length)
+    //     }
+    //     else {
+    //       this.columnWidthList.push(this.cellWidth)
+    //     }
+    //   }
+    // }
+
+    // set column width to be the same
     var row = this.tabularDatasetList[0]
     var item
     for (item in row) {
       var lengthList = row[item].length, len
       for (len in lengthList) {
-        var length = lengthList[len] * this.letterLength
-        if (length >= this.cellWidth) {
-          this.columnWidthList.push(length)
-        }
-        else {
-          this.columnWidthList.push(this.cellWidth)
-        }
+        this.columnWidthList.push(this.cellWidth)
       }
     }
-
+  
     var rcount = this.tabularDatasetList.length
     for (var i=0; i<rcount; i++) {
       this.rowHeightList.push(this.cellHeight)
     }
   },
+
+
   mounted: function() {
     console.log('this.tabularDatasetList', this.tabularDatasetList)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
   },
+
+
   computed: {
     ...mapState([
         'displayMode'
       ]), 
+
+    
+
    
   }
 }
@@ -172,6 +245,7 @@ export default {
       stroke-width: 0.2px;
     }
     .table-cell-text{
+      font-size: 16px;
       text-anchor: start;
     }
 
