@@ -1,45 +1,51 @@
 <template>
   <div class="table-view">
+    <button class="button" id="header-button"
+      @click="" > 
+      header 
+    </button>
+    
     <svg class="table-view-svg">
-      <g>
-        <rect x="0" y="0" :width=cellWidth :height=cellHeight class="table-mark">
-        </rect>
-      </g>
-
+      <rect x="0" y="0" :width=cellWidth :height=cellHeight class="table-mark">
+      </rect>
+      
+      <!-- row mark -->
       <g> 
         <rect v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
-            class="table-mark"
-            x="0"
-            :y="cal_range(0, rowindex, rowHeightList) + cellHeight" 
-            :width="cellWidth"
-            :height="cal_range(rowindex, rowindex+1, rowHeightList)">
+          class="table-mark"
+          x="0"
+          :y="cal_range(0, rowindex, rowHeightList) + cellHeight" 
+          :width="cellWidth"
+          :height="cal_range(rowindex, rowindex+1, rowHeightList)">
         </rect>
         <text v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
-            class="table-mark-text" 
-            :x="cellWidth/2"
-            :y="cal_range(0, rowindex, rowHeightList) + cellHeight + markTextPaddingY" >
+          class="table-mark-text" 
+          :x="cellWidth/2"
+          :y="cal_range(0, rowindex, rowHeightList) + cellHeight + markTextPaddingY" >
           {{rowindex + 1}}
         </text>
       </g>
       
+      <!-- column mark -->
       <g> 
         <rect v-for="(column, columnindex) in columnWidthList" :key="column.index"
-            class="table-mark"
-            :x="cal_range(0, columnindex, columnWidthList) + cellWidth"
-            y="0" 
-            :width="cal_range(columnindex, columnindex+1, columnWidthList)"
-            :height="cellHeight"
-            >
-            {{cal_column_mark(columnindex)}}
+          class="table-mark"
+          :x="cal_range(0, columnindex, columnWidthList) + cellWidth"
+          y="0" 
+          :width="cal_range(columnindex, columnindex+1, columnWidthList)"
+          :height="cellHeight"
+          >
+          {{cal_column_mark(columnindex)}}
         </rect>
         <text v-for="(column, columnindex) in columnWidthList" :key="column.index"
-              class="table-mark-text" 
-              :x="cal_range(0, columnindex, columnWidthList) + cellWidth + columnWidthList[columnindex]/2"
-              :y="markTextPaddingY">
+          class="table-mark-text" 
+          :x="cal_range(0, columnindex, columnWidthList) + cellWidth + columnWidthList[columnindex]/2"
+          :y="markTextPaddingY">
           {{cal_column_mark(columnindex)}}
         </text>
       </g>
 
+      <!-- cell -->
       <g v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
         :transform="'translate(' + cellWidth + ',' + (cal_range(0, rowindex, rowHeightList) + cellHeight) + ')'">
         <rect v-for="(column, columnindex) in row" :key="column.index"
@@ -48,12 +54,15 @@
           y="0" 
           :width="cal_range(column.start, column.end+1, columnWidthList)"
           :height="rowHeightList[rowindex]"
-          @click="">
+          :class="{'selected-cell': check_cell_is_selected(rowindex, columnindex)}"
+          @click="change_selected_cell(rowindex, columnindex)"
+          >
         </rect>
         <text v-for="(column, columnindex) in row" :key="column.index"
           v-if="column.value != 'None'"
           class="table-cell-text"
           :x="cal_range(0, column.start, columnWidthList) + textPaddingX" :y="textPaddingY"
+          @click="change_selected_cell(rowindex, columnindex)"
           >
             {{get_substring(column.value, column.start, column.end, columnindex, row)}}
         </text>
@@ -69,8 +78,6 @@ export default {
   name: 'TableView',
   props: {
   },
-
-
   data() {
     return {
       cellWidth: 70,
@@ -81,10 +88,11 @@ export default {
       letterLength: 11.5,
       tabularDatasetList: null,
       columnWidthList: null,
-      rowHeightList: null
+      rowHeightList: null,
+
+      isSelectedCell: [false,false]
     }
   },
-
 
   methods: {
     ...mapMutations([
@@ -158,15 +166,28 @@ export default {
           return i
         }
       }
+    },
+
+
+    check_cell_is_selected(row, column) {
+      if (row == this.isSelectedCell[0] && column == this.isSelectedCell[1]) {
+        return true
+      }
+      else {
+        return false
+      }
+    },
+
+    change_selected_cell(row, column){
+      this.isSelectedCell = [row, column]
+      bringto
     }
   },
-
 
   watch: {
       displayMode: function() {
       }
   },
-
 
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList
@@ -205,22 +226,16 @@ export default {
     }
   },
 
-
   mounted: function() {
     console.log('this.tabularDatasetList', this.tabularDatasetList)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
   },
 
-
   computed: {
     ...mapState([
         'displayMode'
-      ]), 
-
-    
-
-   
+      ])   
   }
 }
 </script>
@@ -230,6 +245,9 @@ export default {
 .table-view {
   height: 100%;
   width: 100%;
+  #header-button {
+    margin-top: 1%;
+  }
   .table-view-svg {
     height: 100%;
     width: 100%;
@@ -240,7 +258,7 @@ export default {
       stroke: lightslategrey;
       stroke-width: 0.2px;
     }
-    .table-mark-text{
+    .table-mark-text {
       font-family: "Lucida";
       fill:black;
       font-size:105%;
@@ -250,10 +268,17 @@ export default {
       fill: white;
       stroke: lightslategrey;
       stroke-width: 0.2px;
+      z-index: -1;
     }
-    .table-cell-text{
+    .table-cell-text {
       font-family: "Lucida";
       text-anchor: start;
+      z-index: -100;
+    }
+    .selected-cell {
+      stroke:rgb(14, 38, 58);
+      stroke-width: 0.3px;
+      z-index: 1;
     }
 
       
