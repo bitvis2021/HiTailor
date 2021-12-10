@@ -6,10 +6,12 @@ class parse_cell:
         self.end = start  # 终止坐标，若非MergedCell则end = start
         self.value = value
         self.dtype = dtype   # 数据类型
-        self.length = length
+        self.length = []
+        self.length.append(length)
+        self.merged = False
 
     def __repr__(self):     # 用于测试输出
-        return "{" + "\"start\":" + str(self.start) + "," + "\"end\":" + str(self.end) + "," + "\"value\":" + "\"" + str(self.value) + "\"" + "," + "\"length\":" + str(self.length) + "}"
+        return "{" + "\"start\":" + str(self.start) + "," + "\"end\":" + str(self.end) + "," + "\"value\":" + "\"" + str(self.value) + "\"" + "," + "\"length\":" + str(self.length) + "," + "\"merged\":" + "\"" + str(self.merged) + "\"" + "}"
         # return "(" + str(self.start) + "," + str(self.end) + "): " + str(self.value)
 
 
@@ -45,7 +47,8 @@ class parse_sheet:
                         r.append(pc)
                     else:
                         r[-1].end += 1     # cell的结束坐标+1
-                        r[-1].length += self.maxLen[c.column-1]     # cell的长度加上当前单元格
+                        r[-1].length.append(self.maxLen[c.column-1])     # cell的长度加上当前单元格
+                        r[-1].merged = True
             self.parsedSheet.append(r)   # 将当前行加入表格
 
     def result(self):
