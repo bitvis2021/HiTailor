@@ -82,9 +82,10 @@
         :height="cal_range(selectedArea.top, selectedArea.bottom + 1, rowHeightList)"
         @mouseup="handle_mouse_up()"
         draggable
-        @dragstart="handle_drag()"
-        @drag="handle_drag()"
-        @dragend="handle_drag()"
+        @mousedown="handle_mouse_down($event)"
+        @dragstart="handle_drag_start()"
+        @drag="handle_draging()"
+        @dragend="handle_drag_end()"
         >
       </rect>
 
@@ -122,7 +123,6 @@ export default {
     ...mapMutations([
         'UPDATE_DISPLAY_MODE'
     ]),
-
     cal_range(start, end, list) {
       var res = 0
       for (var i=start; i<end; i++) {
@@ -130,7 +130,6 @@ export default {
       }
       return res
     },
-    
     cal_column_mark(index) {
       var res = ""
       var first = parseInt(index / 26)
@@ -140,7 +139,6 @@ export default {
       res += String.fromCharCode(65+(index % 26))
       return res
     },
-
     get_substring(text, start, end, index, row) {
       var textLength = this.get_text_width(text)
       var cellLength = this.cal_range(start, end+1, this.columnWidthList) - this.textPaddingX
@@ -162,10 +160,7 @@ export default {
         var textNum = this.cal_text_num(text, cellLength)
         return text.substring(0, textNum)
       }
-      
-
     },
-
     get_text_width(t) {  
       var text = document.createElement("span")
       document.body.appendChild(text)
@@ -178,10 +173,8 @@ export default {
       text.innerHTML = t
       var res = Math.ceil(text.clientWidth)
       document.body.removeChild(text)
-
       return res
     },
-
     cal_text_num(text, clen) {
       for (var i=0; i<text.length; i++) {
         var tlen = this.get_text_width(text.substring(0,i+1))
@@ -191,7 +184,6 @@ export default {
         }
       }
     },
-
     // check_cell_is_selected(row, column) {
     //   if (row == this.selectedArea.top && column == this.selectedArea.column) {
     //     return true
@@ -200,7 +192,6 @@ export default {
     //     return false
     //   }
     // },
-
     change_selected_cell(row, column) {
       this.selectedCell.row = row
       this.selectedCell.column = column
@@ -212,7 +203,6 @@ export default {
 
       window.onmousemove = this.handle_mouse_move
     },
-
     handle_mouse_move(event) {
       if (this.selectedCell.row <= this.mouserOverCell.row && this.selectedCell.column <= this.mouserOverCell.column) {
         this.selectedArea.bottom = this.mouserOverCell.row
@@ -232,28 +222,38 @@ export default {
       
       // console.log("mousemove", this.selectedArea.bottom, this.selectedArea.right)
     },
-
     handle_mouse_over(row, column) {
       this.mouserOverCell.row = row
       this.mouserOverCell.column = column
       // console.log("mouseover", row, column)
     },
-
     handle_mouse_up (event) {
       window.onmousemove = null
       // event.currentTarget.style.cursor = 'move'
     },
-
     handle_drag() {
       console.log("ininin")
     },
+    handle_drag_start() {
+      console.log('handle_drag_start')
+    },
+    handle_draging() {
+      console.log('handler_draging')
+    },
+    handle_drag_end() {
+      console.log('handler_drag_end')
+    },
+    handle_mouse_down(event) {
+      console.log('event', event)
+    }
   },
-
   watch: {
       displayMode: function() {
+      },
+      columnWidthList: function() {
+        
       }
   },
-
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList
     this.columnWidthList = []
@@ -290,13 +290,11 @@ export default {
       this.rowHeightList.push(this.cellHeight)
     }
   },
-
   mounted: function() {
     console.log('this.tabularDatasetList', this.tabularDatasetList)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
   },
-
   computed: {
     ...mapState([
         'displayMode'
@@ -310,6 +308,10 @@ export default {
 .table-view {
   height: 100%;
   width: 100%;
+  text {
+    pointer-events:none;
+    font-family: Helvetica, Tahoma, Arial;
+  }
   #header-button {
     margin-top: 1%;
   }
@@ -322,9 +324,9 @@ export default {
       fill: rgb(233, 233, 233);
       stroke: lightslategrey;
       stroke-width: 0.2px;
+      cursor: cell;
     }
     .table-mark-text {
-      font-family: Helvetica, Tahoma, Arial;
       fill:black;
       font-size:105%;
       text-anchor: middle;
@@ -333,9 +335,9 @@ export default {
       fill: white;
       stroke: lightslategrey;
       stroke-width: 0.2px;
+      cursor: cell;
     }
     .table-cell-text {
-      font-family: Helvetica, Tahoma, Arial;
       text-anchor: start;
     }
     .selected-area {
@@ -343,6 +345,7 @@ export default {
       fill: steelblue;
       fill-opacity: 10%;
       stroke-width: 1px;
+      cursor: cell;
     }
       
   }
