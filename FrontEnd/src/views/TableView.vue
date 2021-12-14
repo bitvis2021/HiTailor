@@ -8,7 +8,8 @@
       header 
     </button>
     
-    <svg class="table-view-svg">
+    <svg class="table-view-svg"
+      @mouseup="handle_mouse_up()">
       <rect x="0" y="0" :width=cellWidth :height=cellHeight class="table-mark">
       </rect>
       
