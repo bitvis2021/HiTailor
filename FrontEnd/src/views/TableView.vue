@@ -17,18 +17,30 @@
       <!-- row mark -->
       <g> 
         <rect v-for="(row, rowindex) in rowHeightList" :key="row.index"
-          :class="isMarkSelected(rowindex, 'row') ? 'selected-table-mark' : 'table-mark'"
+          :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row'), 
+            'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row'),
+            'hovered-table-mark': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row')}"
+          class="table-mark"
           x="0"
           :y="heightRangeList[rowindex] + cellHeight" 
           :width="cellWidth"
           :height="heightRangeList[rowindex+1] - heightRangeList[rowindex]"
-          @mousemove="handle_mouse_move($event)">
+          @mousemove="handle_mouse_move($event)"
+          @mouseover="handle_mouse_over_mark(rowindex,'row')"
+          @mousedown="handle_mouse_down_mark(rowindex,'row')"
+          @mouseout="handle_mouse_out_mark()">
         </rect>
         <text v-for="(row, rowindex) in rowHeightList" :key="row.index"
-          :class="isMarkSelected(rowindex, 'row') ? 'selected-table-mark-text' : 'table-mark-text'"
+          :class="{'chosen-table-mark-text': selectByMark.row && isMarkSelected(rowindex, 'row'), 
+            'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row'),
+            'hovered-table-mark-text': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row')}"
+          class="table-mark-text"
           :x="cellWidth/2"
           :y="heightRangeList[rowindex] + cellHeight + markTextPaddingY" 
-          @mousemove="handle_mouse_move($event)">
+          @mousemove="handle_mouse_move($event)"
+          @mouseover="handle_mouse_over_mark(rowindex,'row')"
+          @mousedown="handle_mouse_down_mark(rowindex,'row')"
+          @mouseout="handle_mouse_out_mark()">
           {{rowindex + 1}}
         </text>
       </g>
@@ -36,19 +48,31 @@
       <!-- column mark -->
       <g> 
         <rect v-for="(column, columnindex) in columnWidthList" :key="column.index"
-          :class="isMarkSelected(columnindex, 'column') ? 'selected-table-mark' : 'table-mark'"
+          :class="{'chosen-table-mark': selectByMark.column && isMarkSelected(columnindex, 'column'), 
+            'selected-table-mark': !selectByMark.column && isMarkSelected(columnindex, 'column'),
+            'hovered-table-mark': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column')}"
+          class="table-mark"
           :x="widthRangeList[columnindex] + cellWidth"
           y="0" 
           :width="widthRangeList[columnindex+1] - widthRangeList[columnindex]"
           :height="cellHeight"
-          @mousemove="handle_mouse_move($event)">
+          @mousemove="handle_mouse_move($event)"
+          @mouseover="handle_mouse_over_mark(columnindex, 'column')"
+          @mousedown="handle_mouse_down_mark(columnindex, 'column')"
+          @mouseout="handle_mouse_out_mark()">
           {{cal_column_mark(columnindex)}}
         </rect>
         <text v-for="(column, columnindex) in columnWidthList" :key="column.index"
-          :class="isMarkSelected(columnindex, 'column') ? 'selected-table-mark-text' : 'table-mark-text'"
+          :class="{'hovered-table-mark-text': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column'), 
+            'selected-table-mark-text': !selectByMark.column && isMarkSelected(columnindex, 'column'),
+            'chosen-table-mark-text': selectByMark.column && isMarkSelected(columnindex, 'column')}"
+          class="table-mark-text"
           :x="widthRangeList[columnindex] + cellWidth + columnWidthList[columnindex]/2"
           :y="markTextPaddingY"
-          @mousemove="handle_mouse_move($event)">
+          @mousemove="handle_mouse_move($event)"
+          @mouseover="handle_mouse_over_mark(columnindex, 'column')"
+          @mousedown="handle_mouse_down_mark(columnindex, 'column')"
+          @mouseout="handle_mouse_out_mark()">
           {{cal_column_mark(columnindex)}}
         </text>
       </g>
@@ -140,9 +164,12 @@ export default {
 
       selectedCell: {row:0, column:0, start:null, end:null},
       selectedArea: {top:0, left:0, bottom:0, right:0},
-      mouseOverCell: {row:null, column:null, start:null, end:null},
+      selectedMark: {index:null, type:null},
+      mouseOverCell: {row:null, column:null, start:null, end:null, current:null},
+      mouseOverMark: {index:null, type:null},
       mouseDownState: false,
-      
+      mouseDownMarkState: false,
+      selectByMark: {row:false, column:false}
     }
   },
 
@@ -264,6 +291,7 @@ export default {
       if (!columnFlag) {
         columnindex -= 2
       }
+      this.mouseOverCell.current = columnindex
       for (column=0; column<this.rowDistributionList[row].length; column++) {
         if (columnindex >= this.rowDistributionList[row][column].start && columnindex <= this.rowDistributionList[row][column].end) {
           break
@@ -274,6 +302,8 @@ export default {
       this.mouseOverCell.end = this.rowDistributionList[row][column].end
     },
     handle_mouse_down(row, column, start, end) {
+      this.selectByMark.row = false
+      this.selectByMark.column = false
       this.selectedCell.row = row
       this.selectedCell.column = column
       this.selectedCell.start = start
@@ -286,20 +316,70 @@ export default {
 
       this.mouseDownState = true
     },
+    handle_mouse_down_mark(index, type) {
+      if (type == 'column') {
+        this.selectByMark.column = true
+        this.selectByMark.row = false
+      }
+      else {
+        this.selectByMark.row = true
+        this.selectByMark.column = false
+      }
+      this.selectedMark.index = index
+      this.selectedMark.type = type
+
+      if (type == 'column') {
+        this.selectedArea.top = 0
+        this.selectedArea.bottom = this.rowHeightList.length - 1
+        this.selectedArea.left = index
+        this.selectedArea.right = index
+      }
+      else {
+        this.selectedArea.top = index
+        this.selectedArea.bottom = index
+        this.selectedArea.left = 0
+        this.selectedArea.right = this.columnWidthList.length - 1
+      }
+
+      this.mouseDownMarkState = true
+    },
     handle_mouse_down_selected(event) {
       this.cal_mouse_over_cell(event.offsetX, event.offsetY)
       this.handle_mouse_down(this.mouseOverCell.row, this.mouseOverCell.column, this.mouseOverCell.start, this.mouseOverCell.end)
     },
     handle_mouse_move(event) {
-      if (!this.mouseDownState) return  // ignore mousemoves when mouse is not down
+      if (this.mouseDownMarkState) {
+        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
+        if (this.selectedMark.type == 'column') {
+          this.selectedArea.left = this.selectedMark.index < this.mouseOverCell.current ? this.selectedMark.index : this.mouseOverCell.current
+          this.selectedArea.right = this.selectedMark.index > this.mouseOverCell.current ? this.selectedMark.index : this.mouseOverCell.current
+        }
+        else {
+          this.selectedArea.top = this.selectedMark.index < this.mouseOverCell.row ? this.selectedMark.index : this.mouseOverCell.row
+          this.selectedArea.bottom = this.selectedMark.index > this.mouseOverCell.row ? this.selectedMark.index : this.mouseOverCell.row
+        }
+      }
+      else if (this.mouseDownState) {
+        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
 
-      this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-
-      this.selectedArea.top = this.selectedCell.row < this.mouseOverCell.row ? this.selectedCell.row : this.mouseOverCell.row
-      this.selectedArea.bottom = this.selectedCell.row > this.mouseOverCell.row ? this.selectedCell.row : this.mouseOverCell.row
-      this.selectedArea.left = this.selectedCell.start < this.mouseOverCell.start ? this.selectedCell.start : this.mouseOverCell.start
-      this.selectedArea.right = this.selectedCell.end > this.mouseOverCell.end ? this.selectedCell.end : this.mouseOverCell.end
+        this.selectedArea.top = this.selectedCell.row < this.mouseOverCell.row ? this.selectedCell.row : this.mouseOverCell.row
+        this.selectedArea.bottom = this.selectedCell.row > this.mouseOverCell.row ? this.selectedCell.row : this.mouseOverCell.row
+        this.selectedArea.left = this.selectedCell.start < this.mouseOverCell.start ? this.selectedCell.start : this.mouseOverCell.start
+        this.selectedArea.right = this.selectedCell.end > this.mouseOverCell.end ? this.selectedCell.end : this.mouseOverCell.end   
+      }
+      else {
+        return  // ignore mousemoves when mouse is not down
+      }
       
+      
+    },
+    handle_mouse_over_mark(index, type) {
+      if (this.mouseDownState || this.mouseDownMarkState)  return
+      this.mouseOverMark.index = index
+      this.mouseOverMark.type = type
+    },
+    handle_mouse_out_mark() {
+      this.mouseOverMark = {index:null, type:null}
     },
     // handle_mouse_over(row, column) {
     //   this.mouseOverCell.row = row
@@ -308,7 +388,9 @@ export default {
     // },
     handle_mouse_up (event) {
       this.mouseDownState = false
+      this.mouseDownMarkState = false
       this.mouseOverCell = {row:null, column:null}
+      this.selectedMark = {index:null, type:null}
     },
     handle_drag() {
       console.log("ininin")
@@ -449,7 +531,7 @@ export default {
       fill: rgb(233, 233, 233);
       stroke: lightslategrey;
       stroke-width: 0.2px;
-      cursor: cell;
+      cursor: pointer;
     }
     .table-mark-text {
       fill:black;
@@ -467,6 +549,31 @@ export default {
       fill:steelblue;
       font-size:105%;
       text-anchor: middle;
+    }
+    .chosen-table-mark {
+      fill: lightskyblue;
+      fill-opacity: 30%;
+      stroke: lightslategrey;
+      stroke-width: 0.2px;
+      cursor: cell;
+    }
+    .chosen-table-mark-text {
+      fill:steelblue;
+      font-size:105%;
+      text-anchor: middle;
+    }
+    .hovered-table-mark {
+      fill:steelblue;
+      fill-opacity: 30%;
+      stroke: lightslategrey;
+      stroke-width: 0.2px;
+      cursor:pointer;
+    }
+    .hovered-table-mark-text {
+      fill:black;
+      font-size:105%;
+      text-anchor: middle;
+      cursor: pointer;
     }
     .table-cell {
       fill: white;
