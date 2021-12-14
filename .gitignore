@@ -107,4 +107,5 @@ dist
 .tern-port
 
 # Pycache directories
-**/__pycache__
+**/**/__pycache__
+*.cpython-37.pyc
