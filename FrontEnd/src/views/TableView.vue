@@ -9,7 +9,8 @@
     </button>
     
     <svg class="table-view-svg"
-      @mouseup="handle_mouse_up()">
+      @mouseup="handle_mouse_up()"
+      @mousemove="handle_mouse_move($event)">
       <rect x="0" y="0" :width=cellWidth :height=cellHeight class="table-mark">
       </rect>
       
@@ -20,12 +21,14 @@
           x="0"
           :y="heightRangeList[rowindex] + cellHeight" 
           :width="cellWidth"
-          :height="heightRangeList[rowindex+1] - heightRangeList[rowindex]">
+          :height="heightRangeList[rowindex+1] - heightRangeList[rowindex]"
+          @mousemove="handle_mouse_move($event)">
         </rect>
         <text v-for="(row, rowindex) in rowHeightList" :key="row.index"
           :class="isMarkSelected(rowindex, 'row') ? 'selected-table-mark-text' : 'table-mark-text'"
           :x="cellWidth/2"
-          :y="heightRangeList[rowindex] + cellHeight + markTextPaddingY" >
+          :y="heightRangeList[rowindex] + cellHeight + markTextPaddingY" 
+          @mousemove="handle_mouse_move($event)">
           {{rowindex + 1}}
         </text>
       </g>
@@ -38,13 +41,14 @@
           y="0" 
           :width="widthRangeList[columnindex+1] - widthRangeList[columnindex]"
           :height="cellHeight"
-          >
+          @mousemove="handle_mouse_move($event)">
           {{cal_column_mark(columnindex)}}
         </rect>
         <text v-for="(column, columnindex) in columnWidthList" :key="column.index"
           :class="isMarkSelected(columnindex, 'column') ? 'selected-table-mark-text' : 'table-mark-text'"
           :x="widthRangeList[columnindex] + cellWidth + columnWidthList[columnindex]/2"
-          :y="markTextPaddingY">
+          :y="markTextPaddingY"
+          @mousemove="handle_mouse_move($event)">
           {{cal_column_mark(columnindex)}}
         </text>
       </g>
@@ -235,21 +239,31 @@ export default {
       x = x - this.cellWidth
       y = y - this.cellHeight
 
-      var row
+      if (x < 0)  x = 0
+      if (y < 0)  y = 0
+
+      var row, rowFlag=false
       for (row=0; row<this.heightRangeList.length; row++) {
         if (y >= this.heightRangeList[row] && y < this.heightRangeList[row+1]) {
+          rowFlag = true
           break
         }
+      }
+      if (!rowFlag && row!=0) {
+        row -= 2
       }
       this.mouseOverCell.row = row
-
-      var columnindex, column
+      
+      var columnindex, column, columnFlag=false
       for (columnindex=0; columnindex<this.widthRangeList.length; columnindex++) {
         if (x >= this.widthRangeList[columnindex] && x < this.widthRangeList[columnindex+1]) {
+          columnFlag = true
           break
         }
       }
-
+      if (!columnFlag) {
+        columnindex -= 2
+      }
       for (column=0; column<this.rowDistributionList[row].length; column++) {
         if (columnindex >= this.rowDistributionList[row][column].start && columnindex <= this.rowDistributionList[row][column].end) {
           break
@@ -416,8 +430,12 @@ export default {
   height: 100%;
   width: 100%;
   text {
-    pointer-events:none;
     font-family: Helvetica, Tahoma, Arial;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: cell;
   }
   #header-button {
     margin-top: 1%;
