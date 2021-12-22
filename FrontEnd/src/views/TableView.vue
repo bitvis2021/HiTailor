@@ -1,11 +1,14 @@
 <template>
   <div class="table-view">
-    <button class="button" id="header-button"
-        draggable
-        @dragstart="handle_drag()"
-        @drag="handle_drag()"
-        @dragend="handle_drag()" > 
-      header 
+    <button class="button" id="row-header-button"
+      @click="choose_header('row')" > 
+      row header 
+    </button>
+
+    <button id="column-header-button"
+      class="button" 
+      @click="choose_header('column')" > 
+      column header 
     </button>
     
     <svg class="table-view-svg"
@@ -78,30 +81,30 @@
       </g>
 
       <!-- cell -->
-      <g v-for="(row, rowindex) in tabularDatasetList" :key="row.index"
+      <g v-for="(row, rowindex) in rowDistributionList" :key="row.index"
         :transform="'translate(' + cellWidth + ',' + (heightRangeList[rowindex] + cellHeight) + ')'">
         <rect v-for="(column, columnindex) in row" :key="column.index"
           class="table-cell"
-          :ref="'cell(' + rowindex + ',' + columnindex +')' "
-          :x="widthRangeList[column.start]"
+          :class="{'header-table-cell': (columnHeaderBottom!=null && rowindex<=columnHeaderBottom) || (rowHeaderRight!=null && rowDistributionList[rowindex][columnindex].end<=rowHeaderRight)}"
+          :x="widthRangeList[rowDistributionList[rowindex][columnindex].start]"
           y="0" 
-          :width="widthRangeList[column.end+1] - widthRangeList[column.start]"
+          :width="widthRangeList[rowDistributionList[rowindex][columnindex].end+1] - widthRangeList[rowDistributionList[rowindex][columnindex].start]"
           :height="rowHeightList[rowindex]"
-          @mousedown="handle_mouse_down(rowindex, columnindex, column.start, column.end)"
+          @mousedown="handle_mouse_down(rowindex, columnindex)"
           @mousemove="handle_mouse_move($event)"
           @mouseup="handle_mouse_up()"
           >
         </rect>
         <text v-for="(column, columnindex) in row" :key="column.index"
-          v-if="column.value != 'None'"
+          v-if="dataValueList[rowindex][columnindex] != 'None'"
           class="table-cell-text"
-          :ref="'cellText(' + rowindex + ',' + columnindex +')' "
-          :x="widthRangeList[column.start] + textPaddingX" :y="textPaddingY"
-          @mousedown="handle_mouse_down(rowindex, columnindex, column.start, column.end)"
+          :class="{'header-table-cell-text': (columnHeaderBottom!=null && rowindex<=columnHeaderBottom) || (rowHeaderRight!=null && rowDistributionList[rowindex][columnindex].end<=rowHeaderRight)}"
+          :x="widthRangeList[rowDistributionList[rowindex][columnindex].start] + textPaddingX" :y="textPaddingY"
+          @mousedown="handle_mouse_down(rowindex, columnindex)"
           @mousemove="handle_mouse_move($event)"
           @mouseup="handle_mouse_up()"
           >
-            {{get_substring(column.value, column.start, column.end, columnindex, row)}}
+            {{get_substring(dataValueList[rowindex][columnindex], rowindex, columnindex, row.length)}}
         </text>
       </g>
 
@@ -117,7 +120,7 @@
         >
       </rect>
 
-      <!-- row highlight line -->
+      <!-- row mark highlight line -->
       <line class="highlight-line"
         :x1="cellWidth"
         :x2="cellWidth"
@@ -125,13 +128,28 @@
         :y2="heightRangeList[selectedArea.bottom] + 2*cellHeight">
       </line>
 
-      <!-- column highlight line -->
+      <!-- column mark highlight line -->
       <line class="highlight-line"
         :x1="widthRangeList[selectedArea.left] + cellWidth"
         :x2="widthRangeList[selectedArea.right] + 2*cellWidth"
         :y1="cellHeight"
         :y2="cellHeight">
+      </line>
 
+      <!-- row header line -->
+      <line :class="{'header-line': rowHeaderRight!=null}"
+        :x1="cellWidth + widthRangeList[rowHeaderRight+1]"
+        :x2="cellWidth + widthRangeList[rowHeaderRight+1]"
+        :y1="cellHeight"
+        :y2="cellHeight + heightRangeList[heightRangeList.length-1]">
+      </line>
+
+      <!-- column header line -->
+      <line :class="{'header-line': columnHeaderBottom!=null}"
+        :x1="cellWidth"
+        :x2="cellWidth + widthRangeList[widthRangeList.length-1]"
+        :y1="cellHeight + heightRangeList[columnHeaderBottom+1]"
+        :y2="cellHeight + heightRangeList[columnHeaderBottom+1]">
       </line>
 
     </svg>
@@ -154,12 +172,13 @@ export default {
       markTextPaddingY: 22,
 
       tabularDatasetList: null,
-      rowDistributionList: null,
+      rowDistributionList: null,  // Record the start and end of each cell for each row
+      dataValueList: null,
       columnWidthList: null,
-      widthRangeList: null,
-      widthChangeSignal: true,
       rowHeightList: null,
+      widthRangeList: null, 
       heightRangeList: null,
+      widthChangeSignal: true,
       heightChangeSignal: true,
 
       selectedCell: {row:0, column:0, start:null, end:null},
@@ -169,7 +188,9 @@ export default {
       mouseOverMark: {index:null, type:null},
       mouseDownState: false,
       mouseDownMarkState: false,
-      selectByMark: {row:false, column:false}
+      selectByMark: {row:false, column:false},
+      rowHeaderRight: null,
+      columnHeaderBottom: null
     }
   },
 
@@ -209,15 +230,15 @@ export default {
       res += String.fromCharCode(65+(index % 26))
       return res
     },
-    get_substring(text, start, end, index, row) {
+    get_substring(text, rowindex, columnindex, rowLength) {
       var textLength = this.get_text_width(text)
-      var cellLength = this.widthRangeList[end+1] - this.widthRangeList[start] - this.textPaddingX
+      var cellLength = this.widthRangeList[this.rowDistributionList[rowindex][columnindex].end+1] - this.widthRangeList[this.rowDistributionList[rowindex][columnindex].start] - this.textPaddingX
       if (textLength < cellLength) { 
         return text
       }
-      else if ( index+1 < row.length && row[index+1].value=='None')   // the cell after it is none
+      else if ( columnindex+1 < rowLength && this.dataValueList[rowindex][columnindex+1]=='None')   // the cell after it is none
       {
-        cellLength += this.widthRangeList[row[index+1].end+1] - this.widthRangeList[row[index+1].start] - this.textPaddingX
+        cellLength += this.widthRangeList[this.rowDistributionList[rowindex][columnindex+1].end+1] - this.widthRangeList[this.rowDistributionList[rowindex][columnindex+1].start] - this.textPaddingX
         if (textLength < cellLength) {
           return text
         }
@@ -301,18 +322,18 @@ export default {
       this.mouseOverCell.start = this.rowDistributionList[row][column].start
       this.mouseOverCell.end = this.rowDistributionList[row][column].end
     },
-    handle_mouse_down(row, column, start, end) {
+    handle_mouse_down(row, column) {
       this.selectByMark.row = false
       this.selectByMark.column = false
       this.selectedCell.row = row
       this.selectedCell.column = column
-      this.selectedCell.start = start
-      this.selectedCell.end = end
+      this.selectedCell.start = this.rowDistributionList[row][column].start
+      this.selectedCell.end = this.rowDistributionList[row][column].end
 
       this.selectedArea.top = row
-      this.selectedArea.left = start
+      this.selectedArea.left = this.rowDistributionList[row][column].start
       this.selectedArea.bottom = row
-      this.selectedArea.right = end
+      this.selectedArea.right = this.rowDistributionList[row][column].end
 
       this.mouseDownState = true
     },
@@ -392,6 +413,48 @@ export default {
       this.mouseOverCell = {row:null, column:null}
       this.selectedMark = {index:null, type:null}
     },
+    choose_header(type) {
+      if (type == 'column') {
+        this.columnHeaderBottom = this.selectedArea.bottom
+      }
+      else {
+        this.rowHeaderRight = this.selectedArea.right
+      }
+      this.fix_header_cell_structure(type)
+    },
+    fix_header_cell_structure(type) {
+      if (type == 'column') {
+        for (var r=0; r<=this.columnHeaderBottom; r++) {
+          for (var c=1; c<this.rowDistributionList[r]; c++) {
+            var ci = this.cal_column_index(r, c)
+            if (this.dataValueList[r][ci] == 'None') {
+              this.rowDistributionList[r][ci-1].end = this.rowDistributionList[r][ci].end
+              this.rowDistributionList[r].splice(ci, 1)
+              this.dataValueList[r].splice(ci, 1)
+            }
+          }
+        }
+      }
+      else {
+        for (var r=0; r<this.rowDistributionList.length; r++) {
+          for (var c=1; c<=this.rowHeaderRight; c++) {
+            var ci = this.cal_column_index(r, c)
+            if (this.dataValueList[r][ci] == 'None') {
+              this.rowDistributionList[r][ci-1].end = this.rowDistributionList[r][ci].end
+              this.rowDistributionList[r].splice(ci, 1)
+              this.dataValueList[r].splice(ci, 1)
+            }
+          }
+        }  
+      }
+    },
+    cal_column_index(r, c) {
+      for (var i=0; i<this.rowDistributionList[r].length; i++) {
+        if (c >= this.rowDistributionList[r][i].start && c <= this.rowDistributionList[r][i].end) {
+          return i
+        }
+      }
+    },
     handle_drag() {
       console.log("ininin")
     },
@@ -423,6 +486,7 @@ export default {
     this.widthRangeList = []
     this.rowHeightList = []
     this.heightRangeList = []
+    this.dataValueList = []
 
     // // calculate the column width based on dataset
     // var row = this.tabularDatasetList[0]
@@ -458,13 +522,15 @@ export default {
     var rindex
     for (rindex in this.tabularDatasetList) {
       var cindex
-      var r = []
+      var r = [], rvalue = []
       for (cindex in this.tabularDatasetList[rindex]) {
         var item = this.tabularDatasetList[rindex][cindex]
         var range = {start:item.start, end:item.end}
         r.push(range)
+        rvalue.push(item.value)
       }
       this.rowDistributionList.push(r)
+      this.dataValueList.push(rvalue)
     }
 
     this.cal_range_list(this.columnWidthList, "width")
@@ -501,7 +567,27 @@ export default {
           }
         }
       }
-    }
+    },
+    // fix_header_cell_structure() {
+    //   return (type) => {
+    //     if (type == 'column') {
+    //       // this.columnHeaderBottom
+    //     }
+    //     else {
+    //       console.log("iniin")
+    //       for (var r=0; r<this.rowDistributionList.length; r++) {
+    //         for (var c=1; c<=this.rowHeaderRight; c++) {
+    //           if (this.dataValueList[r][c] == 'None') {
+    //             this.rowDistributionList[r][c-1].end = this.rowDistributionList[r][c].end
+    //             this.rowDistributionList[r].splice(c, 1)
+    //             console.log("distribution", r, this.rowDistributionList[r])
+    //             this.dataValueList[r].splice(c, 1)
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // },
   }
 }
 </script>
@@ -519,8 +605,12 @@ export default {
     user-select: none;
     cursor: cell;
   }
-  #header-button {
+  #row-header-button {
     margin-top: 1%;
+  }
+  #column-header-button {
+    margin-top: 1%;
+    margin-left: 1%;
   }
   .table-view-svg {
     height: 100%;
@@ -581,7 +671,17 @@ export default {
       stroke-width: 0.2px;
       cursor: cell;
     }
+    .header-table-cell {
+      fill: lightgrey;
+      fill-opacity: 30%;
+      stroke: lightslategrey;
+      stroke-width: 0.2px;
+      cursor: cell;
+    }
     .table-cell-text {
+      text-anchor: start;
+    }
+    .header-table-cell-text {
       text-anchor: start;
     }
     .selected-area {
@@ -594,6 +694,10 @@ export default {
     .highlight-line {
       stroke: steelblue;
       stroke-width: 2px;
+    }
+    .header-line {
+      stroke: grey;
+      stroke-width: 0.8px;
     }
   }
 }
