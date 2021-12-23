@@ -22,30 +22,33 @@
         <rect v-for="(row, rowindex) in rowHeightList" :key="row.index"
           :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row'), 
             'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row'),
-            'hovered-table-mark': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row')}"
+            'hovered-table-mark': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row'),
+            'hovered-row-mark-line': ((mouseOverMarkLine.index==rowindex || mouseOverMarkLine.index==rowindex-1) && mouseOverMarkLine.type=='row')}"
           class="table-mark"
           x="0"
-          :y="heightRangeList[rowindex] + cellHeight" 
+          :y="markHeightRangeList[rowindex] + cellHeight" 
           :width="cellWidth"
-          :height="heightRangeList[rowindex+1] - heightRangeList[rowindex]"
-          @mousemove="handle_mouse_move($event)"
-          @mouseover="handle_mouse_over_mark(rowindex,'row')"
+          :height="markHeightRangeList[rowindex+1] - markHeightRangeList[rowindex]"
           @mousedown="handle_mouse_down_mark(rowindex,'row')"
           @mouseout="handle_mouse_out_mark()">
         </rect>
         <text v-for="(row, rowindex) in rowHeightList" :key="row.index"
           :class="{'chosen-table-mark-text': selectByMark.row && isMarkSelected(rowindex, 'row'), 
-            'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row'),
-            'hovered-table-mark-text': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row')}"
+            'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row')}"
           class="table-mark-text"
           :x="cellWidth/2"
-          :y="heightRangeList[rowindex] + cellHeight + markTextPaddingY" 
-          @mousemove="handle_mouse_move($event)"
-          @mouseover="handle_mouse_over_mark(rowindex,'row')"
+          :y="markHeightRangeList[rowindex] + cellHeight + markTextPaddingY" 
           @mousedown="handle_mouse_down_mark(rowindex,'row')"
           @mouseout="handle_mouse_out_mark()">
           {{rowindex + 1}}
         </text>
+        <line v-for="(row, rowindex) in markRowHeightList" :key="row.index"
+          class='row-mark-line'
+          x1="0"
+          :x2="cellWidth"
+          :y1="markHeightRangeList[rowindex+1] + cellHeight"
+          :y2="markHeightRangeList[rowindex+1] + cellHeight">
+        </line>
       </g>
       
       <!-- column mark -->
@@ -53,14 +56,13 @@
         <rect v-for="(column, columnindex) in columnWidthList" :key="column.index"
           :class="{'chosen-table-mark': selectByMark.column && isMarkSelected(columnindex, 'column'), 
             'selected-table-mark': !selectByMark.column && isMarkSelected(columnindex, 'column'),
-            'hovered-table-mark': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column')}"
+            'hovered-table-mark': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column'),
+            'hovered-column-mark-line': ((mouseOverMarkLine.index==columnindex || mouseOverMarkLine.index==columnindex-1) && mouseOverMarkLine.type=='column')}"
           class="table-mark"
-          :x="widthRangeList[columnindex] + cellWidth"
+          :x="markWidthRangeList[columnindex] + cellWidth"
           y="0" 
-          :width="widthRangeList[columnindex+1] - widthRangeList[columnindex]"
-          :height="cellHeight"
-          @mousemove="handle_mouse_move($event)"
-          @mouseover="handle_mouse_over_mark(columnindex, 'column')"
+          :width="markWidthRangeList[columnindex+1] - markWidthRangeList[columnindex]"
+          :height="cellHeight"          
           @mousedown="handle_mouse_down_mark(columnindex, 'column')"
           @mouseout="handle_mouse_out_mark()">
           {{cal_column_mark(columnindex)}}
@@ -70,14 +72,19 @@
             'selected-table-mark-text': !selectByMark.column && isMarkSelected(columnindex, 'column'),
             'chosen-table-mark-text': selectByMark.column && isMarkSelected(columnindex, 'column')}"
           class="table-mark-text"
-          :x="widthRangeList[columnindex] + cellWidth + columnWidthList[columnindex]/2"
+          :x="markWidthRangeList[columnindex] + cellWidth + markColumnWidthList[columnindex]/2"
           :y="markTextPaddingY"
-          @mousemove="handle_mouse_move($event)"
-          @mouseover="handle_mouse_over_mark(columnindex, 'column')"
           @mousedown="handle_mouse_down_mark(columnindex, 'column')"
           @mouseout="handle_mouse_out_mark()">
           {{cal_column_mark(columnindex)}}
         </text>
+        <line v-for="(column, columnindex) in markColumnWidthList" :key="column.index"
+          class='column-mark-line'
+          :x1="markWidthRangeList[columnindex+1] + cellWidth"
+          :x2="markWidthRangeList[columnindex+1] + cellWidth"
+          y1="0"
+          :y2="cellHeight">
+        </line>
       </g>
 
       <!-- cell -->
@@ -91,8 +98,6 @@
           :width="widthRangeList[rowDistributionList[rowindex][columnindex].end+1] - widthRangeList[rowDistributionList[rowindex][columnindex].start]"
           :height="rowHeightList[rowindex]"
           @mousedown="handle_mouse_down(rowindex, columnindex)"
-          @mousemove="handle_mouse_move($event)"
-          @mouseup="handle_mouse_up()"
           >
         </rect>
         <text v-for="(column, columnindex) in row" :key="column.index"
@@ -101,8 +106,6 @@
           :class="{'header-table-cell-text': (columnHeaderBottom!=null && rowindex<=columnHeaderBottom) || (rowHeaderRight!=null && rowDistributionList[rowindex][columnindex].end<=rowHeaderRight)}"
           :x="widthRangeList[rowDistributionList[rowindex][columnindex].start] + textPaddingX" :y="textPaddingY"
           @mousedown="handle_mouse_down(rowindex, columnindex)"
-          @mousemove="handle_mouse_move($event)"
-          @mouseup="handle_mouse_up()"
           >
             {{get_substring(dataValueList[rowindex][columnindex], rowindex, columnindex, row.length)}}
         </text>
@@ -115,8 +118,6 @@
         :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
         :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
         @mousedown="handle_mouse_down_selected($event)"
-        @mousemove="handle_mouse_move($event)"
-        @mouseup="handle_mouse_up()"
         >
       </rect>
 
@@ -125,13 +126,13 @@
         :x1="cellWidth"
         :x2="cellWidth"
         :y1="heightRangeList[selectedArea.top] + cellHeight"
-        :y2="heightRangeList[selectedArea.bottom] + 2*cellHeight">
+        :y2="heightRangeList[selectedArea.bottom+1] + cellHeight">
       </line>
 
       <!-- column mark highlight line -->
       <line class="highlight-line"
         :x1="widthRangeList[selectedArea.left] + cellWidth"
-        :x2="widthRangeList[selectedArea.right] + 2*cellWidth"
+        :x2="widthRangeList[selectedArea.right+1] + cellWidth"
         :y1="cellHeight"
         :y2="cellHeight">
       </line>
@@ -152,6 +153,40 @@
         :y2="cellHeight + heightRangeList[columnHeaderBottom+1]">
       </line>
 
+      <g class="table-mark-long-line">
+        <!-- column mark long line -->
+        <g v-if="mouseDownMarkLineState.column">
+          <line
+            :x1="cellWidth + markWidthRangeList[mouseOverMarkLine.index]"
+            :x2="cellWidth + markWidthRangeList[mouseOverMarkLine.index]"
+            :y1="cellHeight"
+            :y2="cellHeight + markHeightRangeList[markHeightRangeList.length-1]">
+          </line>
+          <line
+            :x1="cellWidth + markWidthRangeList[mouseOverMarkLine.index+1]"
+            :x2="cellWidth + markWidthRangeList[mouseOverMarkLine.index+1]"
+            :y1="cellHeight"
+            :y2="cellHeight + markHeightRangeList[markHeightRangeList.length-1]">
+          </line>
+        </g>
+
+        <!-- row mark long line -->
+        <g v-if="mouseDownMarkLineState.row">
+          <line
+            :x1="cellWidth"
+            :x2="cellWidth + markWidthRangeList[markWidthRangeList.length-1]"
+            :y1="cellHeight + markHeightRangeList[mouseOverMarkLine.index]"
+            :y2="cellHeight + markHeightRangeList[mouseOverMarkLine.index]">
+          </line>
+          <line
+            :x1="cellWidth"
+            :x2="cellWidth + markWidthRangeList[markWidthRangeList.length-1]"
+            :y1="cellHeight + markHeightRangeList[mouseOverMarkLine.index+1]"
+            :y2="cellHeight + markHeightRangeList[mouseOverMarkLine.index+1]">
+          </line>
+        </g>
+      </g>
+
     </svg>
   </div>
 </template>
@@ -170,25 +205,42 @@ export default {
       textPaddingX: 5,
       textPaddingY: 20,
       markTextPaddingY: 22,
+      markLinePadding: 5,
+      cellMin: 10,
 
       tabularDatasetList: null,
       rowDistributionList: null,  // Record the start and end of each cell for each row
       dataValueList: null,
+
       columnWidthList: null,
       rowHeightList: null,
+      markColumnWidthList: null,
+      markRowHeightList: null,
+
       widthRangeList: null, 
       heightRangeList: null,
+      markWidthRangeList: null,
+      markHeightRangeList: null,
+
       widthChangeSignal: true,
       heightChangeSignal: true,
+      markWidthChangeSignal: true,
+      markHeightChangeSignal: true,
 
       selectedCell: {row:0, column:0, start:null, end:null},
       selectedArea: {top:0, left:0, bottom:0, right:0},
       selectedMark: {index:null, type:null},
+
       mouseOverCell: {row:null, column:null, start:null, end:null, current:null},
       mouseOverMark: {index:null, type:null},
+      mouseOverMarkLine: {index:null, type:null},
+
       mouseDownState: false,
       mouseDownMarkState: false,
+      mouseDownMarkLineState: {row:false, column:false} ,
+
       selectByMark: {row:false, column:false},
+
       rowHeaderRight: null,
       columnHeaderBottom: null
     }
@@ -210,17 +262,16 @@ export default {
       if (listType == "width") {
         this.widthRangeList = res
       }
-      else {
+      else if (listType == "height"){
         this.heightRangeList = res
       }
+      else if (listType == "mark width") {
+        this.markWidthRangeList = res
+      }
+      else {
+        this.markHeightRangeList = res
+      }
     },
-    // cal_range(start, end, list) {
-    //   var res = 0
-    //   for (var i=start; i<end; i++) {
-    //     res = res + list[i]
-    //   }
-    //   return res
-    // },
     cal_column_mark(index) {
       var res = ""
       var first = parseInt(index / 26)
@@ -275,14 +326,6 @@ export default {
         }
       }
     },
-    // check_cell_is_selected(row, column) {
-    //   if (row == this.selectedArea.top && column == this.selectedArea.column) {
-    //     return true
-    //   }
-    //   else {
-    //     return false
-    //   }
-    // },
     cal_mouse_over_cell(x, y) {
       x = x - this.cellWidth
       y = y - this.cellHeight
@@ -322,54 +365,23 @@ export default {
       this.mouseOverCell.start = this.rowDistributionList[row][column].start
       this.mouseOverCell.end = this.rowDistributionList[row][column].end
     },
-    handle_mouse_down(row, column) {
-      this.selectByMark.row = false
-      this.selectByMark.column = false
-      this.selectedCell.row = row
-      this.selectedCell.column = column
-      this.selectedCell.start = this.rowDistributionList[row][column].start
-      this.selectedCell.end = this.rowDistributionList[row][column].end
-
-      this.selectedArea.top = row
-      this.selectedArea.left = this.rowDistributionList[row][column].start
-      this.selectedArea.bottom = row
-      this.selectedArea.right = this.rowDistributionList[row][column].end
-
-      this.mouseDownState = true
-    },
-    handle_mouse_down_mark(index, type) {
-      if (type == 'column') {
-        this.selectByMark.column = true
-        this.selectByMark.row = false
-      }
-      else {
-        this.selectByMark.row = true
-        this.selectByMark.column = false
-      }
-      this.selectedMark.index = index
-      this.selectedMark.type = type
-
-      if (type == 'column') {
-        this.selectedArea.top = 0
-        this.selectedArea.bottom = this.rowHeightList.length - 1
-        this.selectedArea.left = index
-        this.selectedArea.right = index
-      }
-      else {
-        this.selectedArea.top = index
-        this.selectedArea.bottom = index
-        this.selectedArea.left = 0
-        this.selectedArea.right = this.columnWidthList.length - 1
-      }
-
-      this.mouseDownMarkState = true
-    },
-    handle_mouse_down_selected(event) {
-      this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-      this.handle_mouse_down(this.mouseOverCell.row, this.mouseOverCell.column, this.mouseOverCell.start, this.mouseOverCell.end)
-    },
     handle_mouse_move(event) {
-      if (this.mouseDownMarkState) {
+      if (this.mouseDownMarkLineState.column) {
+        var offset = event.offsetX - this.cellWidth - this.markWidthRangeList[this.mouseOverMarkLine.index]
+        if (offset < this.cellMin) offset = this.cellMin
+        this.markColumnWidthList[this.mouseOverMarkLine.index] = offset
+        this.markWidthChangeSignal = !this.markWidthChangeSignal
+        // console.log(this.markColumnWidthList[this.mouseOverMarkLine])
+      }
+      else if (this.mouseDownMarkLineState.row) {
+        var offset = event.offsetY - this.cellHeight - this.markHeightRangeList[this.mouseOverMarkLine.index]
+        if (offset < this.cellMin) offset = this.cellMin
+        this.markRowHeightList[this.mouseOverMarkLine.index] = offset
+        this.markHeightChangeSignal = !this.markHeightChangeSignal
+        // console.log(this.markRowHeightList[this.mouseOverMarkLine.index])
+      }
+  
+      else if (this.mouseDownMarkState) {
         this.cal_mouse_over_cell(event.offsetX, event.offsetY)
         if (this.selectedMark.type == 'column') {
           this.selectedArea.left = this.selectedMark.index < this.mouseOverCell.current ? this.selectedMark.index : this.mouseOverCell.current
@@ -389,16 +401,109 @@ export default {
         this.selectedArea.right = this.selectedCell.end > this.mouseOverCell.end ? this.selectedCell.end : this.mouseOverCell.end   
       }
       else {
-        return  // ignore mousemoves when mouse is not down
-      }
-      
-      
+        if (event.offsetX <= this.cellWidth && event.offsetY > this.cellHeight) {
+          this.handle_mouse_over_mark(event.offsetY - this.cellHeight, "row")
+        }
+        else if (event.offsetY <= this.cellHeight && event.offsetX > this.cellWidth) {
+          this.handle_mouse_over_mark(event.offsetX - this.cellWidth, "column")
+        }
+        else  return  // ignore other mousemoves when mouse is not down
+      }      
     },
-    handle_mouse_over_mark(index, type) {
-      if (this.mouseDownState || this.mouseDownMarkState)  return
-      this.mouseOverMark.index = index
+    handle_mouse_over_mark(offset, type) {
       this.mouseOverMark.type = type
+      this.mouseOverMarkLine.type = type
+      if (type == "row") {
+        var row, rowFlag=false
+        for (row=0; row<this.heightRangeList.length; row++) {
+          // choose the mark
+          if (offset >= (this.heightRangeList[row] + this.markLinePadding) && offset < (this.heightRangeList[row+1] - this.markLinePadding)) {
+            this.mouseOverMark.index = row
+            this.mouseOverMarkLine = {index:null, type:null}
+            break
+          }
+          // choose the mark line
+          else if (offset >= (this.heightRangeList[row+1] - this.markLinePadding) && offset < (this.heightRangeList[row+1] + this.markLinePadding)) {
+            this.mouseOverMarkLine.index = row
+            this.mouseOverMark = {index:null, type:null}
+            break
+          }
+        }
+      }
+      else {
+        var columnindex, columnFlag=false
+        for (columnindex=0; columnindex<this.widthRangeList.length; columnindex++) {
+          if (offset >= (this.widthRangeList[columnindex] + this.markLinePadding) && offset < (this.widthRangeList[columnindex+1] - this.markLinePadding)) {
+            this.mouseOverMark.index = columnindex
+            this.mouseOverMarkLine = {index:null, type:null}
+            break
+          }
+          else if (offset >= (this.widthRangeList[columnindex+1] - this.markLinePadding) && offset < (this.widthRangeList[columnindex+1] + this.markLinePadding)) {
+            this.mouseOverMarkLine.index = columnindex
+            this.mouseOverMark = {index:null, type:null}
+            break
+          }
+        }
+      }
     },
+    handle_mouse_down(row, column) {
+      this.selectByMark.row = false
+      this.selectByMark.column = false
+      this.selectedCell.row = row
+      this.selectedCell.column = column
+      this.selectedCell.start = this.rowDistributionList[row][column].start
+      this.selectedCell.end = this.rowDistributionList[row][column].end
+
+      this.selectedArea.top = row
+      this.selectedArea.left = this.rowDistributionList[row][column].start
+      this.selectedArea.bottom = row
+      this.selectedArea.right = this.rowDistributionList[row][column].end
+
+      this.mouseDownState = true
+    },
+    handle_mouse_down_mark(index, type) {
+      if (this.mouseOverMarkLine.type != null) { // mouse down on mark line
+        if (this.mouseOverMarkLine.type == "column")
+          this.mouseDownMarkLineState.column = true
+        else 
+          this.mouseDownMarkLineState.row = true
+      }
+      else {  // mouse down on mark cell
+        if (type == 'column') {
+          this.selectByMark.column = true
+          this.selectByMark.row = false
+
+          this.selectedArea.top = 0
+          this.selectedArea.bottom = this.rowHeightList.length - 1
+          this.selectedArea.left = index
+          this.selectedArea.right = index
+        }
+        else {
+          this.selectByMark.row = true
+          this.selectByMark.column = false
+
+          this.selectedArea.top = index
+          this.selectedArea.bottom = index
+          this.selectedArea.left = 0
+          this.selectedArea.right = this.columnWidthList.length - 1
+        }
+        this.selectedMark.index = index
+        this.selectedMark.type = type
+        this.mouseDownMarkState = true
+      }
+    },
+    handle_mouse_down_selected(event) {
+      this.cal_mouse_over_cell(event.offsetX, event.offsetY)
+      this.handle_mouse_down(this.mouseOverCell.row, this.mouseOverCell.column, this.mouseOverCell.start, this.mouseOverCell.end)
+    },
+    // handle_mouse_over_mark(index, type) {
+    //   if (this.mouseDownState || this.mouseDownMarkState)  return
+    //   this.mouseOverMark.index = index
+    //   this.mouseOverMark.type = type
+    // },
+    // handle_mouse_over_mark_line(index, type) {
+    //   console.log("index,type", index, type)
+    // },
     handle_mouse_out_mark() {
       this.mouseOverMark = {index:null, type:null}
     },
@@ -407,10 +512,23 @@ export default {
     //   this.mouseOverCell.column = column
     //   // console.log("mouseover", row, column)
     // },
-    handle_mouse_up (event) {
+    handle_mouse_up () {
       this.mouseDownState = false
       this.mouseDownMarkState = false
+
+      if (this.mouseDownMarkLineState.column = true) {
+        this.columnWidthList = this.markColumnWidthList
+        this.widthChangeSignal = !this.widthChangeSignal
+        this.mouseDownMarkLineState.column = false
+      }
+      if (this.mouseDownMarkLineState.row = true) {
+        this.rowHeightList = this.markRowHeightList
+        this.heightChangeSignal = !this.heightChangeSignal
+        this.mouseDownMarkLineState.row = false
+      }
+
       this.mouseOverCell = {row:null, column:null}
+      this.mouseOverMarkLine = {index:null, type:null}
       this.selectedMark = {index:null, type:null}
     },
     choose_header(type) {
@@ -477,7 +595,14 @@ export default {
       },
       heightChangeSignal: function() {
         this.cal_range_list(this.rowHeightList, "height")
-      }
+      },
+      markWidthChangeSignal: function() {
+        this.cal_range_list(this.markColumnWidthList, "mark width")
+      },
+      markHeightChangeSignal: function() {
+        this.cal_range_list(this.markRowHeightList, "mark height")
+      },
+
   },
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList
@@ -486,6 +611,10 @@ export default {
     this.widthRangeList = []
     this.rowHeightList = []
     this.heightRangeList = []
+    this.markColumnWidthList = []
+    this.markWidthRangeList = []
+    this.markRowHeightList = []
+    this.markHeightRangeList = []
     this.dataValueList = []
 
     // // calculate the column width based on dataset
@@ -511,12 +640,14 @@ export default {
       var lengthList = row[item].length, len
       for (len in lengthList) {
         this.columnWidthList.push(this.cellWidth)
+        this.markColumnWidthList.push(this.cellWidth)
       }
     }
   
     var rcount = this.tabularDatasetList.length
     for (var i=0; i<rcount; i++) {
       this.rowHeightList.push(this.cellHeight)
+      this.markRowHeightList.push(this.cellHeight)
     }
 
     var rindex
@@ -535,6 +666,8 @@ export default {
 
     this.cal_range_list(this.columnWidthList, "width")
     this.cal_range_list(this.rowHeightList, "height")
+    this.cal_range_list(this.markColumnWidthList, "mark width")
+    this.cal_range_list(this.markRowHeightList, "mark height")
   },
   mounted: function() {
     console.log('this.tabularDatasetList', this.tabularDatasetList)
@@ -631,8 +764,6 @@ export default {
     .selected-table-mark {
       fill: grey;
       fill-opacity: 30%;
-      stroke: lightslategrey;
-      stroke-width: 0.2px;
       cursor: cell;
     }
     .selected-table-mark-text {
@@ -643,8 +774,6 @@ export default {
     .chosen-table-mark {
       fill: lightskyblue;
       fill-opacity: 30%;
-      stroke: lightslategrey;
-      stroke-width: 0.2px;
       cursor: cell;
     }
     .chosen-table-mark-text {
@@ -655,15 +784,27 @@ export default {
     .hovered-table-mark {
       fill:steelblue;
       fill-opacity: 30%;
-      stroke: lightslategrey;
-      stroke-width: 0.2px;
       cursor:pointer;
     }
-    .hovered-table-mark-text {
-      fill:black;
-      font-size:105%;
-      text-anchor: middle;
-      cursor: pointer;
+    .hovered-column-mark-line {
+      cursor: col-resize;
+    }
+    .hovered-row-mark-line {
+      cursor: row-resize;
+    }
+    .column-mark-line {
+      stroke: lightslategrey;
+      stroke-width: 0.2px;
+      cursor:col-resize;
+    }
+    .row-mark-line {
+      stroke: lightslategrey;
+      stroke-width: 0.2px;
+      cursor:row-resize;
+    }
+    .table-mark-long-line {
+      stroke: black;
+      stroke-width: 0.2px;
     }
     .table-cell {
       fill: white;
@@ -673,7 +814,7 @@ export default {
     }
     .header-table-cell {
       fill: lightgrey;
-      fill-opacity: 30%;
+      fill-opacity: 15%;
       stroke: lightslategrey;
       stroke-width: 0.2px;
       cursor: cell;
@@ -688,16 +829,16 @@ export default {
       stroke: steelblue;
       fill: steelblue;
       fill-opacity: 10%;
-      stroke-width: 2px;
+      stroke-width: 1.5px;
       cursor: cell;
     }      
     .highlight-line {
       stroke: steelblue;
-      stroke-width: 2px;
+      stroke-width: 1.5px;
     }
     .header-line {
       stroke: grey;
-      stroke-width: 0.8px;
+      stroke-width: 1px;
     }
   }
 }
