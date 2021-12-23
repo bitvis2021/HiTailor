@@ -161,36 +161,20 @@
 
       <g class="table-mark-long-line">
         <!-- column mark long line -->
-        <g v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'column'">
-          <line
-            :x1="cellWidth + markWidthRangeList[mouseDownMarkLine.index]"
-            :x2="cellWidth + markWidthRangeList[mouseDownMarkLine.index]"
-            :y1="cellHeight"
-            :y2="cellHeight + markHeightRangeList[markHeightRangeList.length-1]">
-          </line>
-          <line
-            :x1="cellWidth + markWidthRangeList[mouseDownMarkLine.index+1]"
-            :x2="cellWidth + markWidthRangeList[mouseDownMarkLine.index+1]"
-            :y1="cellHeight"
-            :y2="cellHeight + markHeightRangeList[markHeightRangeList.length-1]">
-          </line>
-        </g>
+        <line v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'column'"
+          :x1="cellWidth + markWidthRangeList[mouseDownMarkLine.index+1]"
+          :x2="cellWidth + markWidthRangeList[mouseDownMarkLine.index+1]"
+          :y1="cellHeight"
+          :y2="cellHeight + markHeightRangeList[markHeightRangeList.length-1]">
+        </line>
 
         <!-- row mark long line -->
-        <g v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'row'">
-          <line
-            :x1="cellWidth"
-            :x2="cellWidth + markWidthRangeList[markWidthRangeList.length-1]"
-            :y1="cellHeight + markHeightRangeList[mouseDownMarkLine.index]"
-            :y2="cellHeight + markHeightRangeList[mouseDownMarkLine.index]">
-          </line>
-          <line
-            :x1="cellWidth"
-            :x2="cellWidth + markWidthRangeList[markWidthRangeList.length-1]"
-            :y1="cellHeight + markHeightRangeList[mouseDownMarkLine.index+1]"
-            :y2="cellHeight + markHeightRangeList[mouseDownMarkLine.index+1]">
-          </line>
-        </g>
+        <line v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'row'"
+          :x1="cellWidth"
+          :x2="cellWidth + markWidthRangeList[markWidthRangeList.length-1]"
+          :y1="cellHeight + markHeightRangeList[mouseDownMarkLine.index+1]"
+          :y2="cellHeight + markHeightRangeList[mouseDownMarkLine.index+1]">
+        </line>
       </g>
 
     </svg>
@@ -508,10 +492,6 @@ export default {
       this.mouseOverMark.type = type
       console.log(index, type)
     },
-    // handle_mouse_over_mark_line(index, type) {
-    //   this.mouseDownMarkLine.index = index
-    //   this.mouseDownMarkLine.type = type
-    // },
     handle_mouse_out_mark() {
       this.mouseOverMark = {index:null, type:null}
     },
@@ -765,8 +745,7 @@ export default {
       cursor: cell;
     }
     .selected-table-mark {
-      fill: grey;
-      fill-opacity: 30%;
+      fill: rgb(213, 215, 218);
       cursor: cell;
     }
     .selected-table-mark-text {
@@ -775,8 +754,7 @@ export default {
       text-anchor: middle;
     }
     .chosen-table-mark {
-      fill: lightskyblue;
-      fill-opacity: 30%;
+      fill: rgb(204, 231, 243);
       cursor: cell;
     }
     .chosen-table-mark-text {
@@ -785,8 +763,7 @@ export default {
       text-anchor: middle;
     }
     .hovered-table-mark {
-      fill:steelblue;
-      fill-opacity: 30%;
+      fill:rgb(173, 199, 223);
       cursor:pointer;
     }
     .hovered-table-mark-text {
@@ -806,7 +783,7 @@ export default {
     }
     .table-mark-long-line {
       stroke: black;
-      stroke-width: 0.2px;
+      stroke-width: 0.4px;
     }
     .table-cell {
       fill: white;
@@ -816,7 +793,6 @@ export default {
     }
     .header-table-cell {
       fill: lightgrey;
-      fill-opacity: 15%;
       stroke: lightslategrey;
       stroke-width: 0.2px;
       cursor: cell;
@@ -830,8 +806,8 @@ export default {
     }
     .selected-area {
       stroke: steelblue;
-      fill: steelblue;
-      fill-opacity: 10%;
+      fill: rgb(186, 219, 228);
+      fill-opacity: 20%;
       stroke-width: 1.5px;
       cursor: cell;
     }      
