@@ -1,90 +1,110 @@
 <template>
-  <div id="app" v-if="!loadingData">
+    <div id="app" v-if="!loadingData"> 
     <el-menu
-        class="el-menu-demo"
-        mode="horizontal"
-        background-color="#676767"
-        text-color="#fff"
-        :default-active="activeIndex"
-        active-text-color="#ffd04b">
-        <el-menu-item class='labelIcon' id="title">
-          {{appName}}
+      class="el-menu-demo"
+      mode="horizontal"
+      background-color="#676767"
+      text-color="#fff"
+      :default-active="activeIndex"
+      active-text-color="#ffd04b"
+    >
+      <el-menu-item class="labelIcon" id="title">
+        {{ appName }}
+      </el-menu-item>
+      <el-tooltip
+        class="labelIcon"
+        v-for="operation in operationArray"
+        :key="operation"
+        :content="operation"
+        effect="light"
+      >
+        <el-menu-item
+          :index="operation"
+          @click="changeDialogVisible(operation)"
+        >
+          {{ operation }}
         </el-menu-item>
-        <el-tooltip class='labelIcon' v-for="operation in operationArray" 
-          :key="operation" :content="operation" effect="light">
-          <el-menu-item :index="operation" @click="changeDialogVisible(operation)">
-            {{operation}}
-          </el-menu-item>
-        </el-tooltip>
+      </el-tooltip>
     </el-menu>
-    <div class = "content-container">
-      <TableView></TableView>
+    <div class="content-container">
+      <VisView></VisView>
     </div>
-    <el-dialog title="Dataset" id="dataset-dialog" :visible.sync="datasetDialogVisible">
+    <div class="content-container">
+      <TableView></TableView> 
+    </div>
+    <el-dialog
+      title="Dataset"
+      id="dataset-dialog"
+      :visible.sync="datasetDialogVisible"
+    >
       <DataDialog
         :datasetDialogKey="datasetDialogKey"
-        @closeDataDialog="closeDataDialog">
+        @closeDataDialog="closeDataDialog"
+      >
       </DataDialog>
     </el-dialog>
   </div>
 </template>
 
 <script>
-
-import TableView from './views/TableView.vue'
-import { getTabularDataset } from '@/communication/communicator.js'
-import { Dataset } from '@/dataset/dataset.js'
-import DataDialog from '@/views/dialogs/DataDialog.vue'
+import TableView from "./views/TableView.vue";
+import VisView from "./views/VisView.vue";
+import { getTabularDataset } from "@/communication/communicator.js";
+import { Dataset } from "@/dataset/dataset.js";
+import DataDialog from "@/views/dialogs/DataDialog.vue";
 
 export default {
-  name: 'app',
+  name: "app",
   components: {
-    TableView, DataDialog
+    VisView,
+    TableView,
+    DataDialog,
   },
   data() {
     return {
       appName: "TableVis",
-      operationArray: ['dataset'],
-      activeIndex: '',
+      operationArray: ["dataset"],
+      activeIndex: "",
       datasetDialogVisible: false,
       datasetDialogKey: 0,
-      loadingData: true
-    }
+      loadingData: true,
+    };
   },
-  beforeMount: function() {
-    let self = this
-    window.sysDatasetObj = new Dataset()
-    let tabularDataDeferObj = $.Deferred()
-    $.when(tabularDataDeferObj).then(function() {
-      self.loadingData = false
-    })
-    let tabularDataList = ['*']
+  beforeMount: function () {
+    let self = this;
+    window.sysDatasetObj = new Dataset();
+    let tabularDataDeferObj = $.Deferred();
+    $.when(tabularDataDeferObj).then(function () {
+      self.loadingData = false;
+    });
+    let tabularDataList = ["*"];
     // initialize the tabular dataset
-    getTabularDataset(tabularDataList, function(processed_tabular_datalist_str) {
-      let processed_tabular_datalist = JSON.parse(processed_tabular_datalist_str)
-      console.log('processed_tabular_datalist', processed_tabular_datalist)
-      sysDatasetObj.updateTabularDatasetList(processed_tabular_datalist)
-      tabularDataDeferObj.resolve()
-    })
+    getTabularDataset(
+      tabularDataList,
+      function (processed_tabular_datalist_str) {
+        let processed_tabular_datalist = JSON.parse(
+          processed_tabular_datalist_str
+        );
+        console.log("processed_tabular_datalist", processed_tabular_datalist);
+        sysDatasetObj.updateTabularDatasetList(processed_tabular_datalist);
+        tabularDataDeferObj.resolve();
+      }
+    );
   },
-  mounted: function() {
-    
-  },
+  mounted: function () {},
   methods: {
     iconClass(operation) {
-      return 'icon-' + operation
+      return "icon-" + operation;
     },
-    closeDataDialog() {
-
-    },
+    closeDataDialog() {},
     changeDialogVisible(panel_name) {
-      console.log('panel_name', panel_name)
+      console.log("panel_name", panel_name);
       if (panel_name === "dataset") {
-        this.datasetDialogVisible=true
+        this.datasetDialogVisible = true;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="less">
@@ -93,7 +113,7 @@ html {
 }
 @menu-height: 2.5rem;
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -122,11 +142,14 @@ html {
     font-size: 1rem;
   }
   .content-container {
-    position: absolute;
+    // position: absolute;
     top: @menu-height;
     left: 0%;
     bottom: 0%;
     right: 0%;
+  }
+  svg:not(:root){
+    overflow: visible;
   }
 }
 </style>

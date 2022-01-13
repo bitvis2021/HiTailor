@@ -191,7 +191,6 @@
                 }
             }
         },
-        //  传递选择的项目
         updateSelectedTreeDatasetName: function (selectedFileName) {
             this.$emit('updateSelectedTreeDatasetName', selectedFileName)
         },
