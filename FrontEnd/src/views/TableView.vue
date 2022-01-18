@@ -292,25 +292,9 @@ export default {
 
       selectByMark: {row:false, column:false},
 
-      headerFixedFlag: {column:false, row:false},
-      rowHeaderRange: {top:null, right:null},
-      columnHeaderRange: {left:null, bottom:null},
-      rowValueOffset: null,
-
-      colHeader: null,
-      rowHeader: null,
-      headerDistribution: null,
-      num2header: null,
-      header2num: null,
-      num2seq: null,
-      seq2num: null,
-      valueIndex: 0,
-      headerIndex: 0,
-      colHeaderIndex: 0, // column headers' indexes starts from 0
-      rowHeaderIndex: 100,  // row headers' indexes starts from 100
-      newHeaderIndex: 200, // new headers' indexes starts from 200
-      // colHeaderStart: null,
-
+      rowHeaderRight: null,
+      columnHeaderBottom: null,
+      
     }
   },
 
