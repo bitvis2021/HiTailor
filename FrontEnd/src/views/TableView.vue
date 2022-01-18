@@ -292,9 +292,25 @@ export default {
 
       selectByMark: {row:false, column:false},
 
-      rowHeaderRight: null,
-      columnHeaderBottom: null,
-      
+      headerFixedFlag: {column:false, row:false},
+      rowHeaderRange: {top:null, right:null},
+      columnHeaderRange: {left:null, bottom:null},
+      // rowValueOffset: null,
+
+      colHeader: null,
+      rowHeader: null,
+      headerDistribution: null,
+      num2header: null,
+      header2num: null,
+      num2seq: null,
+      seq2num: null,
+      valueIndex: 0,
+      headerIndex: 0,
+      colHeaderIndex: 0, // column headers' indexes starts from 0
+      rowHeaderIndex: 100,  // row headers' indexes starts from 100
+      newHeaderIndex: 200, // new headers' indexes starts from 200
+      // colHeaderStart: null,
+
     }
   },
 
@@ -504,7 +520,7 @@ export default {
         // this.get_row_header()
         this.headerFixedFlag.row = true
       }
-      this.modify_header_cell_structure(type)
+      // this.modify_header_cell_structure(type)
       if (this.headerFixedFlag.row && this.headerFixedFlag.column) {    // both column and row headers are fixed, change valuecells to header sequences
         this.get_column_header()
         this.get_row_header()
@@ -533,7 +549,7 @@ export default {
               this.rowDistributionList[r][ci-1].end = this.rowDistributionList[r][ci].end
               this.rowDistributionList[r].splice(ci, 1)
               this.dataValueList[r].splice(ci, 1)
-              this.rowValueOffset[r] += 1
+              // this.rowValueOffset[r] += 1
             }
           }
         }  
@@ -545,8 +561,8 @@ export default {
 
       for (var row=this.columnHeaderRange.bottom+1; row<this.rowHeightList.length; row++) {
         for (var col=this.rowHeaderRange.right+1; col<this.columnWidthList.length; col++) {
-          var value = this.dataValueList[row][col-this.rowValueOffset[row]]
-          // var value = this.dataValueList[row][col]
+          // var value = this.dataValueList[row][col-this.rowValueOffset[row]]
+          var value = this.dataValueList[row][col]
           // console.log("row, col, value", row, col, value)
           var seq = []
           //column header
@@ -588,7 +604,14 @@ export default {
         }
                 
         for (var j=sindex, len=this.rowDistributionList[i].length; j<len; j++) {
-          var name = (this.dataValueList[i][j] == 'None') ? ' ' : this.dataValueList[i][j]
+          // var name = (this.dataValueList[i][j] == 'None') ? ' ' : this.dataValueList[i][j]
+          var name = this.dataValueList[i][j]
+          if (name == 'None') {
+            var lastRange = this.colHeader[i][this.colHeader[i].length-1][1].range.pop()
+            lastRange[lastRange.length-1].end += 1
+            this.colHeader[i][this.colHeader[i].length-1][1].range.push(lastRange) 
+            continue
+          }
           var start = this.rowDistributionList[i][j].start, end = this.rowDistributionList[i][j].end
           var attributes
           
@@ -617,7 +640,7 @@ export default {
 
           attributes.range.push({"start":start, "end":end})
           if (i>0) {  // first layer doesn't have parents
-            attributes.parent.push(this.find_column_header_parent(name, i, start, end))
+            attributes.parent.push(this.find_header_parent(name, start, end, this.rowHeader[i-1]))
           }
           items.set(name, attributes)
           this.headerIndex += 1
@@ -638,12 +661,54 @@ export default {
     get_row_header() {
       this.headerIndex = this.rowHeaderIndex
       this.rowHeader = []
-      for (var j=0; j<this.rowHeaderRange.right; j++) {
-        
+      for (var j=0; j<=this.rowHeaderRange.right; j++) {
+        var items = new Map
+        for (var i=this.rowHeaderRange.top; i<this.rowHeightList.length; i++) {
+          var name = this.dataValueList[i][j]
+          if (name == 'None') {
+            var lastRange = this.rowHeader[j][this.rowHeader[j].length-1][1].range.pop()
+            lastRange[lastRange.length-1].end += 1
+            this.rowHeader[j][this.rowHeader[j].length-1][1].range.push(lastRange) 
+            continue
+          }
+          var start = i, end = i
+          var attributes
+
+          if (!items.has(name)) {  // a new header
+            this.headerDistribution.set(name, {"isRowHeader":true, "layer":j, "count":1})
+            this.num2header.set(this.headerIndex, {"value":name, "times":0})
+            this.header2num.set(name, [])
+
+            attributes = new Object
+            attributes.range = []
+            attributes.cellNum = end - start + 1
+            attributes.children = []
+            attributes.parent = []
+            attributes.isFullyConn = true
+          }
+          else {
+            var tmp = this.headerDistribution.get(name)
+            tmp.count += 1
+            this.num2header.set(this.headerIndex, {"value":name, "times":tmp.count-1})
+            this.headerDistribution.set(name, tmp) 
+            attributes = items.get(name)
+          }
+          var tmpindex = this.header2num.get(name)
+          tmpindex.push(this.headerIndex)
+          this.header2num.set(name, tmpindex)
+
+          attributes.range.push({"start":start, "end":end})
+          if (j>0) {  // first layer doesn't have parents
+            attributes.parent.push(this.find_header_parent(name, start, end, this.rowHeader[j-1]))
+          }
+          items.set(name, attributes)
+          this.headerIndex += 1
+        }
+        this.roeHeader.push(items)
       }
     },
-    find_column_header_parent(name, rindex, cstart, cend) {
-      var parentLayer = this.colHeader[rindex-1], parent
+    find_column_header_parent(name, cstart, cend, parentLayer) {
+      var parent
       for (let [key, value] of parentLayer) {
         var ranges = value.range, findFlag = false
         for (var i=0, len=ranges.length; i<len; i++) {
@@ -763,7 +828,7 @@ export default {
     this.markRowHeightList = []
     this.markHeightRangeList = []
     this.dataValueList = []
-    this.rowValueOffset = []
+    // this.rowValueOffset = []
     this.headerDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
@@ -812,7 +877,7 @@ export default {
       }
       this.rowDistributionList.push(r)
       this.dataValueList.push(rvalue)
-      this.rowValueOffset.push(0)
+      // this.rowValueOffset.push(0)
     }
 
     this.cal_range_list(this.columnWidthList, "width")
