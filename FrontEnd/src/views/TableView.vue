@@ -295,8 +295,10 @@ export default {
       headerFixedFlag: {column:false, row:false},
       rowHeaderRange: {top:null, right:null},
       columnHeaderRange: {left:null, bottom:null},
+      rowValueOffset: null,
 
       colHeader: null,
+      rowHeader: null,
       headerDistribution: null,
       num2header: null,
       header2num: null,
@@ -509,7 +511,7 @@ export default {
       if (type == 'column') {
         this.columnHeaderRange.bottom = this.selectedArea.bottom
         this.columnHeaderRange.left = (this.rowHeaderRange.right!=null) ? (this.rowHeaderRange.right+1) : this.selectedArea.left
-        this.get_column_header()
+        // this.get_column_header()
         this.headerFixedFlag.column = true
       }
       else {
@@ -518,11 +520,12 @@ export default {
         // this.get_row_header()
         this.headerFixedFlag.row = true
       }
+      this.modify_header_cell_structure(type)
       if (this.headerFixedFlag.row && this.headerFixedFlag.column) {    // both column and row headers are fixed, change valuecells to header sequences
-        console.log(this.rowHeaderRange.right)
+        this.get_column_header()
+        this.get_row_header()
         this.get_cell_sequence()
       }
-      this.modify_header_cell_structure(type)
     },
     modify_header_cell_structure(type) {
       if (type == 'column') {
@@ -541,10 +544,12 @@ export default {
         for (var r=0, len=this.rowDistributionList.length; r<len; r++) {
           for (var c=1; c<=this.rowHeaderRange.right; c++) {
             var ci = this.cal_column_index(r, c)
-            if (this.dataValueList[r][ci] == 'None') {
+
+            if (this.dataValueList[r][ci] == 'None' && this.dataValueList[r][ci-1] != 'None') {
               this.rowDistributionList[r][ci-1].end = this.rowDistributionList[r][ci].end
               this.rowDistributionList[r].splice(ci, 1)
               this.dataValueList[r].splice(ci, 1)
+              this.rowValueOffset[r] += 1
             }
           }
         }  
@@ -556,7 +561,9 @@ export default {
 
       for (var row=this.columnHeaderRange.bottom+1; row<this.rowHeightList.length; row++) {
         for (var col=this.rowHeaderRange.right+1; col<this.columnWidthList.length; col++) {
-          var value = this.dataValueList[row][col]
+          var value = this.dataValueList[row][col-this.rowValueOffset[row]]
+          // var value = this.dataValueList[row][col]
+          // console.log("row, col, value", row, col, value)
           var seq = []
           //column header
           for (var i=0; i<this.colHeader.length; i++) { // find header in each row
@@ -597,11 +604,7 @@ export default {
         }
                 
         for (var j=sindex, len=this.rowDistributionList[i].length; j<len; j++) {
-          var name = this.dataValueList[i][j]
-          if (name == 'None') {
-            this.columnHeaderRange.left += 1
-            continue
-          }
+          var name = (this.dataValueList[i][j] == 'None') ? ' ' : this.dataValueList[i][j]
           var start = this.rowDistributionList[i][j].start, end = this.rowDistributionList[i][j].end
           var attributes
           
@@ -637,10 +640,23 @@ export default {
         }
         this.colHeader.push(items)
       }
+      for (var i=0; i<this.colHeader.length; i++) {
+        for (var item of this.colHeader[i].values()) {
+          item.range = []
+        }
+      }
+      this.cal_header_range()
       console.log("colHeader", this.colHeader)
       console.log("headerDistribution", this.headerDistribution)
       console.log("header2num",this.header2num)
       console.log("num2header",this.num2header)
+    },
+    get_row_header() {
+      this.headerIndex = this.rowHeaderIndex
+      this.rowHeader = []
+      for (var j=0; j<this.rowHeaderRange.right; j++) {
+        
+      }
     },
     find_column_header_parent(name, rindex, cstart, cend) {
       var parentLayer = this.colHeader[rindex-1], parent
@@ -763,7 +779,7 @@ export default {
     this.markRowHeightList = []
     this.markHeightRangeList = []
     this.dataValueList = []
-
+    this.rowValueOffset = []
     this.headerDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
@@ -812,6 +828,7 @@ export default {
       }
       this.rowDistributionList.push(r)
       this.dataValueList.push(rvalue)
+      this.rowValueOffset.push(0)
     }
 
     this.cal_range_list(this.columnWidthList, "width")
