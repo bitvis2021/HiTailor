@@ -26,7 +26,7 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-    <div class="content-container">
+    <div>
       <VisView></VisView>
     </div>
     <div class="content-container">
