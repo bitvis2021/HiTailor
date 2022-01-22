@@ -26,11 +26,12 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-    <div>
-      <VisView></VisView>
-    </div>
     <div class="content-container">
       <TableView></TableView> 
+    </div>
+    <div>
+      <VisView visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
+      <!-- 到时候学学axois怎么json对应url转化为对象 -->
     </div>
     <el-dialog
       title="Dataset"

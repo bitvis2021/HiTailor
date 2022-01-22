@@ -1,7 +1,14 @@
 <template>
   <!-- <div id="view"> -->
   <div>
-  <panel-view></panel-view>
+    <el-button type="primary" @click="isShowPanel = !isShowPanel"
+      >显示面板</el-button
+    >
+    <div id="chart" hidden="hidden"></div>
+    <el-button style="margin:10px" type="primary" v-on:click="GenFig(visHeight, 200, visX, visY)"
+      >镶嵌</el-button
+    >
+    <panel-view v-show="isShowPanel" ref="sendName"></panel-view>
   </div>
 </template>
 
@@ -9,42 +16,106 @@
 import * as vega from "vega";
 import * as vegalite from "vega-lite";
 import vegaEmbed from "vega-embed";
-import PanelView from "./vis/PanelView"
+import PanelView from "./vis/PanelView";
 
 export default {
   name: "VisView",
-  props: {},
-  components:{
-    PanelView
+  components: {
+    PanelView,
+  },
+  props: {
+    visData: {
+      type: [Object, String],
+      required: true,
+    },
+    visHeight: {
+      type: Number,
+      default: 200,
+    },
+    visWidth: {
+      type: Number,
+      default: 200,
+    },
+    visX: {
+      type: Number,
+      default: 0,
+    },
+    visY: {
+      type: Number,
+      default: 0,
+    },
   },
   data() {
     return {
+      isShowPanel: false,
+
       chartDec: {
         data: {
-          url: "http://localhost:8081/seattle-weather.csv",
+          url: this.visData,
         },
-        mark: "line",
+        mark: "point",
         encoding: {
-          x: { field: "date", axis: { labels: false, ticks: false, title: null}},
-          y: { field: "precipitation", type: "quantitative" ,axis: { labels: false, ticks: false, title: null}}, // 需要的数据格式：csv
+          x: {
+            field: "Flipper Length (mm)",
+            type: "quantitative",
+            scale: { zero: false },
+            axis: { labels: false, ticks: false, title: null },
+          },
+          y: {
+            field: "Body Mass (g)",
+            type: "quantitative",
+            scale: { zero: false },
+            axis: { labels: false, ticks: false, title: null },
+          },
+          color: { field: "Species", type: "nominal", legend: false },
+          shape: { field: "Species", type: "nominal", legend: false },
         },
       },
     };
   },
   methods: {
-    // chart: specify height, width
-    chart(height, width) {
-      this.chartDec.height = height;
-      this.chartDec.width = width;
-      vegaEmbed("#view", this.chartDec,{renderer:"svg"});
+    GenFig(height, width, x, y) {
+      this.chartDec.height=height;
+      this.chartDec.width=width;
+      vegaEmbed("#chart", this.chartDec, { renderer: "svg" }).then(() => {
+        let pic =
+          document.getElementById("chart").childNodes[0].childNodes[0]
+            .childNodes[0].childNodes[0].childNodes[0];
+        let target = document.getElementsByClassName("table-view-svg")[0];
+
+        pic.setAttribute("transform", "translate(" + x + "," + y + ")");
+        pic.childNodes[0].setAttribute("style", "fill:white");
+        target.appendChild(pic);
+
+      });
     },
-    // todo: functions to modify chart object's model
+    GetName(d){
+      console.log('父组件收到了',d)
+    }
   },
-  mounted: function () {
-    this.chart(300,200);
+  mounted() {
+    this.$bus.$on('set-param',(data)=>{
+      console.log('heelo');
+    })
+    this.$refs.sendName.$on('send-name',(data)=>console.log("父接收到了",data))
   },
+  beforeDestroy() {
+    this.$bus.$off('set-param');
+  }
 };
 </script>
 
 <style>
+#panel {
+  width: 20%;
+  height: 30%;
+  margin: 30px;
+  padding: 20px;
+  background-color: whitesmoke;
+  filter: drop-shadow(5px 5px 10px #00000055);
+  border-radius: 10px;
+}
+#chart {
+  display: none;
+}
 </style>
