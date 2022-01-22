@@ -30,7 +30,7 @@
       <TableView></TableView> 
     </div>
     <div>
-      <VisView visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
+      <VisView style="transform:translate(200px,-210px);" visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
       <!-- 到时候学学axois怎么json对应url转化为对象 -->
     </div>
     <el-dialog
@@ -109,6 +109,8 @@ export default {
 </script>
 
 <style lang="less">
+
+
 html {
   font-size: 100%;
 }

@@ -5,10 +5,17 @@
       >显示面板</el-button
     >
     <div id="chart" hidden="hidden"></div>
-    <el-button style="margin:10px" type="primary" v-on:click="GenFig(visHeight, 200, visX, visY)"
+    <el-button
+      style="margin: 10px"
+      type="primary"
+      v-on:click="GenFig(visHeight, 200, visX, visY)"
       >镶嵌</el-button
     >
-    <panel-view v-show="isShowPanel" ref="sendName"></panel-view>
+    <panel-view
+      ref="updateConfig"
+      v-show="isShowPanel"
+      :vegaData="chartDec"
+    ></panel-view>
   </div>
 </template>
 
@@ -75,8 +82,8 @@ export default {
   },
   methods: {
     GenFig(height, width, x, y) {
-      this.chartDec.height=height;
-      this.chartDec.width=width;
+      this.chartDec.height = height;
+      this.chartDec.width = width;
       vegaEmbed("#chart", this.chartDec, { renderer: "svg" }).then(() => {
         let pic =
           document.getElementById("chart").childNodes[0].childNodes[0]
@@ -86,35 +93,24 @@ export default {
         pic.setAttribute("transform", "translate(" + x + "," + y + ")");
         pic.childNodes[0].setAttribute("style", "fill:white");
         target.appendChild(pic);
-
       });
     },
-    GetName(d){
-      console.log('父组件收到了',d)
-    }
+    GetName(d) {
+      console.log("父组件收到了", d);
+    },
   },
   mounted() {
-    this.$bus.$on('set-param',(data)=>{
-      console.log('heelo');
-    })
-    this.$refs.sendName.$on('send-name',(data)=>console.log("父接收到了",data))
+    this.$refs.updateConfig.$on("update-config", (data) => {
+      this.isShowPanel = false;
+      this.chartDec=data;
+      this.GenFig(this.visHeight,this.visWidth,this.visX,this.visY);
+    });
   },
-  beforeDestroy() {
-    this.$bus.$off('set-param');
-  }
+  beforeDestroy() {},
 };
 </script>
 
 <style>
-#panel {
-  width: 20%;
-  height: 30%;
-  margin: 30px;
-  padding: 20px;
-  background-color: whitesmoke;
-  filter: drop-shadow(5px 5px 10px #00000055);
-  border-radius: 10px;
-}
 #chart {
   display: none;
 }
