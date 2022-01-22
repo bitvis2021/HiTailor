@@ -1,15 +1,29 @@
 <template>
   <div class="table-view">
-    <button class="button" id="row-header-button"
-      @click="choose_header('row')" > 
-      row header 
-    </button>
+      <button v-if="!(headerFixedFlag.row && headerFixedFlag.column)"
+        class="button" id="row-header-button"
+        @click="choose_header('row')" > 
+        row header 
+      </button>
 
-    <button id="column-header-button"
-      class="button" 
-      @click="choose_header('column')" > 
-      column header 
-    </button>
+      <button v-if="!(headerFixedFlag.row && headerFixedFlag.column)"
+        id="column-header-button"
+        class="button" 
+        @click="choose_header('column')" > 
+        column header 
+      </button>
+
+      <button v-if="headerFixedFlag.row && headerFixedFlag.column"
+        class="transform-button"
+        @click="transform_transpose()" > 
+        transpose
+      </button>
+
+      <button v-if="headerFixedFlag.row && headerFixedFlag.column"
+        class="transform-button"
+        @click="transform_swap()" > 
+        swap
+      </button>
     
     <svg class="table-view-svg"
       @mouseup="handle_mouse_up()"
@@ -28,14 +42,12 @@
               y="0" 
               :width="widthRangeList[rowDistributionList[rowindex][columnindex].end+1] - widthRangeList[rowDistributionList[rowindex][columnindex].start]"
               :height="rowHeightList[rowindex]"
-              @mousedown="handle_mouse_down(rowindex, columnindex)"
-            >
+              @mousedown="handle_mouse_down(rowindex, columnindex)">
             </rect>
             <text v-if="dataValueList[rowindex][columnindex] != 'None'"
               class="table-cell-text"
               :x="widthRangeList[rowDistributionList[rowindex][columnindex].start] + textPaddingX" :y="textPaddingY"
-              @mousedown="handle_mouse_down(rowindex, columnindex)"
-            >
+              @mousedown="handle_mouse_down(rowindex, columnindex)">
               {{dataValueList[rowindex][columnindex]}}
             </text>
           </g>
@@ -47,13 +59,6 @@
       <g v-if="headerFixedFlag.column">
         <g v-for="(item,index) in num2header" :key="item.index"
           v-if="!headerDistribution.get(item[1].value).isRowHeader">
-          <!--
-          <rect class="header-table-cell"
-            :x="markWidth + widthRangeList[columnHeaderRange.left + colHeader[headerDistribution.get(item[1].value).layer].get(item[1].value).range[item[1].times].start]"
-            :y="markHeight + heightRangeList[headerDistribution.get(item[1].value).layer]"
-            :width="widthRangeList[colHeader[headerDistribution.get(item[1].value).layer].get(item[1].value).range[item[1].times].start + colHeader[headerDistribution.get(item[1].value).layer].get(item[1].value).cellNum] - widthRangeList[colHeader[headerDistribution.get(item[1].value).layer].get(item[1].value).range[item[1].times].start]"
-            :height="heightRangeList[headerDistribution.get(item[1].value).layer+1] - heightRangeList[headerDistribution.get(item[1].value).layer]">
-          </rect> -->
           <rect class="header-table-cell"
             :x="cal_column_header_position(item[1].value, item[1].times).x"
             :y="cal_column_header_position(item[1].value, item[1].times).y"
@@ -94,7 +99,6 @@
             :y="markHeight + heightRangeList[cal_value_cell_position(item[1].seq).row]"
             :width="widthRangeList[cal_value_cell_position(item[1].seq).col+1] - widthRangeList[cal_value_cell_position(item[1].seq).col]"
             :height="rowHeightList[cal_value_cell_position(item[1].seq).row]">
-            
           </rect>
           <text class="table-cell-text"
             :x="markWidth + widthRangeList[cal_value_cell_position(item[1].seq).col] + textPaddingX"
@@ -105,7 +109,7 @@
       </g>
 
       <!-- selected area -->
-      <rect class="selected-area"
+      <rect v-if="!(headerFixedFlag.row && headerFixedFlag.column)" class="selected-area"
         :x="markWidth + widthRangeList[selectedArea.left]" 
         :y="markHeight + heightRangeList[selectedArea.top]" 
         :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
@@ -238,11 +242,6 @@
         :y1="markHeight + heightRangeList[columnHeaderRange.bottom+1]"
         :y2="markHeight + heightRangeList[columnHeaderRange.bottom+1]">
       </line>
-
-      
-
-      
-
     </svg>
   </div>
 </template>
@@ -317,7 +316,6 @@ export default {
       rowHeaderIndex: 100,  // row headers' indexes starts from 100
       newHeaderIndex: 200, // new headers' indexes starts from 200
       // colHeaderStart: null,
-
     }
   },
 
@@ -534,6 +532,50 @@ export default {
           this.colHeader, this.rowHeader, this.num2seq, this.seq2num, this.valueIndex)
       }
     },    
+    transform_transpose() {
+      for (var i=0; i<this.colHeader.length; i++) {
+        for (var item of this.colHeader[i]) {
+          var header = item[0]
+          this.headerDistribution.get(header).isRowHeader = true
+        }
+      }
+      for (var i=0; i<this.rowHeader.length; i++) {
+        for (var item of this.rowHeader[i]) {
+          var header = item[0]
+          this.headerDistribution.get(header).isRowHeader = false
+        }
+      }
+
+      var tmp = this.colHeader
+      this.colHeader = this.rowHeader
+      this.rowHeader = tmp
+
+      if (this.columnWidthList.length > this.rowHeightList.length) {
+        var tmp = this.columnWidthList.length
+        this.markColumnWidthList.length = this.rowHeightList.length
+
+        for (var i=this.rowHeightList.length; i<tmp; i++) {
+          this.markRowHeightList.push(this.cellHeight)
+        }
+      }      
+      else if (this.columnWidthList.length < this.rowHeightList.length) {
+        var tmp = this.rowHeightList.length
+        this.markRowHeightList.length = this.columnWidthList.length
+
+        for (var i=this.columnWidthList.length; i<tmp; i++) {
+          this.markColumnWidthList.push(this.cellWidth)
+        }
+      }
+      this.columnWidthList = this.markColumnWidthList
+      this.rowHeightList = this.markRowHeightList
+      this.widthChangeSignal = !this.widthChangeSignal
+      this.markWidthChangeSignal = !this.markWidthChangeSignal
+      this.heightChangeSignal = !this.heightChangeSignal
+      this.markHeightChangeSignal= !this.markHeightChangeSignal
+    },
+    transform_swap() {
+      
+    },
     handle_drag() {
       console.log("ininin")
     },
@@ -570,7 +612,15 @@ export default {
           }
         }
         cal_header_range(this.colHeader)
-      }
+      },
+      rowHeader: function() {
+        for (var i=0; i<this.rowHeader.length; i++) {
+          for (var item of this.rowHeader[i].values()) {
+            item.range = []
+          }
+        }
+        cal_header_range(this.rowHeader)
+      },
   },
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList
@@ -666,7 +716,7 @@ export default {
         var curHeaderPos = {x:null, y:null, width:null, height:null}
         curHeaderPos.x = this.markWidth + this.widthRangeList[this.rowHeaderRange.right+1 + start]
         curHeaderPos.y = this.markHeight + this.heightRangeList[rindex]
-        curHeaderPos.width = this.widthRangeList[start+span] - this.widthRangeList[start]
+        curHeaderPos.width = this.widthRangeList[this.rowHeaderRange.right+1+start+span] - this.widthRangeList[this.rowHeaderRange.right+1+start]       
         curHeaderPos.height = this.rowHeightList[rindex]
         return curHeaderPos
       }
@@ -680,8 +730,8 @@ export default {
         var curHeaderPos = {x:null, y:null, width:null, height:null}
         curHeaderPos.x = this.markWidth + this.widthRangeList[cindex]
         curHeaderPos.y = this.markHeight + this.heightRangeList[this.columnHeaderRange.bottom+1 + start]
-        curHeaderPos.width = this.widthRangeList[cindex+1] - this.widthRangeList[cindex]
-        curHeaderPos.height = this.heightRangeList[start+span] - this.heightRangeList[start]
+        curHeaderPos.width = this.columnWidthList[cindex]       
+        curHeaderPos.height = this.heightRangeList[this.columnHeaderRange.bottom+1+start+span] - this.heightRangeList[this.columnHeaderRange.bottom+1+start]
         return curHeaderPos
       }
     },
@@ -755,6 +805,10 @@ export default {
     margin-top: 1%;
   }
   #column-header-button {
+    margin-top: 1%;
+    margin-left: 1%;
+  }
+  .transform-button {
     margin-top: 1%;
     margin-left: 1%;
   }
