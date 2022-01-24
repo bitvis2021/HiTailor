@@ -29,8 +29,8 @@
     <div class="content-container">
       <TableView></TableView> 
     </div>
-    <div>
-      <VisView style="transform:translate(200px,-210px);" visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
+    <div class="side-panel">
+      <VisView  visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
       <!-- 到时候学学axois怎么json对应url转化为对象 -->
     </div>
     <el-dialog
@@ -153,6 +153,12 @@ html {
   }
   svg:not(:root){
     overflow: visible;
+  }
+  .side-panel{
+    right: 0%;
+    left: 75%;
+    top: @menu-height;
+    position: absolute;
   }
 }
 </style>

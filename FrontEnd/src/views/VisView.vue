@@ -1,21 +1,14 @@
 <template>
-  <!-- <div id="view"> -->
   <div>
-    <el-button type="primary" @click="isShowPanel = !isShowPanel"
-      >显示面板</el-button
-    >
-    <div id="chart" hidden="hidden"></div>
-    <el-button
-      style="margin: 10px"
-      type="primary"
-      v-on:click="GenFig(visHeight, 200, visX, visY)"
-      >镶嵌</el-button
-    >
-    <panel-view
-      ref="updateConfig"
-      v-show="isShowPanel"
-      :vegaData="chartDec"
-    ></panel-view>
+    <div id="gen-chart" style="display: none"></div>
+    <div id="vis-view">
+      <div id="chart"></div>
+      <panel-view
+        ref="updateConfig"
+        v-show="isShowPanel"
+        :vegaData="chartDec"
+      ></panel-view>
+    </div>
   </div>
 </template>
 
@@ -24,6 +17,7 @@ import * as vega from "vega";
 import * as vegalite from "vega-lite";
 import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView";
+import { flush } from "vega";
 
 export default {
   name: "VisView",
@@ -54,7 +48,7 @@ export default {
   },
   data() {
     return {
-      isShowPanel: false,
+      isShowPanel: true,
 
       chartDec: {
         data: {
@@ -84,14 +78,19 @@ export default {
     GenFig(height, width, x, y) {
       this.chartDec.height = height;
       this.chartDec.width = width;
-      vegaEmbed("#chart", this.chartDec, { renderer: "svg" }).then(() => {
+      vegaEmbed("#gen-chart", this.chartDec, {
+        renderer: "svg",
+        actions: false,
+      }).then(() => {
         let pic =
-          document.getElementById("chart").childNodes[0].childNodes[0]
-            .childNodes[0].childNodes[0].childNodes[0];
+          document.getElementById("gen-chart").childNodes[0].childNodes[0];
         let target = document.getElementsByClassName("table-view-svg")[0];
 
         pic.setAttribute("transform", "translate(" + x + "," + y + ")");
-        pic.childNodes[0].setAttribute("style", "fill:white");
+        pic.childNodes[0].childNodes[0].childNodes[0].setAttribute(
+          "style",
+          "fill:white"
+        );
         target.appendChild(pic);
       });
     },
@@ -100,18 +99,26 @@ export default {
     },
   },
   mounted() {
+    // this.GenFig(this.visHeight,this.visWidth,this.visX,this.visY);
     this.$refs.updateConfig.$on("update-config", (data) => {
-      this.isShowPanel = false;
-      this.chartDec=data;
-      this.GenFig(this.visHeight,this.visWidth,this.visX,this.visY);
+      // this.isShowPanel = false;
+      this.chartDec = data;
+      this.GenFig(this.visHeight, this.visWidth, this.visX, this.visY);
     });
+    this.chartDec.height = 200;
+    this.chartDec.width = 300;
+    vegaEmbed("#chart", this.chartDec, { renderer: "svg", actions: false });
   },
   beforeDestroy() {},
 };
 </script>
 
 <style>
+#vis-view {
+  background-color: white;
+  padding: 0px 10px 0px 10px;
+}
 #chart {
-  display: none;
+  margin-top: 3%;
 }
 </style>
