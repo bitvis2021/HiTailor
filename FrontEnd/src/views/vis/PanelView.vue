@@ -5,19 +5,26 @@
         <el-button type="text" size="medium" @click="ApplyConfig()"
           >Apply</el-button
         >
-        <el-button
-          id="add-layer"
-          type="text"
-          icon="el-icon-circle-plus"
-          @click="addTab(editableTabsValue)"
-          >Add layer</el-button
-        >
+        <el-dropdown id="add-layer">
+          <el-button
+            type="text"
+            icon="el-icon-arrow-down"
+            @click="AddTab(editableTabsValue)"
+            >Add Layer</el-button
+          >
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item><div class="el-icon-circle-plus"></div> Rule</el-dropdown-item>
+            <el-dropdown-item><div class="el-icon-circle-plus"></div> Bar</el-dropdown-item>
+            <el-dropdown-item><div class="el-icon-circle-plus"></div> Line</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </div>
       <el-tabs
         v-model="editableTabsValue"
         type="card"
         closable
-        @edit="handleTabsEdit"
+        v-if="this.tabIndex > 1"
+        @tab-remove="CloseTab"
       >
         <el-tab-pane
           :key="item.name"
@@ -25,180 +32,74 @@
           :label="item.title"
           :name="item.name"
         >
+          <layer-view :index="index" :parent="vegaData"></layer-view>
         </el-tab-pane>
       </el-tabs>
-      <div class="layer">
-        <div class="encodings">
-          Mark
-          <br />
-          type
-          <el-select v-model="vegaConfig.mark" placeholder="Select">
-            <el-option
-              v-for="(item, index) in mark"
-              :key="index"
-              :label="item"
-              :value="item"
-            >
-            </el-option>
-          </el-select>
-        </div>
-        <br />
-        <div class="encodings">
-          <div class="encoding">
-            X
-            <br />
-            <div class="property">
-              field
-              <el-select
-                v-model="vegaConfig.encoding.x.field"
-                placeholder="Select"
-              >
-                <el-option
-                  v-for="(item, index) in field"
-                  :key="index"
-                  :label="item"
-                  :value="item"
-                >
-                </el-option>
-              </el-select>
-              <br />
-            </div>
 
-            <el-dropdown size="mini" split-button>
-              Add property
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item>scale</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </div>
-
-          <hr />
-
-          <div class="encoding">
-            Y
-            <br />
-            <div class="property">
-              field
-              <el-select
-                v-model="vegaConfig.encoding.y.field"
-                placeholder="Select"
-              >
-                <el-option
-                  v-for="(item, index) in field"
-                  :key="index"
-                  :label="item"
-                  :value="item"
-                ></el-option
-              ></el-select>
-              <br />
-            </div>
-
-            <el-dropdown size="mini" split-button>
-              Add property
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item>scale</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </div>
-        </div>
-        <el-dropdown class="property">
-          <span class="el-dropdown-link">
-            <i class="el-icon-circle-plus"></i> Add Encoding
-          </span>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>黄金糕</el-dropdown-item>
-            <el-dropdown-item>狮子头</el-dropdown-item>
-            <el-dropdown-item>螺蛳粉</el-dropdown-item>
-            <el-dropdown-item disabled>双皮奶</el-dropdown-item>
-            <el-dropdown-item divided>蚵仔煎</el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
-      </div>
+      <layer-view v-if="this.tabIndex <= 1"></layer-view>
     </div>
   </div>
 </template>
 <script>
 import ElementUI from "element-ui";
+import LayerView from "./LayerView.vue";
 
 export default {
+  components: { LayerView },
   name: "PanelView",
-  props: {
-    vegaData: {
-      type: Object,
-    },
-  },
+  props: {},
   data() {
     return {
-      value1: 10,
-      mark: ["bar", "point", "line"],
-      selected_mark: "",
-      field: [
-        "Species",
-        "Island",
-        "Beak Length (mm)",
-        "Beak Depth (mm)",
-        "Flipper Length (mm)",
-        "Body Mass (g)",
-        "Sex",
-      ],
-      type: ["quantitavie", "temporal", "ordinal", "nomianl"],
-      vegaConfig: this.vegaData,
-      editableTabsValue: "2",
-      editableTabs: [
-        {
-          title: "Tab 1",
-          name: "1",
-          content: "Tab 1 content",
-        },
-        {
-          title: "Tab 2",
-          name: "2",
-          content: "Tab 2 content",
-        },
-      ],
-      tabIndex: 2,
+      editableTabs: [],
+      tabIndex: 0,
+      vegaData: this.$parent.chartDec,
     };
   },
   methods: {
     ApplyConfig() {
-      console.log("update-config");
-      this.$emit("update-config", this.vegaConfig);
+      this.$bus.$emit("apply-config", this.vegaData);
     },
-    addTab(targetName) {
-      let newTabName = ++this.tabIndex + "";
+    AddTab(targetName) {
+      let newTabName = "layer" + ++this.tabIndex;
       this.editableTabs.push({
-        title: "New Tab",
+        title: newTabName,
         name: newTabName,
-        content: "New Tab content",
       });
       this.editableTabsValue = newTabName;
-    },
-    handleTabsEdit(targetName, action) {
-      if (action === "add") {
-        let newTabName = ++this.tabIndex + "";
-        this.editableTabs.push({
-          title: "New Tab",
-          name: newTabName,
-          content: "New Tab content",
-        });
-        this.editableTabsValue = newTabName;
-      }
-      if (action === "remove") {
-        let tabs = this.editableTabs;
-        let activeName = this.editableTabsValue;
-        if (activeName === targetName) {
-          tabs.forEach((tab, index) => {
-            if (tab.name === targetName) {
-              let nextTab = tabs[index + 1] || tabs[index - 1];
-              if (nextTab) {
-                activeName = nextTab.name;
-              }
-            }
-          });
-        }
+      if (this.tabIndex == 1) {
+        // json not having layer to having layer
+        this.vegaData.layer = [
+          { mark: this.vegaData.mark, encoding: this.vegaData.encoding },
+        ];
+        delete this.vegaData.mark;
+        delete this.vegaData.encoding;
 
-        this.editableTabsValue = activeName;
-        this.editableTabs = tabs.filter((tab) => tab.name !== targetName);
+        this.vegaData.layer.push({ mark: "point" });
+
+        this.AddTab(newTabName);
+      }
+    },
+    CloseTab(name) {
+      this.tabIndex = this.tabIndex - 1;
+      let delIndex = this.editableTabs.length;
+      for (let index = 0; index < this.editableTabs.length; index++) {
+        if (this.editableTabs[index].name === name) {
+          delIndex = index;
+        }
+        if (index > delIndex) {
+          let newTabName = "layer" + index;
+          this.editableTabs[index].title = newTabName;
+          this.editableTabs[index].name = newTabName;
+        }
+      }
+      this.editableTabs.splice(delIndex, 1);
+
+      // json having layer to not having layer
+      if (this.tabIndex == 1) {
+        this.vegaData.mark = this.vegaData.layer[0].mark;
+        this.vegaData.encoding = this.vegaData.layer[0].encoding;
+        delete this.vegaData.layer;
+        this.CloseTab(this.editableTabs[0].name);
       }
     },
   },
@@ -216,16 +117,7 @@ export default {
   border-radius: 10px;
   text-align: left;
 }
-.encodings {
-  border-color: rgb(200, 203, 210);
-  border-style: solid;
-  border-width: thin;
-  // padding-left: 3%;
-  // padding-right: 3%;
-  // padding-top: 2%;
-  // padding-bottom: 2%;
-  border-radius: 10px;
-}
+
 .encoding {
   padding: 1%;
 }

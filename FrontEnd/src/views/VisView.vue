@@ -4,9 +4,8 @@
     <div id="vis-view">
       <div id="chart"></div>
       <panel-view
-        ref="updateConfig"
+        ref="apply Config"
         v-show="isShowPanel"
-        :vegaData="chartDec"
       ></panel-view>
     </div>
   </div>
@@ -17,7 +16,6 @@ import * as vega from "vega";
 import * as vegalite from "vega-lite";
 import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView";
-import { flush } from "vega";
 
 export default {
   name: "VisView",
@@ -100,22 +98,25 @@ export default {
   },
   mounted() {
     // this.GenFig(this.visHeight,this.visWidth,this.visX,this.visY);
-    this.$refs.updateConfig.$on("update-config", (data) => {
-      // this.isShowPanel = false;
+    this.$bus.$on("apply-config", (data) => {
       this.chartDec = data;
       this.GenFig(this.visHeight, this.visWidth, this.visX, this.visY);
     });
+
     this.chartDec.height = 200;
     this.chartDec.width = 300;
     vegaEmbed("#chart", this.chartDec, { renderer: "svg", actions: false });
   },
-  beforeDestroy() {},
+  beforeDestroy() {
+    this.$bus.$off("apply-config");
+  },
 };
 </script>
 
 <style>
 #vis-view {
   background-color: white;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5);
   padding: 0px 10px 0px 10px;
 }
 #chart {
