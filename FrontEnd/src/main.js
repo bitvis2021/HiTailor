@@ -17,5 +17,8 @@ window.$ = $
 
 new Vue({
   store,
-  render: h => h(App)
+  render: h => h(App),
+  beforeCreate() {
+    Vue.prototype.$bus=this; // Installing Gloabal event bus
+  }
 }).$mount('#app')

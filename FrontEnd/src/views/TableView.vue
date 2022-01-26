@@ -119,7 +119,8 @@
       </rect>
       
       <!-- row mark -->
-      <g v-for="(row, rowindex) in rowHeightList" :key="row.index"> 
+      <g v-for="(row, rowindex) in rowHeightList" :key="row.index">  
+        <!-- rowHeightList -->
         <rect 
           :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row'), 
             'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row'),
@@ -623,11 +624,11 @@ export default {
       },
   },
   beforeMount: function() {
-    this.tabularDatasetList = sysDatasetObj.tabularDatasetList
+    this.tabularDatasetList = sysDatasetObj.tabularDatasetList 
     this.rowDistributionList = []
     this.columnWidthList = []
     this.widthRangeList = []
-    this.rowHeightList = []
+    this.rowHeightList = [] 
     this.heightRangeList = []
     this.markColumnWidthList = []
     this.markWidthRangeList = []
