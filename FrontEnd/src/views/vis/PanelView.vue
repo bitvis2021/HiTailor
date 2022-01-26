@@ -13,9 +13,18 @@
             >Add Layer</el-button
           >
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item><div class="el-icon-circle-plus"></div> Rule</el-dropdown-item>
-            <el-dropdown-item><div class="el-icon-circle-plus"></div> Bar</el-dropdown-item>
-            <el-dropdown-item><div class="el-icon-circle-plus"></div> Line</el-dropdown-item>
+            <el-dropdown-item
+              ><div class="el-icon-circle-plus"></div>
+              Rule</el-dropdown-item
+            >
+            <el-dropdown-item
+              ><div class="el-icon-circle-plus"></div>
+              Bar</el-dropdown-item
+            >
+            <el-dropdown-item
+              ><div class="el-icon-circle-plus"></div>
+              Line</el-dropdown-item
+            >
           </el-dropdown-menu>
         </el-dropdown>
       </div>
@@ -43,21 +52,22 @@
 <script>
 import ElementUI from "element-ui";
 import LayerView from "./LayerView.vue";
+import { mapState } from "vuex";
 
 export default {
   components: { LayerView },
   name: "PanelView",
-  props: {},
   data() {
     return {
       editableTabs: [],
       tabIndex: 0,
-      vegaData: this.$parent.chartDec,
     };
+  },
+  computed: { ...mapState(["currentVegaJson"]),
   },
   methods: {
     ApplyConfig() {
-      this.$bus.$emit("apply-config", this.vegaData);
+      this.$bus.$emit("apply-config",500,200,0,0);
     },
     AddTab(targetName) {
       let newTabName = "layer" + ++this.tabIndex;
@@ -68,13 +78,13 @@ export default {
       this.editableTabsValue = newTabName;
       if (this.tabIndex == 1) {
         // json not having layer to having layer
-        this.vegaData.layer = [
-          { mark: this.vegaData.mark, encoding: this.vegaData.encoding },
+        this.currentVegaJson.layer = [
+          { mark: this.currentVegaJson.mark, encoding: this.currentVegaJson.encoding },
         ];
-        delete this.vegaData.mark;
-        delete this.vegaData.encoding;
+        delete this.currentVegaJson.mark;
+        delete this.currentVegaJson.encoding;
 
-        this.vegaData.layer.push({ mark: "point" });
+        this.currentVegaJson.layer.push({ mark: "point" });
 
         this.AddTab(newTabName);
       }
@@ -96,9 +106,9 @@ export default {
 
       // json having layer to not having layer
       if (this.tabIndex == 1) {
-        this.vegaData.mark = this.vegaData.layer[0].mark;
-        this.vegaData.encoding = this.vegaData.layer[0].encoding;
-        delete this.vegaData.layer;
+        this.currentVegaJson.mark = this.currentVegaJson.layer[0].mark;
+        this.currentVegaJson.encoding = this.currentVegaJson.layer[0].encoding;
+        delete this.currentVegaJson.layer;
         this.CloseTab(this.editableTabs[0].name);
       }
     },

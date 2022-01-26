@@ -107,17 +107,18 @@ export default {
         "Sex",
       ],
       type: ["quantitavie", "temporal", "ordinal", "nomianl"],
-      //   layerConfig: this.$parent.vegaData, // 这个是直接在父组件上进行更改的
+
       editableTabsValue: "2",
     };
   },
   methods: {},
   computed: {
+    ...mapState(['currentVegaJson']),
     layerConfig() {
       if (this.index == undefined) {
-        return this.$parent.vegaData;
+        return this.currentVegaJson;
       } else {
-        return this.$parent.$parent.$parent.vegaData.layer[this.index];
+        return this.currentVegaJson.layer[this.index];
       }
     },
   },

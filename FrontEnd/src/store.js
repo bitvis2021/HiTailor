@@ -10,10 +10,10 @@ export default new Vuex.Store({
   },
   mutations: {
     ['UPDATE_DISPLAY_MODE'] (state, displayMode) {
-      state.displayMode = displayMode
+      state.displayMode = displayMode;
     },
-    ['UPDATE_CURRENT_VEGA_JSON'] (state, currentVegaJson) {
-      state.currentVegaJson = currentVegaJson
+    ['UPDATE_CURRENT_VEGA_JSON'] (state, newVegaJson) {
+      state.currentVegaJson = newVegaJson;
     }
   },
   actions: {
