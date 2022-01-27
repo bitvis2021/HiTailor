@@ -5,28 +5,16 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-  	displayMode: 'vis',
-    currentVegaJson:{},
+  	displayMode: 'vis'
   },
   mutations: {
     ['UPDATE_DISPLAY_MODE'] (state, displayMode) {
-      state.displayMode = displayMode
-    },
-    ['UPDATE_CURRENT_VEGA_JSON'] (state, currentVegaJson) {
-      state.currentVegaJson = currentVegaJson
+      state.displayMode = displayMode;
     }
   },
   actions: {
 
   },
   getters:{
-    getLayer:(state,layerIndex)=>{
-      if (layerIndex==undefined) {
-        return this.currentVegaJson;
-      }
-      else{
-        return this.currentVegaJson['layer'][layerIndex];
-      }
-    }
   }
 })
