@@ -3,7 +3,7 @@
     <div id="gen-chart" style="display: none"></div>
     <div id="vis-view">
       <div id="chart"></div>
-      <panel-view v-show="isShowPanel"></panel-view>
+      <panel-view></panel-view>
     </div>
   </div>
 </template>
@@ -11,47 +11,17 @@
 <script>
 import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView";
-import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "VisView",
   components: {
     PanelView,
   },
-  computed: {
-    ...mapState(["currentVegaJson"]),
-  },
+  computed: {},
   data() {
-    return {
-      isShowPanel: true,
-
-      chartDec: {
-        data: {
-          url: "http://localhost:8080/penguins.json",
-        },
-        mark: "point",
-        encoding: {
-          x: {
-            field: "Flipper Length (mm)",
-            type: "quantitative",
-            scale: { zero: false },
-            axis: { labels: false, ticks: false, title: null },
-          },
-          y: {
-            field: "Body Mass (g)",
-            type: "quantitative",
-            scale: { zero: false },
-            axis: { labels: false, ticks: false, title: null },
-          },
-          color: { field: "Species", type: "nominal", legend: false },
-          shape: { field: "Species", type: "nominal", legend: false },
-        },
-      },
-    };
+    return {};
   },
   methods: {
-    ...mapMutations(["UPDATE_CURRENT_VEGA_JSON"]),
-
     GenFig(height, width, x, y, chartJson) {
       chartJson.height = height;
       chartJson.width = width;
@@ -71,11 +41,9 @@ export default {
       });
     },
   },
-  mounted() {
-    this.UPDATE_CURRENT_VEGA_JSON(this.chartDec);
-
-    this.$bus.$on("apply-config", (visHeight,visWidth,visX,visY) => {
-      this.GenFig(visHeight, visWidth, visX, visY, this.currentVegaJson);
+  beforeCreate() {
+    this.$bus.$on("apply-config", (visHeight, visWidth, visX, visY, data) => {
+      this.GenFig(visHeight, visWidth, visX, visY, data);
     });
 
     this.$bus.$on("preview-config", (data) => {
@@ -85,10 +53,10 @@ export default {
         renderer: "svg",
         actions: false,
       });
+      
     });
-    
-    this.$bus.$emit("preview-config", JSON.parse(JSON.stringify(this.currentVegaJson)));
   },
+  mounted() {},
   beforeDestroy() {
     this.$bus.$off("apply-config");
     this.$bus.$off("preview-config");

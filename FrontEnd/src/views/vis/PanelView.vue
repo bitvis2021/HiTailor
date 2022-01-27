@@ -1,58 +1,13 @@
 <template>
   <div>
     <div id="panel">
-      <div class="property">
-        <el-button type="text" size="medium" @click="ApplyConfig()"
-          >Apply</el-button
-        >
-        <el-dropdown id="add-layer">
-          <el-button
-            type="text"
-            icon="el-icon-arrow-down"
-            @click="AddTab(editableTabsValue)"
-            >Add Layer</el-button
-          >
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item
-              ><div class="el-icon-circle-plus"></div>
-              Rule</el-dropdown-item
-            >
-            <el-dropdown-item
-              ><div class="el-icon-circle-plus"></div>
-              Bar</el-dropdown-item
-            >
-            <el-dropdown-item
-              ><div class="el-icon-circle-plus"></div>
-              Line</el-dropdown-item
-            >
-          </el-dropdown-menu>
-        </el-dropdown>
-      </div>
-      <el-tabs
-        v-model="editableTabsValue"
-        type="card"
-        closable
-        v-if="this.tabIndex > 1"
-        @tab-remove="CloseTab"
-      >
-        <el-tab-pane
-          :key="item.name"
-          v-for="(item, index) in editableTabs"
-          :label="item.title"
-          :name="item.name"
-        >
-          <layer-view :index="index" :parent="vegaData"></layer-view>
-        </el-tab-pane>
-      </el-tabs>
-
-      <layer-view v-if="this.tabIndex <= 1"></layer-view>
+     
     </div>
   </div>
 </template>
 <script>
 import ElementUI from "element-ui";
 import LayerView from "./LayerView.vue";
-import { mapState } from "vuex";
 
 export default {
   components: { LayerView },
@@ -60,16 +15,37 @@ export default {
   data() {
     return {
       editableTabs: [],
-      tabIndex: 0,
+      editableTabsValue: "",
+      chartDec: {
+        data: {
+          url: "http://localhost:8080/penguins.json",
+        },
+        mark: "point",
+        encoding: {
+          x: {
+            field: "Flipper Length (mm)",
+            type: "quantitative",
+            scale: { zero: false },
+            axis: { labels: false, ticks: false, title: null },
+          },
+          y: {
+            field: "Body Mass (g)",
+            type: "quantitative",
+            scale: { zero: false },
+            axis: { labels: false, ticks: false, title: null },
+          },
+          color: { field: "Species", type: "nominal", legend: false },
+          shape: { field: "Species", type: "nominal", legend: false },
+        },
+      },
     };
   },
-  computed: { ...mapState(["currentVegaJson"]),
-  },
+  computed: {},
   methods: {
     ApplyConfig() {
-      this.$bus.$emit("apply-config",500,200,0,0);
+      this.$bus.$emit("apply-config", 500, 200, 0, 0);
     },
-    AddTab(targetName) {
+    AddTab() {
       let newTabName = "layer" + ++this.tabIndex;
       this.editableTabs.push({
         title: newTabName,
@@ -79,7 +55,10 @@ export default {
       if (this.tabIndex == 1) {
         // json not having layer to having layer
         this.currentVegaJson.layer = [
-          { mark: this.currentVegaJson.mark, encoding: this.currentVegaJson.encoding },
+          {
+            mark: this.currentVegaJson.mark,
+            encoding: this.currentVegaJson.encoding,
+          },
         ];
         delete this.currentVegaJson.mark;
         delete this.currentVegaJson.encoding;
@@ -113,14 +92,20 @@ export default {
       }
     },
   },
-  mounted() {},
+  mounted() {
+    // console.log('thischart',this.chartDec)
+    this.$bus.$emit(
+      "preview-config",
+      JSON.parse(JSON.stringify(this.chartDec))
+    );
+  },
 };
 </script>
 <style lang="less">
 #panel {
   // width: 100%;
   // height: 30%;
-  // margin: 0px 5px 0px 5px;
+  margin: 0px 5px 0px 5px;
   padding: 0px 5px 0px 5px;
   // background-color: white;
   // filter: drop-shadow(5px 5px 10px #00000055);
