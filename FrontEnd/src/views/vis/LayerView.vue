@@ -1,18 +1,7 @@
 <template>
   <div class="layer">
     <div class="encodings">
-      Mark
-      <br />
-      type
-      <el-select v-model="layerConfig.mark" placeholder="Select">
-        <el-option
-          v-for="(item, index) in mark"
-          :key="index"
-          :label="item"
-          :value="item"
-        >
-        </el-option>
-      </el-select>
+      <mark-view :layer="this.layerConfig"></mark-view>
     </div>
     <br />
     <div v-if="'encoding' in layerConfig" class="encodings">
@@ -21,18 +10,18 @@
         <br />
         <div class="property">
           field
-          <el-select
+          <!-- <el-select
             v-model="layerConfig.encoding.x.field"
             placeholder="Select"
           >
             <el-option
-              v-for="(item, index) in field"
+              v-for="(item, index) in this.field"
               :key="index"
               :label="item"
               :value="item"
             >
             </el-option>
-          </el-select>
+          </el-select> -->
           <br />
         </div>
 
@@ -51,17 +40,17 @@
         <br />
         <div class="property">
           field
-          <el-select
+          <!-- <el-select
             v-model="layerConfig.encoding.y.field"
             placeholder="Select"
           >
             <el-option
-              v-for="(item, index) in field"
+              v-for="(item, index) in this.field"
               :key="index"
               :label="item"
               :value="item"
             ></el-option
-          ></el-select>
+          ></el-select> -->
           <br />
         </div>
 
@@ -88,14 +77,15 @@
   </div>
 </template>
 <script>
-import { mapState, mapMutations } from 'vuex';
+import { mapState, mapMutations } from "vuex";
+import MarkView from "./MarkView.vue";
 export default {
   name: "LayerView",
-  props: { index: { type: Number }, parent: { type: Object } },
+  props: { index: { type: Number } },
+  components: { MarkView },
   data() {
     return {
       value1: 10,
-      mark: ["bar", "point", "line"],
       selected_mark: "",
       field: [
         "Species",
@@ -107,13 +97,16 @@ export default {
         "Sex",
       ],
       type: ["quantitavie", "temporal", "ordinal", "nomianl"],
-
-      editableTabsValue: "2",
+      editableTabsValue: "2"
     };
   },
-  methods: {},
+  methods: {
+  },
   computed: {
-    ...mapState(['currentVegaJson']),
+    ...mapState(["currentVegaJson"]),
+    getIndex() {
+      return this.index;
+    },
     layerConfig() {
       if (this.index == undefined) {
         return this.currentVegaJson;
@@ -122,7 +115,6 @@ export default {
       }
     },
   },
-  mounted() {},
 };
 </script>
 <style lang="less">
