@@ -1,7 +1,7 @@
 <template>
   <div>
     <div id="panel">
-     
+      <layer-view></layer-view>
     </div>
   </div>
 </template>
