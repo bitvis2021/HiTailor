@@ -26,11 +26,18 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
+
+    <el-radio-group v-if="isHeaderFixed"
+      class="change-view-button" v-model="currView" size="medium">
+      <el-radio-button label="transformation"></el-radio-button>
+      <el-radio-button label="visualization"></el-radio-button>
+    </el-radio-group>
+    
     <div class="content-container">
-      <TableView></TableView> 
+      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
     </div>
     <div class="side-panel">
-      <VisView  visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
+      <VisView  v-show="currView=='visualization'" visData='http://localhost:8080/penguins.json' :visX=0 :visY=0 :visHeight="200" :visWidth="300"></VisView> 
       <!-- 到时候学学axois怎么json对应url转化为对象 -->
     </div>
     <el-dialog
@@ -69,6 +76,9 @@ export default {
       datasetDialogVisible: false,
       datasetDialogKey: 0,
       loadingData: true,
+      
+      isHeaderFixed: false,
+      currView: "transformation",
     };
   },
   beforeMount: function () {
@@ -104,7 +114,10 @@ export default {
         this.datasetDialogVisible = true;
       }
     },
-  },
+    change_is_header_fixed(state) {
+      this.isHeaderFixed = state
+    },
+  }
 };
 </script>
 
@@ -140,6 +153,9 @@ html {
         color: #dadada !important;
       }
     }
+  }
+  .change-view-button {
+    margin-top: 1%;
   }
   .labelIcon {
     font-size: 1rem;

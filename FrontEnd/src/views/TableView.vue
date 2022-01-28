@@ -1,39 +1,50 @@
 <template>
   <div class="table-view">
     <div v-if="!(headerFixedFlag.row && headerFixedFlag.column)">
-      <button class="button" id="row-header-button"
+      <el-button class="button" id="row-header-button"
         @click="choose_header('row')" > 
         row header 
-      </button>
+      </el-button>
 
-      <button class="button" id="column-header-button"    
+      <el-button class="button" id="column-header-button"    
         @click="choose_header('column')" > 
         column header 
-      </button>
+      </el-button>
     </div>
 
     <div v-if="headerFixedFlag.row && headerFixedFlag.column">
-      <button  class="button"
-       @click="toTransformationView()">
+      <!-- <button  class="button"
+       @click="to_trans_view()">
         transformation
       </button>
       <button  class="button"
-        @click="toVisualizationView">
+        @click="to_vis_view()">
         visualization
-      </button>
-
-       <div v-if="isTransformView">
-        <button 
+      </button> -->
+ 
+      <div v-if="isTransformView">
+        <el-button type="primary" plain 
           class="button"
           @click="transform_transpose()" > 
           transpose
-        </button>
-        <button 
+        </el-button>
+        <el-button type="primary" plain 
           class="button"
-          @click="transform_swap()" > 
+          @click="transform_swap('FALL 2001', colHeader, false)" > 
           swap
-        </button>
+        </el-button>
       </div>
+
+      <div v-if="!isTransformView">
+        <el-button type="primary" plain 
+          class="button"
+          @click="transmit_data_to_vis()" > 
+          transmit data
+        </el-button>
+      </div>
+
+
+
     </div>
 
    
@@ -71,7 +82,7 @@
       <!-- column header-->
       <g v-if="headerFixedFlag.column">
         <g v-for="item in num2header" :key="item.index"
-          v-if="!headerDistribution.get(item[1].value).isRowHeader">
+          v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
           <rect class="header-table-cell"
             :x="cal_column_header_position(item[1].value, item[1].times).x"
             :y="cal_column_header_position(item[1].value, item[1].times).y"
@@ -88,7 +99,7 @@
       <!-- row header-->
       <g v-if="headerFixedFlag.row">
         <g v-for="item in num2header" :key="item.index"
-          v-if="headerDistribution.get(item[1].value).isRowHeader">
+          v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
           <rect class="header-table-cell"
             :x="cal_row_header_position(item[1].value, item[1].times).x"
             :y="cal_row_header_position(item[1].value, item[1].times).y"
@@ -128,16 +139,7 @@
         @mousedown="handle_mouse_down_mask($event)">
       </rect>
       
-      <!-- selected area -->
-      <rect v-if="!isTransformView"
-        class="selected-area"
-        :x="markWidth + widthRangeList[selectedArea.left]" 
-        :y="markHeight + heightRangeList[selectedArea.top]" 
-        :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
-        :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
-        @mousedown="handle_mouse_down_selected($event)"
-      >
-      </rect>
+
       
       <!-- row mark -->
       <g v-for="(row, rowindex) in rowHeightList" :key="row.index">  
@@ -232,6 +234,17 @@
         :y2="markHeight">
       </line>
 
+      <!-- selected area -->
+      <rect v-if="!(headerFixedFlag.row && headerFixedFlag.column) || (headerFixedFlag.row && headerFixedFlag.column && !isTransformView)"
+        class="selected-area"
+        :x="markWidth + widthRangeList[selectedArea.left]" 
+        :y="markHeight + heightRangeList[selectedArea.top]" 
+        :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
+        :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
+        @mousedown="handle_mouse_down_selected($event)"
+      >
+      </rect>
+
       <g class="table-mark-long-line">
         <!-- column mark long line -->
         <line v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'column'"
@@ -274,6 +287,8 @@
 export default {
   name: 'TableView',
   props: {
+    "isHeaderFixed": Boolean,
+    "isTransformView": Boolean
   },
   data() {
     return {
@@ -326,6 +341,7 @@ export default {
       colHeader: null,
       rowHeader: null,
       headerDistribution: null,
+      valueDistribution: null,
       num2header: null,
       header2num: null,
       num2seq: null,
@@ -336,7 +352,11 @@ export default {
       rowHeaderIndex: 100,  // row headers' indexes starts from 100
       newHeaderIndex: 200, // new headers' indexes starts from 200
 
-      isTransformView: false
+      colHeaderChangeSignal: true,
+      rowHeaderChangeSignal: true,
+
+      // isTransformView: false
+      childIsTransformView: this.isTransformView
     }
   },
 
@@ -375,7 +395,7 @@ export default {
       res += String.fromCharCode(65+(index % 26))
       return res
     },
-    cal_mouse_over_cell(x, y, isHeaderFixed=false) {
+    cal_mouse_over_cell(x, y, headerFixed=false) {
       x = x - this.markWidth
       y = y - this.markHeight
 
@@ -406,7 +426,7 @@ export default {
       }
       this.mouseOverCell.ccurrent = columnindex
 
-      if (!isHeaderFixed) {
+      if (!headerFixed) {
         var row, column
         row = rowindex
         for (column=0, len=this.rowDistributionList[rowindex].length; column<len; column++) {
@@ -610,17 +630,17 @@ export default {
         get_cell_sequence(this.headerRange, this.rowHeightList, this.columnWidthList, this.dataValueList,
           this.colHeader, this.rowHeader, this.num2seq, this.seq2num, this.valueIndex)
         
-        this.toTransformationView()
+        this.$emit("changeHeaderFixed", true)
       }
     },  
-    toTransformationView() {
-      this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
-      this.selectedArea = {top:0, left:0, bottom:0, right:0}
-      this.selectedMark = {index:null, type:null}
-      this.selectByMark = {row:false, column:false}
+    // to_trans_view() {
+    //   this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
+    //   this.selectedArea = {top:0, left:0, bottom:0, right:0}
+    //   this.selectedMark = {index:null, type:null}
+    //   this.selectByMark = {row:false, column:false}
 
-      this.isTransformView = true
-    }, 
+    //   this.isTransformView = true
+    // }, 
     transform_transpose() {
       for (var i=0; i<this.colHeader.length; i++) {
         for (var item of this.colHeader[i]) {
@@ -668,11 +688,140 @@ export default {
       this.heightChangeSignal = !this.heightChangeSignal
       this.markHeightChangeSignal= !this.markHeightChangeSignal
     },
-    transform_swap() {
-      
+    transform_swap(name, header, isSwapUp) {
+      var distributionInfo = this.headerDistribution.get(name)
+      var currLayerNum = distributionInfo.layer
+      var upLayerNum, downLayerNum
+      if (isSwapUp && currLayerNum!=0) {
+        upLayerNum = currLayerNum - 1
+        downLayerNum = currLayerNum
+      }
+      else if(!isSwapUp && currLayerNum!=header.length-1) {
+        upLayerNum = currLayerNum
+        downLayerNum = currLayerNum + 1
+      }
+      else return
+
+      var new1st = Array.from(header[upLayerNum])[0][1].parent
+      var new2nd = Array.from(header[upLayerNum])[0][1].children
+      var new3rd = Array.from(header[downLayerNum])[0][1].parent
+      var new4th = Array.from(header[downLayerNum])[0][1].children
+
+      for (var item of header[upLayerNum]) {
+        item[1].parent = new2nd
+        item[1].children = new4th
+        header[upLayerNum].set(item[0], item[1])
+        var tmp = this.headerDistribution.get(item[0])
+        tmp.layer += 1
+        this.headerDistribution.set(item[0], tmp)
+      }
+      for (var item of header[downLayerNum]) {
+        item[1].parent = new1st
+        item[1].children = new3rd
+        header[downLayerNum].set(item[0], item[1])
+        var tmp = this.headerDistribution.get(item[0])
+        tmp.layer -= 1
+        this.headerDistribution.set(item[0], tmp)
+      }
+      if (new1st.length != 0) {
+        for (var item of header[upLayerNum-1]) {
+          item[1].children = new2nd
+          header[upLayerNum-1].set(item[0], item[1])
+        }
+      }
+      if (new4th.length != 0) {
+        for (var item of header[downLayerNum+1]) {
+          item[1].parent = new3rd
+          header[downLayerNum+1].set(item[0], item[1])
+        }
+      }
+
+      // swap position in header array
+      header[upLayerNum] = header.splice(downLayerNum, 1,  header[upLayerNum])[0]
+      // this.rowHeaderChangeSignal = !this.rowHeaderChangeSignal
+      // this.colHeaderChangeSignal = !this.colHeaderChangeSignal
+
+      // re-calculate header numbers
+      for (var item of header[upLayerNum]) {
+        var i
+        for (i=this.headerDistribution.get(item[0]).count; i<item[1].parent.length; i++) {
+          this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
+          var tmpindex = this.header2num.get(item[0])
+          tmpindex.push(this.newHeaderIndex++)
+          this.header2num.set(item[0], tmpindex)
+        }
+        this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
+      }
+      for (var item of header[downLayerNum]) {
+        var i
+        for (i=this.headerDistribution.get(item[0]).count; i<item[1].parent.length; i++) {
+          this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
+          var tmpindex = this.header2num.get(item[0])
+          tmpindex.push(this.newHeaderIndex++)
+          this.header2num.set(item[0], tmpindex)
+        }
+        this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
+      }
+
     },
-    toVisualizationView() {
-      this.isTransformView = false
+    // to_vis_view() {
+    //   this.isTransformView = false
+    // },
+    transmit_data_to_vis() {
+      var data = this.get_data_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+      var jsdata = this.gen_json_from_data(data)
+      var field = {}
+      for (var j=0; j<data[0].length; j++) {
+        if (j == data[0].length-1) {
+          field["value"] = "quantitative"
+        }
+        else {
+          var name = "attr" + (j+1)
+          field[name] = "nominal"
+        }
+      }
+      // console.log(field)
+
+      var x = this.markWidth + this.widthRangeList[this.selectedArea.left]
+      var y = this.markHeight + this.heightRangeList[this.selectedArea.top]
+      var width = this.widthRangeList[this.selectedArea.right+1] - this.widthRangeList[this.selectedArea.left]
+      var height= this.heightRangeList[this.selectedArea.bottom+1] - this.heightRangeList[this.selectedArea.top]
+      var pos = {"x":x, "y":y, "width":width, "height":height}
+
+      this.$bus.$emit('visualize-selectedData', pos, jsdata, field)
+    },
+    get_data_from_chosen(top, bottom, left, right) {
+      var res=[]
+      for (var i=top; i<=bottom; i++) {
+        for (var j=left; j<=right; j++) {
+          var pos = [i, j].toString()
+          var seq = this.valueDistribution.get(pos)
+          var value = this.seq2num.get(seq).value
+          seq.add(value)
+          res.push(Array.from(seq))
+        }
+      }
+      // console.log(res)
+      return res
+    },
+    gen_json_from_data(data) {
+      var res=[]
+      for (var i=0; i<data.length; i++) {
+        var obj={}
+        for (var j=0; j<data[i].length; j++) {
+          if (j == data[i].length-1) {
+            obj["value"] = data[i][j]
+          }
+          else {
+            var name = "attr" + (j+1)
+            obj[name] = data[i][j]
+          }
+        }
+        res.push(obj)
+      }
+      var js = JSON.stringify(res)
+    
+      return js
     },
     handle_drag() {
       console.log("ininin")
@@ -711,6 +860,14 @@ export default {
         }
         cal_header_range(this.colHeader)
       },
+      colHeaderChangeSignal: function() {
+        for (var i=0; i<this.colHeader.length; i++) {
+          for (var item of this.colHeader[i].values()) {
+            item.range = []
+          }
+        }
+        cal_header_range(this.colHeader)
+      },
       rowHeader: function() {
         for (var i=0; i<this.rowHeader.length; i++) {
           for (var item of this.rowHeader[i].values()) {
@@ -719,6 +876,21 @@ export default {
         }
         cal_header_range(this.rowHeader)
       },
+      rowHeaderChangeSignal: function() {
+        for (var i=0; i<this.rowHeader.length; i++) {
+          for (var item of this.rowHeader[i].values()) {
+            item.range = []
+          }
+        }
+        cal_header_range(this.rowHeader)
+      },
+      isTransformView: function() {
+        this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
+        this.selectedArea = {top:0, left:0, bottom:0, right:0}
+        this.selectedMark = {index:null, type:null}
+        this.selectByMark = {row:false, column:false}
+      }, 
+      
   },
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList 
@@ -733,6 +905,7 @@ export default {
     this.markHeightRangeList = []
     this.dataValueList = []
     this.headerDistribution = new Map
+    this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
 
@@ -878,7 +1051,8 @@ export default {
         if (rowIndex.start == rowIndex.end) {
           res.row = rowIndex.start + this.headerRange.bottom+1
         }        
-        
+        var key=[res.row, res.col].toString()
+        this.valueDistribution.set(key, seq)
         return res
       }
     },
@@ -904,11 +1078,10 @@ export default {
   }
   #column-header-button {
     margin-top: 1%;
-    margin-left: 1%;
   }
   .button {
     margin-top: 1%;
-    margin-left: 1%;
+
   }
   .table-view-svg {
     height: 100%;
