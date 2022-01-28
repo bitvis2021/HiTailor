@@ -1,7 +1,10 @@
 <template>
   <div class="layer">
-    {{ markJson }}
+    mark:{{ markJson }}
+    <br />
+    <br />
     <mark-view :config="markJson" v-on:apply-config="ApplyMark"></mark-view>
+    <encoding-view></encoding-view>
   </div>
 </template>
 <script>
@@ -13,7 +16,7 @@ export default {
   components: { MarkView, EncodingView },
   data() {
     return {
-      markJson: { type: "bar" },
+      markJson: "bar",
     };
   },
   methods: {

@@ -1,7 +1,5 @@
 <template>
   <div>
-    <br />
-    <br />
     Mark
     <el-row>
       type
@@ -15,13 +13,19 @@
         </el-option>
       </el-select>
     </el-row>
-    <vue-form
-      v-model="formData"
-      :schema="schema"
-      :form-props="this.formPops"
-      @on-change="ApplyConfig"
-      ><div></div
-    ></vue-form>
+    <div v-if="this.isMultipleProperty">
+      <vue-form
+        v-model="formData"
+        :schema="schema"
+        :form-props="this.formPops"
+        @on-change="ApplyConfig"
+        ><div></div
+      ></vue-form>
+    </div>
+    <el-button v-else type="text" @click="AddProperty"
+      ><div class="el-icon-circle-plus"></div>
+      Adjust Mark Property</el-button
+    >
   </div>
 </template>
 
@@ -36,6 +40,7 @@ export default {
   },
   data() {
     return {
+      isMultipleProperty: false,
       formData: {},
       markType: markType,
       type: "arc",
@@ -44,28 +49,41 @@ export default {
     };
   },
   methods: {
-    ChangeMark(data) {
-      this.$set(this.$data, "schema", new markConf[data]());
+    ChangeMark(mark) {
+      if (this.isMultipleProperty) {
+        this.ChangeForm(mark);
+      } else {
+        this.type = mark;
+        this.$emit("apply-config", this.type);
+      }
+    },
+    ChangeForm(mark) {
+      this.$set(this.$data, "schema", new markConf[mark]());
       this.$set(this.$data, "formData", {});
     },
+    // only multiple property can be applied
     ApplyConfig() {
-      console.log("hello");
       let markData = { type: this.type };
       for (const key in this.formData) {
         markData[key] = this.formData[key];
       }
       this.$emit("apply-config", markData);
     },
+    AddProperty() {
+      this.isMultipleProperty = true;
+      this.ChangeForm(this.type);
+    },
   },
   computed: {},
   mounted() {
-    console.log(this.config.type);
     if ("object" == typeof this.config) {
       this.type = this.config.type;
+      this.isMultipleProperty = true;
     } else {
       this.type = this.config;
+      this.isMultipleProperty = false;
     }
-    this.ChangeMark(this.type);
+    this.ChangeForm(this.type);
   },
 };
 </script>

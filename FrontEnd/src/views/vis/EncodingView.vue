@@ -1,14 +1,14 @@
 <template>
   <div>
-
+    Encoding
+    <br />
   </div>
 </template>
 <script>
 export default {
   name: "EncodingView",
   data() {
-    return {
-    };
+    return {};
   },
 };
 </script>
