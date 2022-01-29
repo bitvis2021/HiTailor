@@ -1,10 +1,7 @@
 <template>
   <div class="layer">
-    mark:{{ markJson }}
-    <br />
-    <br />
-    <mark-view :config="markJson" v-on:apply-config="ApplyMark"></mark-view>
-    <encoding-view></encoding-view>
+    <mark-view :config="this.markJson" v-on:apply-config="ApplyMark"></mark-view>
+    <encoding-view :config="this.encodingJson"></encoding-view>
   </div>
 </template>
 <script>
@@ -16,7 +13,8 @@ export default {
   components: { MarkView, EncodingView },
   data() {
     return {
-      markJson: "bar",
+      markJson: this.config.mark,
+      encodingJson:this.config.encoding,
     };
   },
   methods: {
@@ -28,10 +26,13 @@ export default {
 };
 </script>
 <style lang="less">
-.encodings {
+.card {
   border-color: rgb(200, 203, 210);
   border-style: solid;
   border-width: thin;
   border-radius: 10px;
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 </style>

@@ -21,7 +21,7 @@ export let confTemplate = {
             maximum: 1,
         }
     },
-    width: function (title_str,min_nb,max_nb,df_width) {
+    width: function (title_str, min_nb, max_nb, df_width) {
         return {
             title: title_str,
             type: "number",
@@ -57,18 +57,51 @@ export let confTemplate = {
 export let markConf = {
     arc: function (df_innerRadius, df_outerRadius) {
         this.properties = {};
-        this.properties.innerRadius = new confTemplate.width('inner radius',1,100,df_innerRadius);
-        this.properties.outerRadius = new confTemplate.width('outer radius',1,100,df_outerRadius);
+        this.properties.innerRadius = new confTemplate.width('inner radius', 1, 100, df_innerRadius);
+        this.properties.outerRadius = new confTemplate.width('outer radius', 1, 100, df_outerRadius);
     },
     area: function (df_color, df_opacity) {
         this.properties = {};
-        this.properties.color = new confTemplate.color(df_color);
         this.properties.opacity = new confTemplate.opacity(df_opacity);
+        this.properties.color = new confTemplate.color(df_color);
     },
-    bar: function (df_align,df_width) {
+    bar: function (df_align, df_width) {
         this.properties = {};
-        this.properties.align = new confTemplate.select_radius("align",["left", "right", "center"],df_align);
-        this.properties.width = new confTemplate.width('width',1,100,df_width);
-    }
+        this.properties.width = new confTemplate.width('width', 1, 100, df_width);
+        this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
+    },
+    boxplot: function (df_size, df_opacity, df_color, df_orient, df_extent) {
+        this.properties = {};
+        this.properties.size = new confTemplate.width('width', 1, 100, df_size);
+        this.properties.opacity = new confTemplate.opacity(df_opacity);
+        this.properties.color = new confTemplate.color(df_color);
+        this.properties.orient = new confTemplate.select_radius("orient", ["horizontal", "vertical"], df_orient);
+    },
+    line: function (df_strokeWidth, df_color, df_interpolate) {
+        this.properties = {};
+        this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], df_interpolate);
+        this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 100, df_strokeWidth);
+        this.properties.stroke = new confTemplate.color(df_color);
+    },
+    point: function (df_size, df_shape) {
+        this.properties = {};
+        this.properties.size = new confTemplate.width('point size', 1, 100, df_size);
+        this.properties.shape = new confTemplate.select("shape", ["circle", "square", "cross", "diamond", "triangle-up", "triangle-down", "triangle-right", "triangle-left", "stroke", "arrow", "arrow", "triangle"], df_shape);
+    },
+    line: function (df_strokeWidth, df_color) {
+        this.properties = {};
+        this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 100, df_strokeWidth);
+        // this.properties.strokeDash = new confTemplate.select("strokeDash",["basis", "cardinal","catmull-rom","linear","monotone","natural","step","step-after","step-before"],df_interpolate);
+        this.properties.color = new confTemplate.color(df_color);
+    },
 }
 
+export let encodingConfig = {
+    positionChannel: function (fields_arr, df_field) {
+        this.properties = {};
+        this.properties.field = new confTemplate.select('field', fields_arr,df_field);
+        this.properties.aggregate = new confTemplate.select('aggregate', ['count', 'sum', 'mean', 'stdev', 'median', 'min', 'max']);
+        this.properties.scaleType=new confTemplate.select('scale type', ['linear', 'pow', 'sqrt', 'symlog', 'log']);
+        this.properties.scalDomain=new confTemplate.width('scale domain'); // 需要自己定义一个双滑杆组件
+    }
+}

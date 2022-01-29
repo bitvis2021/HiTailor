@@ -1,7 +1,20 @@
 <template>
   <div>
+    <div id="apply-button">
+      <el-row type="flex" class="row-bg" justify="space-between"
+        ><el-button type="primary" size="mini" round plain>
+          <span
+            style="padding-left: 10px; padding-right: 10px"
+            >Apply</span
+          >
+        </el-button>
+        <el-button type="text" size="mini"
+          ><i class="el-icon-circle-plus"></i>Add Layer</el-button
+        ></el-row
+      >
+    </div>
     <div id="panel">
-      <layer-view></layer-view>
+      <layer-view :config="chartDec"></layer-view>
     </div>
   </div>
 </template>
@@ -103,27 +116,32 @@ export default {
 </script>
 <style lang="less">
 #panel {
-  // width: 100%;
-  // height: 30%;
   margin: 0px 5px 0px 5px;
   padding: 0px 5px 0px 5px;
-  // background-color: white;
-  // filter: drop-shadow(5px 5px 10px #00000055);
   border-radius: 10px;
   text-align: left;
+  max-height: 500px;
+  overflow: scroll;
+  &::-webkit-scrollbar {
+    width: 5px;
+    background: rgb(255, 255, 255);
+    border-radius: 5px;
+    // height: 8px;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: #dcdfe6;
+    border-radius: 5px;
+  }
 }
-
-.encoding {
-  padding: 1%;
-}
-.property {
-  margin-top: 2%;
-  margin-bottom: 2%;
+#apply-button {
+  margin: 0px 5px 0px 5px;
+  padding: 0px 5px 0px 5px;
 }
 #add-layer {
   position: absolute;
   right: 10%;
 }
+
 .el-dropdown-link {
   cursor: pointer;
   color: #409eff;

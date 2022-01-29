@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="card">
     Mark
-    <el-row>
-      type
+    <el-row class="el-form-item">
+      <label class="el-form-item__label"> type: </label>
       <el-select v-model="type" placeholder="Select" v-on:change="ChangeMark">
         <el-option
           v-for="(item, index) in markType"
@@ -22,7 +22,7 @@
         ><div></div
       ></vue-form>
     </div>
-    <el-button v-else type="text" @click="AddProperty"
+    <el-button v-else type="text" @click="AddProperty" size="small"
       ><div class="el-icon-circle-plus"></div>
       Adjust Mark Property</el-button
     >
@@ -87,3 +87,9 @@ export default {
   },
 };
 </script>
+
+<style lang="less">
+.el-form-item__label-wrap {
+  margin-left: 0px !important;
+}
+</style>
