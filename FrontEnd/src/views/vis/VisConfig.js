@@ -99,9 +99,123 @@ export let markConf = {
 export let encodingConfig = {
     positionChannel: function (fields_arr, df_field) {
         this.properties = {};
-        this.properties.field = new confTemplate.select('field', fields_arr,df_field);
+        this.properties.field = new confTemplate.select('field', fields_arr, df_field);
         this.properties.aggregate = new confTemplate.select('aggregate', ['count', 'sum', 'mean', 'stdev', 'median', 'min', 'max']);
-        this.properties.scaleType=new confTemplate.select('scale type', ['linear', 'pow', 'sqrt', 'symlog', 'log']);
-        this.properties.scalDomain=new confTemplate.width('scale domain'); // 需要自己定义一个双滑杆组件
+        this.properties.scaleType = new confTemplate.select('scale type', ['linear', 'pow', 'sqrt', 'symlog', 'log']);
+        this.properties.scalDomain = new confTemplate.width('scale domain'); // 需要自己定义一个双滑杆组件
     }
+}
+
+export let displayEncoding = {
+    title: "addEncoding",
+    type: "object",
+    properties: {
+        x: {
+            title: "x",
+            type: "boolean",
+            default: true,
+        },
+        x2: {
+            title: "x2",
+            type: "boolean",
+        },
+        y: {
+            title: "y",
+            type: "boolean",
+            default: true,
+        },
+        y2: {
+            title: "y2",
+            type: "boolean",
+        },
+        color: {
+            title: "color",
+            type: "boolean",
+        },
+        shape: {
+            title: "shape",
+            type: "boolean",
+        },
+    },
+}
+
+export let encodingSchema = {
+    type: "object",
+    definitions: {
+        positionChannel: {
+            properties: {
+                field: {
+                    title: "field",
+                    type: "string",
+                },
+                type: { type: "string" },
+                aggregate: {
+                    title: "aggregate",
+                    type: "string",
+                },
+                scale: {
+                    type: "object",
+                    properties: {
+                        type: {
+                            title: "scale type",
+                            type: "string",
+                        },
+                        // domain: {
+                        //     title: "scale domain",
+                        //     type: "array",
+                        //     items: {
+                        //         type: "number",
+                        //     },
+                        // },
+                    },
+                },
+            },
+        },
+    },
+    properties: {
+        encoding: {
+            type: "object",
+            properties: {
+                x: {
+                    title: "X",
+                    type: "object",
+                    $ref: "#/definitions/positionChannel",
+                },
+                y: {
+                    title: "Y",
+                    type: "object",
+                    $ref: "#/definitions/positionChannel",
+                },
+                color: {
+                    title: "Color",
+                    type: "object",
+                    properties: {
+                        field: {
+                            title: "field",
+                            type: "string",
+                        },
+                        type: { type: "string" },
+                    },
+                    legend: {
+                        type: "boolean",
+                    },
+                },
+
+                shape: {
+                    title: "Shape",
+                    type: "object",
+                    properties: {
+                        field: {
+                            title: "field",
+                            type: "string",
+                        },
+                        type: { type: "string" },
+                    },
+                    legend: {
+                        type: "boolean",
+                    },
+                },
+            },
+        },
+    },
 }

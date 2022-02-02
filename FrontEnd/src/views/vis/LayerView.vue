@@ -1,7 +1,26 @@
 <template>
   <div class="layer">
-    <mark-view :config="this.markJson" v-on:apply-config="ApplyMark"></mark-view>
-    <encoding-view :config="this.encodingJson"></encoding-view>
+    <!-- 临时debug -->
+    <div
+      style="
+        position: absolute;
+        left: -500px;
+        top: 10px;
+        max-width: 400px;
+        background-color: white;
+      "
+    >
+    {{ {mark:this.markJson,encoding:this.encodingJson} }}
+    </div>
+
+    <mark-view
+      :config="this.markJson"
+      v-on:apply-config="ApplyMark"
+    ></mark-view>
+    <encoding-view
+      :config="this.encodingJson"
+      v-on:apply-config="ApplyEncoding"
+    ></encoding-view>
   </div>
 </template>
 <script>
@@ -14,12 +33,15 @@ export default {
   data() {
     return {
       markJson: this.config.mark,
-      encodingJson:this.config.encoding,
+      encodingJson: this.config.encoding,
     };
   },
   methods: {
     ApplyMark(data) {
       this.markJson = data;
+    },
+    ApplyEncoding(data) {
+      this.encodingJson = data;
     },
   },
   computed: {},
