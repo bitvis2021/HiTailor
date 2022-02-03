@@ -1,5 +1,6 @@
 <template>
   <div>
+    <el-divider content-position="right">Encoding</el-divider>
     <div class="card">
       <vue-form
         v-model="encodingForm"
@@ -7,10 +8,10 @@
         :form-props="formPops"
         :ui-schema="uiSchema"
         @on-change="ApplyConfig">
-      <div>
-      </div>
-        </vue-form>
-      </div>
+        <div>
+        </div>
+      </vue-form>
+    </div>
     <el-row type="flex" class="row-bg" justify="end">
       <el-dropdown>
         <span class="el-dropdown-link">
@@ -71,4 +72,20 @@ export default {
 };
 </script>
 <style lang="less">
+  .fieldGroupWrap_title {
+    margin: 0px !important;
+    line-height: 15px !important;
+    font-family: 'Avenir', Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+  }
+  .genFormLabel {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  }
+  .card {
+    border-style: none !important;
+  }
+  .el-divider--horizontal {
+    margin: 0px !important;
+  }
 </style>

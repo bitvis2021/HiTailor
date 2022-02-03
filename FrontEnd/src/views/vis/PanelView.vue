@@ -116,6 +116,24 @@ export default {
 };
 </script>
 <style lang="less">
+  @input-height: 28px;
+  .el-input__inner {
+    height: @input-height !important;
+    line-height: @input-height !important;
+  }
+  .el-form-item__label {
+    height: @input-height !important;
+    line-height: @input-height !important;
+  }
+  .el-input__icon {
+    height: @input-height !important;
+    line-height: @input-height !important;
+  }
+  .el-form-item__content {
+    line-height: @input-height !important;
+  }
+</style>
+<style scoped lang="less">
 .panel-view {
   position: absolute;
   left: 0%;
