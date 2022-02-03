@@ -6,11 +6,11 @@
         :schema="encodingSchema"
         :form-props="formPops"
         :ui-schema="uiSchema"
-        @on-change="ApplyConfig"
-      >
-        <div></div
-      ></vue-form>
-    </div>
+        @on-change="ApplyConfig">
+      <div>
+      </div>
+        </vue-form>
+      </div>
     <el-row type="flex" class="row-bg" justify="end">
       <el-dropdown>
         <span class="el-dropdown-link">

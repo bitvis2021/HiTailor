@@ -16,17 +16,14 @@
         v-for="operation in operationArray"
         :key="operation"
         :content="operation"
-        effect="light"
-      >
+        effect="light">
         <el-menu-item
           :index="operation"
-          @click="changeDialogVisible(operation)"
-        >
+          @click="changeDialogVisible(operation)">
           {{ operation }}
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-
     <el-radio-group v-if="isHeaderFixed"
       class="change-view-button" v-model="currView" size="medium">
       <el-radio-button label="transformation"></el-radio-button>
@@ -37,7 +34,7 @@
       <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
     </div>
     <div class="side-panel">
-      <VisView  ></VisView> 
+      <VisView></VisView> 
     </div>
     <el-dialog
       title="Dataset"
@@ -121,12 +118,11 @@ export default {
 </script>
 
 <style lang="less">
-
-
+@side-panel-width: 20%;
+@menu-height: 2.5rem;
 html {
   font-size: 100%;
 }
-@menu-height: 2.5rem;
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -160,20 +156,23 @@ html {
     font-size: 1rem;
   }
   .content-container {
-    // position: absolute;
+    position: absolute;
     top: @menu-height;
     left: 0%;
     bottom: 0%;
-    right: 0%;
+    right: @side-panel-width;
   }
   svg:not(:root){
     overflow: visible;
   }
   .side-panel{
-    right: 0%;
-    left: 75%;
-    top: @menu-height;
     position: absolute;
+    right: 0%;
+    width: @side-panel-width;
+    top: @menu-height;
+    bottom: 0%;
+    border-left: solid #efefef 1px;
+    background-color: white;
   }
 }
 </style>

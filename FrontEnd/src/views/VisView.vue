@@ -1,9 +1,11 @@
 <template>
-  <div>
+  <div class="visview-container">
     <div id="gen-chart"></div>
     <div id="vis-view">
       <div id="chart"></div>
-      <panel-view></panel-view>
+      <div class="panel-view-container">
+        <panel-view></panel-view>
+      </div>
     </div>
   </div>
 </template>
@@ -107,20 +109,33 @@ export default {
 </script>
 
 <style lang="less">
-#vis-view {
-  background-color: white;
-  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.5);
-  padding: 0px 10px 0px 10px;
-    .el-form-item
-    {
-      margin-top:2px !important;
-      margin-bottom:2px !important;
-    }
-}
-#chart {
-  margin-top: 3%;
-}
-.role-axis {
-  display: none;
+.visview-container {
+  position: absolute;
+  left: 0%;
+  width: 100%;
+  top: 0%;
+  height: 100%;
+  #vis-view {
+    background-color: white;
+    // padding: 0px 10px 0px 10px;
+      .el-form-item
+      {
+        margin-top:2px !important;
+        margin-bottom:2px !important;
+      }
+  }
+  #chart {
+    // margin-top: 3%;
+  }
+  .panel-view-container {
+    position: absolute;
+    top: 210px;
+    bottom: 0%;
+    left: 0%;
+    right: 0%;
+  }
+  .role-axis {
+    display: none;
+  }
 }
 </style>
