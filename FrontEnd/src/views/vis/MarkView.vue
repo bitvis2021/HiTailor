@@ -1,7 +1,7 @@
 <template>
   <div class="mark-container">
     <el-divider content-position="left">Mark</el-divider>
-    <div class="card">
+    <div class="mark-card">
       <el-row class="el-form-item">
         <label class="el-form-item__label"> type: </label>
         <el-select v-model="type" placeholder="Select" v-on:change="ChangeMark">
@@ -95,5 +95,8 @@ export default {
 }
 .mark-container {
   margin-top: 20px;
+  .mark-card {
+    padding: 10px;
+  }
 }
 </style>

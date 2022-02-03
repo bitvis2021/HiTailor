@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-divider content-position="right">Encoding</el-divider>
-    <div class="card">
+    <div class="encoding-card">
       <vue-form
         v-model="encodingForm"
         :schema="encodingSchema"
@@ -12,10 +12,10 @@
         </div>
       </vue-form>
     </div>
-    <el-row type="flex" class="row-bg" justify="end">
+    <el-row type="flex" class="add-operation" justify="start">
       <el-dropdown>
         <span class="el-dropdown-link">
-          Add Encoding <i class="el-icon-circle-plus"></i>
+          <i class="el-icon-circle-plus"></i> Add Encoding
         </span>
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item>1</el-dropdown-item>
@@ -82,10 +82,18 @@ export default {
   .genFormLabel {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
   }
-  .card {
+  .encoding-card {
     border-style: none !important;
+    padding: 10px 10px 0px 10px;
   }
   .el-divider--horizontal {
     margin: 0px !important;
+  }
+  .add-operation {
+    padding-left: 10px;
+    .el-dropdown-link {
+      font-size: 12px !important;
+      color: #409EFF;
+    }
   }
 </style>
