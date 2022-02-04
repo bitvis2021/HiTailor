@@ -1,5 +1,5 @@
 <template>
-  <div class="table-view">
+  <div class="table-view" >
     <div v-if="!(headerFixedFlag.row && headerFixedFlag.column)">
       <el-button class="button" id="row-header-button"
         @click="choose_header('row')" > 
@@ -787,7 +787,7 @@ export default {
       var width = this.widthRangeList[this.selectedArea.right+1] - this.widthRangeList[this.selectedArea.left]
       var height= this.heightRangeList[this.selectedArea.bottom+1] - this.heightRangeList[this.selectedArea.top]
       var pos = {"x":x, "y":y, "width":width, "height":height}
-
+      console.log("pos", pos)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, field)
     },
     get_data_from_chosen(top, bottom, left, right) {
@@ -801,7 +801,6 @@ export default {
           res.push(Array.from(seq))
         }
       }
-      // console.log(res)
       return res
     },
     gen_json_from_data(data) {
@@ -819,6 +818,7 @@ export default {
         }
         res.push(obj)
       }
+      console.log("data", res)
       var js = JSON.stringify(res)
     
       return js
