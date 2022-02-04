@@ -1,7 +1,21 @@
 <template>
-  <div>
+  <div class="panel-view">
+    <div id="apply-button">
+      <el-row type="flex" class="row-bg" justify="space-between">
+        <el-col :span="6">
+          <el-button type="primary" size="mini" round plain>
+            Apply
+          </el-button>
+        </el-col>
+        <el-col :span="8">
+          <el-button type="text" size="mini">
+            <i class="el-icon-circle-plus"></i>Add Layer
+          </el-button>
+        </el-col>
+      </el-row>
+    </div>
     <div id="panel">
-      <layer-view></layer-view>
+      <layer-view :config="chartDec"></layer-view>
     </div>
   </div>
 </template>
@@ -102,46 +116,83 @@ export default {
 };
 </script>
 <style lang="less">
-#panel {
-  // width: 100%;
-  // height: 30%;
-  margin: 0px 5px 0px 5px;
-  padding: 0px 5px 0px 5px;
-  // background-color: white;
-  // filter: drop-shadow(5px 5px 10px #00000055);
-  border-radius: 10px;
-  text-align: left;
-}
-
-.encoding {
-  padding: 1%;
-}
-.property {
-  margin-top: 2%;
-  margin-bottom: 2%;
-}
-#add-layer {
+  @input-height: 28px;
+  .el-input__inner {
+    height: @input-height !important;
+    line-height: @input-height !important;
+  }
+  .el-form-item__label {
+    height: @input-height !important;
+    line-height: @input-height !important;
+  }
+  .el-input__icon {
+    height: @input-height !important;
+    line-height: @input-height !important;
+  }
+  .el-form-item__content {
+    line-height: @input-height !important;
+  }
+</style>
+<style scoped lang="less">
+.panel-view {
   position: absolute;
-  right: 10%;
-}
-.el-dropdown-link {
-  cursor: pointer;
-  color: #409eff;
-}
-.el-icon-arrow-down {
-  font-size: 12px;
-}
-.el-tabs__item {
-  padding: 0 10px !important;
-  height: 20px !important;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  line-height: 15px !important;
-  display: inline-block;
-  list-style: none;
-  font-size: 8px !important;
-  font-weight: 500;
-  color: #303133;
-  position: relative;
+  left: 0%;
+  width: 100%;
+  top: 0%;
+  height: 100%;
+  #apply-button {
+    position: absolute;
+    left: 0%;
+    width: 100%;
+    height: 5%;
+    top: 0%;
+    // padding: 0px 5px 0px 5px;
+    border-bottom: solid #efefef 1px;
+  }
+  #panel {
+    position: absolute;
+    // margin: 0px 5px 0px 5px;
+    padding: 0px 5px 0px 5px;
+    border-radius: 10px;
+    text-align: left;
+    top: 5%;
+    max-height: 95%;
+    overflow: scroll;
+    &::-webkit-scrollbar {
+      width: 5px;
+      background: rgb(255, 255, 255);
+      border-radius: 5px;
+      // height: 8px;
+    }
+    &:hover::-webkit-scrollbar-thumb {
+      background-color: #dcdfe6;
+      border-radius: 5px;
+    }
+  }
+  #add-layer {
+    position: absolute;
+    right: 10%;
+  }
+
+  .el-dropdown-link {
+    cursor: pointer;
+    color: #409eff;
+  }
+  .el-icon-arrow-down {
+    font-size: 12px;
+  }
+  .el-tabs__item {
+    padding: 0 10px !important;
+    height: 20px !important;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    line-height: 15px !important;
+    display: inline-block;
+    list-style: none;
+    font-size: 8px !important;
+    font-weight: 500;
+    color: #303133;
+    position: relative;
+  }
 }
 </style>

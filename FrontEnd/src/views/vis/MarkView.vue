@@ -1,31 +1,32 @@
 <template>
-  <div>
-    Mark
-    <el-row>
-      type
-      <el-select v-model="type" placeholder="Select" v-on:change="ChangeMark">
-        <el-option
-          v-for="(item, index) in markType"
-          :key="item + index"
-          :label="item"
-          :value="item"
-        >
-        </el-option>
-      </el-select>
-    </el-row>
-    <div v-if="this.isMultipleProperty">
-      <vue-form
-        v-model="formData"
-        :schema="schema"
-        :form-props="this.formPops"
-        @on-change="ApplyConfig"
-        ><div></div
-      ></vue-form>
+  <div class="mark-container">
+    <el-divider content-position="left">Mark</el-divider>
+    <div class="mark-card">
+      <el-row class="el-form-item">
+        <label class="el-form-item__label"> type: </label>
+        <el-select v-model="type" placeholder="Select" v-on:change="ChangeMark">
+          <el-option
+            v-for="(item, index) in markType"
+            :key="item + index"
+            :label="item"
+            :value="item"
+          >
+          </el-option>
+        </el-select>
+      </el-row>
+      <div v-if="this.isMultipleProperty">
+        <vue-form
+          v-model="formData"
+          :schema="schema"
+          :form-props="this.formPops"
+          @on-change="ApplyConfig"
+          ><div></div
+        ></vue-form>
+      </div>
+      <el-button v-else type="text" @click="AddProperty" size="small"
+        ><div class="el-icon-circle-plus"></div>
+        Adjust Mark Property</el-button>
     </div>
-    <el-button v-else type="text" @click="AddProperty"
-      ><div class="el-icon-circle-plus"></div>
-      Adjust Mark Property</el-button
-    >
   </div>
 </template>
 
@@ -87,3 +88,15 @@ export default {
   },
 };
 </script>
+
+<style lang="less">
+.el-form-item__label-wrap {
+  margin-left: 0px !important;
+}
+.mark-container {
+  margin-top: 20px;
+  .mark-card {
+    padding: 10px;
+  }
+}
+</style>
