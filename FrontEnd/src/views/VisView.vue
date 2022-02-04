@@ -116,10 +116,14 @@ export default {
   top: 0%;
   height: 100%;
   #vis-view {
+    position: absolute;
+    top: 0%;
+    bottom: 0%;
+    left: 0%;
+    right: 0%;
     background-color: white;
     // padding: 0px 10px 0px 10px;
-      .el-form-item
-      {
+      .el-form-item {
         margin-top:2px !important;
         margin-bottom:2px !important;
       }

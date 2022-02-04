@@ -24,14 +24,15 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-    <el-radio-group v-if="isHeaderFixed"
-      class="change-view-button" v-model="currView" size="medium">
-      <el-radio-button label="transformation"></el-radio-button>
-      <el-radio-button label="visualization"></el-radio-button>
-    </el-radio-group>
-    
+
     <div class="content-container">
       <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
+    </div>
+    <div class="change-view-button-container" v-if="isHeaderFixed">
+      <el-radio-group class="change-view-button" v-model="currView" size="medium">
+        <el-radio-button label="transformation"></el-radio-button>
+        <el-radio-button label="visualization"></el-radio-button>
+      </el-radio-group>
     </div>
     <div class="side-panel">
       <VisView></VisView> 
@@ -149,8 +150,11 @@ html {
       }
     }
   }
-  .change-view-button {
-    margin-top: 1%;
+  .change-view-button-container {
+    text-align: left;
+    .change-view-button {
+      margin-top: 1%;
+    }
   }
   .labelIcon {
     font-size: 1rem;
