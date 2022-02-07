@@ -37,14 +37,15 @@ export default {
   },
   created() {},
   mounted() {
+    console.log('this.encodingSchema', this.encodingSchema)
     // 初始化UI的配置
-    for (const key in this.encodingSchema.properties.addEncoding.properties) {
-      // 绑定属性显示,
-      this.$set(this.uiSchema.encoding, key, {
-        "ui:hidden": (parentFormData, rootFormData) =>
-          !rootFormData.addEncoding[key],
-      });
-    }
+    // for (const key in this.encodingSchema.properties.addEncoding.properties) {
+    //   // 绑定属性显示,
+    //   this.$set(this.uiSchema.encoding, key, {
+    //     "ui:hidden": (parentFormData, rootFormData) =>
+    //       !rootFormData.addEncoding[key],
+    //   });
+    // }
   },
   data() {
     return {
