@@ -16,7 +16,7 @@ SchemaCompiler.prototype.GetEncodingSchema = function (vegaEncoding_obj, selecti
             return undefined
         }
         else {
-            selection[encodingName][propertyName]
+           return selection[encodingName][propertyName]
         }
     }
 
@@ -27,7 +27,10 @@ SchemaCompiler.prototype.GetEncodingSchema = function (vegaEncoding_obj, selecti
         if (Object.hasOwnProperty.call(vegaEncoding_obj, encodingName)) {
             const vegaEncoding = vegaEncoding_obj[encodingName];
             for (const propertyName in vegaEncoding) {
-                schemaEncoding.properties.push(this.GetProperty(propertyName, getSelection(selections_obj, encodingName, propertyName)))
+                let supportedProperty = this.GetProperty(propertyName, getSelection(selections_obj, encodingName, propertyName))
+                if (supportedProperty != undefined) {
+                    schemaEncoding.properties.push(supportedProperty)
+                }
             }
         }
         schema.push(schemaEncoding);

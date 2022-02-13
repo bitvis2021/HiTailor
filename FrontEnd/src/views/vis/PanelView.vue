@@ -13,7 +13,11 @@
       </el-row>
     </div>
     <div id="panel">
-      <layer-view :config="chartDec"></layer-view>
+      <layer-view
+        :vegaSchema="this.vegaSchema"
+        :vegaConfig="this.vegaConfig"
+        v-on:apply-config="this.ApplyConfig"
+      ></layer-view>
     </div>
   </div>
 </template>
@@ -28,34 +32,12 @@ export default {
     return {
       editableTabs: [],
       editableTabsValue: "",
-      chartDec: {
-        data: {
-          url: "http://localhost:8080/penguins.json",
-        },
-        mark: "point",
-        encoding: {
-          x: {
-            field: "Flipper Length (mm)",
-            type: "quantitative",
-            scale: { zero: false },
-            axis: { labels: false, ticks: false, title: null },
-          },
-          y: {
-            field: "Body Mass (g)",
-            type: "quantitative",
-            scale: { zero: false },
-            axis: { labels: false, ticks: false, title: null },
-          },
-          color: { field: "Species", type: "nominal", legend: false },
-          shape: { field: "Species", type: "nominal", legend: false },
-        },
-      },
     };
   },
-  computed: {},
   methods: {
-    ApplyConfig() {
-      this.$bus.$emit("apply-config", 500, 200, 0, 0);
+    // like v-model. submit the modified data to visView
+    ApplyConfig(data) {
+      this.$emit("apply-config", data);
     },
     AddTab() {
       let newTabName = "layer" + ++this.tabIndex;
@@ -106,10 +88,10 @@ export default {
   },
   mounted() {
     // console.log('thischart',this.chartDec)
-    this.$bus.$emit(
-      "preview-config",
-      JSON.parse(JSON.stringify(this.chartDec))
-    );
+    // this.$bus.$emit(
+    //   "preview-config",
+    //   // JSON.parse(JSON.stringify(this.chartDec))
+    // );
   },
 };
 </script>

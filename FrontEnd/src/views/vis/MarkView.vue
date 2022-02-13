@@ -32,7 +32,7 @@
 
 <script>
 import VueForm from "@lljj/vue-json-schema-form";
-import { confTemplate, markType, markConf } from "./SchemaCompiler";
+import { markType, markConf } from "./SchemaCompiler";
 export default {
   name: "MarkView",
   props: ["config"],

@@ -13,7 +13,8 @@
     </div>
     <div id="gen-chart"></div>
     <div id="vis-view">
-      <div v-show="!showTemplates">
+      <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
+      <div v-if="!showTemplates">
         <el-row type="flex" class="row-bg">
           <el-button
             type="text"
@@ -25,8 +26,9 @@
         <div id="chart"></div>
         <div class="panel-view-container">
           <panel-view
-            :vegaConfig="this.vegaConfig"
             :vegaSchema="this.vegaSchema"
+            :vegaConfig="this.vegaConfig"
+            v-on:apply-config="ApplyVegaConf"
           ></panel-view>
         </div>
       </div>
@@ -67,12 +69,14 @@ export default {
     };
   },
   methods: {
+    ApplyVegaConf(data) {
+      this.vegaConfig = data;
+    },
     OpenPanelView(template) {
-      this.showTemplates = false;
-
       console.log(template);
       this.vegaSchema = template.GetSchema();
       this.vegaConfig = template.GetVegaConf();
+      this.showTemplates = false;
     },
     ApplyVis2Preview() {},
     ApplyVis2Table() {
@@ -107,9 +111,9 @@ export default {
     },
   },
   beforeCreate() {
-    this.$bus.$on("apply-config", (visHeight, visWidth, visX, visY, data) => {
-      // this.GenFig(visHeight, visWidth, visX, visY, data);
-    });
+    // this.$bus.$on("apply-config", (visHeight, visWidth, visX, visY, data) => {
+    //   // this.GenFig(visHeight, visWidth, visX, visY, data);
+    // });
 
     this.$bus.$on("preview-config", (data) => {
       data.height = 200;
@@ -128,7 +132,7 @@ export default {
       this.position = position;
       let test_regionMetaData = {
         x: {
-          range: 1,
+          range: 4,
           headers: [
             {
               name: "attr1",
@@ -172,7 +176,7 @@ export default {
     this.templates = GetTemplates();
   },
   beforeDestroy() {
-    this.$bus.$off("apply-config");
+    // this.$bus.$off("apply-config");
     this.$bus.$off("preview-config");
   },
 };

@@ -1,7 +1,55 @@
 <template>
   <div>
     <el-divider content-position="right">Encoding</el-divider>
-    <div class="encoding-card"></div>
+    <div class="encoding-card">
+      <div v-for="(encoding, key) in this.encodings" :key="key + encoding.name">
+        <el-row>
+          {{ InitialUpper(encoding.name) }}
+        </el-row>
+        <br />
+        <div
+          v-for="property in encoding.properties"
+          :key="encoding.name + property.name"
+        >
+          <el-row type="flex" class="row-bg" justify="space-between">
+            <span class="propertyText">
+              {{ property.name + ":" }}
+            </span>
+
+            <el-select
+              v-if="property.type == 'select'"
+              v-model="config[encoding.name][property.name]"
+              placeholder="select..."
+            >
+              <el-option
+                v-for="(item, key) in property.selections"
+                :key="encoding.name + property.name + item + key"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+            <!-- else if -->
+          </el-row>
+          <br />
+        </div>
+        <el-row type="flex" class="add-operation" justify="start">
+          <el-dropdown>
+            <span class="el-dropdown-link">
+              <i class="el-icon-circle-plus"></i> Add Property
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item>1</el-dropdown-item>
+              <el-dropdown-item disabled>2</el-dropdown-item>
+              <el-dropdown-item divided>3</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </el-row>
+        <br />
+        <el-divider></el-divider>
+        <br />
+      </div>
+    </div>
     <el-row type="flex" class="add-operation" justify="start">
       <el-dropdown>
         <span class="el-dropdown-link">
@@ -19,12 +67,17 @@
 <script>
 export default {
   name: "EncodingView",
-  props: ["config", "fields"],
+  props: ["config", "schema"],
   components: {},
   created() {},
-  mounted() {},
+  mounted() {
+    console.log(this.schema);
+  },
   data() {
-    return {};
+    return {
+      encodings: this.schema,
+      config: this.config,
+    };
   },
   methods: {
     InitialUpper(word) {
@@ -38,12 +91,20 @@ export default {
 };
 </script>
 <style lang="less">
+.propertyText {
+  font-size: 14px;
+  line-height: 15px;
+  height: 28px;
+  padding: 0 12px 0 0;
+  margin: 0px;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  color: #606266;
+}
 .fieldGroupWrap_title {
   margin: 0px !important;
   line-height: 15px !important;
   font-family: "Avenir", Helvetica, Arial, sans-serif !important;
   font-size: 14px !important;
-  font-weight: bold !important;
 }
 .genFormLabel {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
