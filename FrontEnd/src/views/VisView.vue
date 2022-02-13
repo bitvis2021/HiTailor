@@ -1,11 +1,40 @@
 <template>
-  <div class="visview-container">
+  <div class="visview-container" v-if="this.showVisPanel">
+    <div
+      style="
+        background-color: white;
+        position: absolute;
+        left: -300px;
+        top: 0px;
+        width: 200px;
+      "
+    >
+      {{ this.VegaConfigNoData }}
+    </div>
     <div id="gen-chart"></div>
     <div id="vis-view">
-      <div id="chart"></div>
-      <div class="panel-view-container">
-        <panel-view></panel-view>
+      <div v-show="!showTemplates">
+        <el-row type="flex" class="row-bg">
+          <el-button
+            type="text"
+            @click="ReturnTempView"
+            style="margin-top: -5px; margin-bottom: -10px; margin-left: 5px"
+            ><i class="el-icon-back"></i
+          ></el-button>
+        </el-row>
+        <div id="chart"></div>
+        <div class="panel-view-container">
+          <panel-view
+            :vegaConfig="this.vegaConfig"
+            :vegaSchema="this.vegaSchema"
+          ></panel-view>
+        </div>
       </div>
+      <templates-view
+        v-if="showTemplates"
+        v-on:select-template="OpenPanelView"
+        :templates="this.templates"
+      ></templates-view>
     </div>
   </div>
 </template>
@@ -13,52 +42,57 @@
 <script>
 import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
+import TemplatesView from "./vis/TemplatesView.vue";
+import { GetTemplates } from "./vis/Temp2Vega";
 
 export default {
   name: "VisView",
   components: {
     PanelView,
+    TemplatesView,
   },
-  computed: {},
+  computed: {
+    VegaConfigNoData() {
+      return { mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding };
+    },
+  },
   data() {
     return {
-      chartDec: {
-        data: {
-          url: "http://localhost:8080/penguins.json",
-        },
-        mark: "bar",
-        encoding: {
-          x: {
-            field: "attr2",
-            type: "nominal",
-            scale: { zero: false },
-            axis: { labels: false, ticks: false, title: null },
-          },
-          y: {
-            aggregate:"sum",
-            field: "value",
-            // type: "quantitative",
-            scale: { zero: false },
-            axis: { labels: false, ticks: false, title: null },
-          },
-          // color: { field: "Species", type: "nominal", legend: false },
-          // shape: { field: "Species", type: "nominal", legend: false },
-        },
-      },
+      showVisPanel: false,
+      showTemplates: true,
+      templates: [],
+      vegaConfig: {}, // template -> vegaConfig <=> panelView
+      vegaSchema: {}, // template -> vegaSchema -> panelView
+      position: {},
     };
   },
   methods: {
-    GenFig(height, width, x, y, chartJson,data) {
+    OpenPanelView(template) {
+      this.showTemplates = false;
+
+      console.log(template);
+      this.vegaSchema = template.GetSchema();
+      this.vegaConfig = template.GetVegaConf();
+    },
+    ApplyVis2Preview() {},
+    ApplyVis2Table() {
+      this.GenFig(
+        this.position.height - 1.2,
+        this.position.width - 1.2,
+        this.position.x + 0.1,
+        this.position.y + 0.1,
+        this.vegaConfig
+      );
+    },
+    ReturnTempView() {
+      this.showTemplates = true;
+    },
+    GenFig(height, width, x, y, chartJson) {
       chartJson.height = height;
       chartJson.width = width;
-      if (data!==undefined) {
-        chartJson.data={};
-        chartJson.data.values=data;
-      }
       vegaEmbed("#gen-chart", chartJson, {
         renderer: "svg",
         actions: false,
-        theme: "latimes",
       }).then(() => {
         let pic =
           document.getElementById("gen-chart").childNodes[0].childNodes[0];
@@ -74,32 +108,68 @@ export default {
   },
   beforeCreate() {
     this.$bus.$on("apply-config", (visHeight, visWidth, visX, visY, data) => {
-      this.GenFig(visHeight, visWidth, visX, visY, data);
+      // this.GenFig(visHeight, visWidth, visX, visY, data);
     });
 
     this.$bus.$on("preview-config", (data) => {
       data.height = 200;
       data.width = 300;
-      vegaEmbed("#chart", data, {
-        renderer: "svg",
-        actions: false,
-        // theme: "latimes",
-      });
+      // vegaEmbed("#chart", data, {
+      //   renderer: "svg",
+      //   actions: false,
+      //   // theme: "latimes",
+      // });
     });
   },
   mounted() {
     // get event
-    this.$bus.$on("visualize-selectedData", (position, jsonData, field) => {
-      this.GenFig(
-        position.height - 1.2,
-        position.width - 1.2,
-        position.x + 0.1,
-        position.y + 0.1,
-        this.chartDec,
-        jsonData
-      );
-      console.log(jsonData);
+    this.$bus.$on("visualize-selectedData", (position, jsonData, metaData) => {
+      this.showVisPanel = true;
+      this.position = position;
+      let test_regionMetaData = {
+        x: {
+          range: 1,
+          headers: [
+            {
+              name: "attr1",
+              sort: [
+                "FALL 2001",
+                "FALL 2002",
+                "FALL 2003",
+                "FALL 2004",
+                "FALL 2005",
+              ],
+            },
+            {
+              name: "attr2",
+              sort: ["SSH", "%Chg", "FTE"],
+            },
+          ],
+        },
+        y: {
+          range: 4,
+          headers: [
+            {
+              name: "attr3",
+              sort: ["HUMANITIES", "PROFESS STUDIES", "SOCIAL SCIENCES"],
+            },
+            {
+              name: "attr4",
+              sort: [
+                "Anthropology",
+                "Economics",
+                "Political Science",
+                "Psychology",
+                "Social Science",
+                "Sociology",
+              ],
+            },
+          ],
+        },
+      };
+      this.templates = GetTemplates(test_regionMetaData, jsonData);
     });
+    this.templates = GetTemplates();
   },
   beforeDestroy() {
     this.$bus.$off("apply-config");
@@ -123,17 +193,14 @@ export default {
     right: 0%;
     background-color: white;
     // padding: 0px 10px 0px 10px;
-      .el-form-item {
-        margin-top:2px !important;
-        margin-bottom:2px !important;
-      }
-  }
-  #chart {
-    // margin-top: 3%;
+    .el-form-item {
+      margin-top: 2px !important;
+      margin-bottom: 2px !important;
+    }
   }
   .panel-view-container {
     position: absolute;
-    top: 210px;
+    top: 240px;
     bottom: 0%;
     left: 0%;
     right: 0%;

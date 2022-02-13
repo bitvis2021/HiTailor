@@ -3,9 +3,7 @@
     <div id="apply-button">
       <el-row type="flex" class="row-bg" justify="space-between">
         <el-col :span="6">
-          <el-button type="primary" size="mini" round plain>
-            Apply
-          </el-button>
+          <el-button type="primary" size="mini" round plain> Apply </el-button>
         </el-col>
         <el-col :span="8">
           <el-button type="text" size="mini">
@@ -20,12 +18,12 @@
   </div>
 </template>
 <script>
-import ElementUI from "element-ui";
 import LayerView from "./LayerView.vue";
 
 export default {
   components: { LayerView },
   name: "PanelView",
+  props: ["vegaConfig", "vegaSchema"],
   data() {
     return {
       editableTabs: [],
@@ -116,22 +114,22 @@ export default {
 };
 </script>
 <style lang="less">
-  @input-height: 28px;
-  .el-input__inner {
-    height: @input-height !important;
-    line-height: @input-height !important;
-  }
-  .el-form-item__label {
-    height: @input-height !important;
-    line-height: @input-height !important;
-  }
-  .el-input__icon {
-    height: @input-height !important;
-    line-height: @input-height !important;
-  }
-  .el-form-item__content {
-    line-height: @input-height !important;
-  }
+@input-height: 28px;
+.el-input__inner {
+  height: @input-height !important;
+  line-height: @input-height !important;
+}
+.el-form-item__label {
+  height: @input-height !important;
+  line-height: @input-height !important;
+}
+.el-input__icon {
+  height: @input-height !important;
+  line-height: @input-height !important;
+}
+.el-form-item__content {
+  line-height: @input-height !important;
+}
 </style>
 <style scoped lang="less">
 .panel-view {
@@ -144,14 +142,15 @@ export default {
     position: absolute;
     left: 0%;
     width: 100%;
-    height: 5%;
+    height: 8%;
     top: 0%;
+    z-index: 100;
+    background-color: white;
     // padding: 0px 5px 0px 5px;
-    border-bottom: solid #efefef 1px;
+    // border-bottom: solid #efefef 1px;
   }
   #panel {
     position: absolute;
-    // margin: 0px 5px 0px 5px;
     padding: 0px 5px 0px 5px;
     border-radius: 10px;
     text-align: left;
