@@ -29,6 +29,7 @@
             :vegaSchema="this.vegaSchema"
             :vegaConfig="this.vegaConfig"
             v-on:apply-config="ApplyVegaConf"
+            v-on:apply-vis="ApplyVis2Table"
           ></panel-view>
         </div>
       </div>
@@ -130,48 +131,11 @@ export default {
     this.$bus.$on("visualize-selectedData", (position, jsonData, metaData) => {
       this.showVisPanel = true;
       this.position = position;
-      let test_regionMetaData = {
-        x: {
-          range: 4,
-          headers: [
-            {
-              name: "attr1",
-              sort: [
-                "FALL 2001",
-                "FALL 2002",
-                "FALL 2003",
-                "FALL 2004",
-                "FALL 2005",
-              ],
-            },
-            {
-              name: "attr2",
-              sort: ["SSH", "%Chg", "FTE"],
-            },
-          ],
-        },
-        y: {
-          range: 4,
-          headers: [
-            {
-              name: "attr3",
-              sort: ["HUMANITIES", "PROFESS STUDIES", "SOCIAL SCIENCES"],
-            },
-            {
-              name: "attr4",
-              sort: [
-                "Anthropology",
-                "Economics",
-                "Political Science",
-                "Psychology",
-                "Social Science",
-                "Sociology",
-              ],
-            },
-          ],
-        },
-      };
-      this.templates = GetTemplates(test_regionMetaData, jsonData);
+      console.log(metaData)
+      if (typeof metaData != Object) {
+        metaData=JSON.parse(metaData)
+      }
+      this.templates = GetTemplates(metaData, jsonData);
     });
     this.templates = GetTemplates();
   },

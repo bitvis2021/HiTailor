@@ -35,6 +35,7 @@ VegaTemplate.prototype.GetSchema = function () {
 
 function GetHeaders(channel_obj) {
     let ans = []
+    console.log(channel_obj)
     for (let index = 0; index < channel_obj.headers.length; index++) {
         const field = channel_obj.headers[index];
         ans.push(field.name)
@@ -45,9 +46,11 @@ function GetHeaders(channel_obj) {
 // 输入元数据，返回VegaTemplate对象数组
 export function GetTemplates(regionMetaData, data) {
     let templates = [];
-
     if (regionMetaData != undefined && data != undefined) {
-
+        console.log('region',regionMetaData)
+        console.log('regionX',regionMetaData["x"])
+        console.log('regionY',regionMetaData["y"])
+        
         let vegaEncoding = {}
         let selections = {
             x: { field: GetHeaders(regionMetaData.x).concat(['value']) },

@@ -3,7 +3,9 @@
     <div id="apply-button">
       <el-row type="flex" class="row-bg" justify="space-between">
         <el-col :span="6">
-          <el-button type="primary" size="mini" round plain> Apply </el-button>
+          <el-button type="primary" @click="Apply2Vis" size="mini" round plain>
+            Apply
+          </el-button>
         </el-col>
         <el-col :span="8">
           <el-button type="text" size="mini">
@@ -36,6 +38,9 @@ export default {
   },
   methods: {
     // like v-model. submit the modified data to visView
+    Apply2Vis() {
+      this.$emit("apply-vis");
+    },
     ApplyConfig(data) {
       this.$emit("apply-config", data);
     },
