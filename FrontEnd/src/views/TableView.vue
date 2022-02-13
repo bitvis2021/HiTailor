@@ -1,6 +1,6 @@
 <template>
   <div class="table-view" >
-    <div v-if="!(headerFixedFlag.row && headerFixedFlag.column)">
+    <div v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
       <el-button class="button" id="row-header-button"
         @click="choose_header('row')" > 
         row header 
@@ -12,7 +12,7 @@
       </el-button>
     </div>
 
-    <div v-if="headerFixedFlag.row && headerFixedFlag.column">
+    <div v-if="(headerFixedFlag.row && headerFixedFlag.column) ">
       <!-- <button  class="button"
        @click="to_trans_view()">
         transformation
@@ -22,17 +22,51 @@
         visualization
       </button> -->
  
-      <div v-if="isTransformView">
-        <el-button type="primary" plain 
+      <div class="tranform-button-container" v-if="isTransformView">
+        <el-button v-if="isCurrFlat"
+          type="primary" plain 
           class="button"
-          @click="transform_transpose()" > 
-          transpose
+          @click="transform_unfold()" > 
+          Unfold
         </el-button>
-        <el-button type="primary" plain 
-          class="button"
-          @click="transform_swap('FALL 2001', colHeader, false)" > 
-          swap
-        </el-button>
+
+        <div v-if="!isCurrFlat">
+          <el-button type="primary" plain 
+            class="button"
+            @click="transform_fold()" > 
+            Fold
+          </el-button>
+          <el-button type="primary" plain 
+            class="button"
+            @click="transform_transpose()" > 
+            Transpose
+          </el-button>
+          <el-button type="primary" plain 
+            class="button"
+            @click="handle_transform_swap('2001', false)" > 
+            Swap
+          </el-button>
+          <el-button type="primary" plain 
+            class="button"
+            @click="handle_transform_2stacked('HUMANITIES')" > 
+            ToStacked
+          </el-button>
+          <el-button type="primary" plain 
+            class="button"
+            @click="handle_transform_2linear('HUMANITIES', 0)" > 
+            ToLinear
+          </el-button>
+          <el-button type="primary" plain 
+            class="button"
+            @click="transform_derive()" > 
+            Derive
+          </el-button>
+          <el-button type="primary" plain 
+            class="button"
+            @click="transform_merge()" > 
+            Merge
+          </el-button>
+        </div>
       </div>
 
       <div v-if="!isTransformView">
@@ -42,9 +76,6 @@
           transmit data
         </el-button>
       </div>
-
-
-
     </div>
 
    
@@ -55,8 +86,41 @@
       <rect x="0" y="0" :width=markWidth :height=markHeight class="table-mark">
       </rect>
 
+      <g v-if="isCurrFlat">
+        <g v-for="(item,i) in flatAttrName" :key="item.index">
+          <rect class="header-table-cell"
+            :x="markWidth + widthRangeList[i]"
+            :y="markHeight"
+            :width="widthRangeList[i+1] - widthRangeList[i]"
+            :height="rowHeightList[0]">
+          </rect>
+          <text class="table-cell-text"
+          :x="markWidth + widthRangeList[i]+ textPaddingX"
+          :y="markHeight + textPaddingY">
+          {{flatAttrName[i]}}
+          </text>
+        </g>
+        <g v-for="(row, rowindex) in flatData" :key="row.index"
+          :transform="'translate(' + markWidth + ',' + (heightRangeList[rowindex+1] + markHeight) + ')'">
+          <g v-for="(column, columnindex) in row" :key="column.index">
+            <rect class="table-cell"
+              :x="widthRangeList[columnindex]"
+              y="0" 
+              :width="widthRangeList[columnindex+1] - widthRangeList[columnindex]"
+              :height="rowHeightList[rowindex+1]">
+            </rect>
+            <text v-if="flatData[rowindex][columnindex] != 'None'"
+              class="table-cell-text"
+              :x="widthRangeList[columnindex] + textPaddingX" 
+              :y="textPaddingY">
+              {{flatData[rowindex][columnindex]}}
+            </text>
+          </g>
+        </g>
+      </g>
+
       <!-- cell before choosing header-->
-      <g v-if="!(headerFixedFlag.row && headerFixedFlag.column)">
+      <g v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
         <g v-for="(row, rowindex) in rowDistributionList" :key="row.index"
           :transform="'translate(' + markWidth + ',' + (heightRangeList[rowindex] + markHeight) + ')'">
           <g v-for="(column, columnindex) in row" :key="column.index">
@@ -79,74 +143,76 @@
       </g>
 
       <!-- cell after choosing header-->
-      <!-- column header-->
-      <g v-if="headerFixedFlag.column">
-        <g v-for="item in num2header" :key="item.index"
-          v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
-          <rect class="header-table-cell"
-            :x="cal_column_header_position(item[1].value, item[1].times).x"
-            :y="cal_column_header_position(item[1].value, item[1].times).y"
-            :width="cal_column_header_position(item[1].value, item[1].times).width"
-            :height="cal_column_header_position(item[1].value, item[1].times).height">
-          </rect>
-          <text class="table-cell-text"
-            :x="cal_column_header_position(item[1].value, item[1].times).x + textPaddingX" 
-            :y="cal_column_header_position(item[1].value, item[1].times).y + textPaddingY">
-            {{item[1].value}}
-          </text>
+      <g v-if="!isCurrFlat">
+        <!-- column header-->
+        <g v-if="headerFixedFlag.column">
+          <g v-for="item in num2header" :key="item.index">
+            <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
+              <rect class="header-table-cell"
+                :x="cal_column_header_position(item[1].value, item[1].times).x"
+                :y="cal_column_header_position(item[1].value, item[1].times).y"
+                :width="cal_column_header_position(item[1].value, item[1].times).width"
+                :height="cal_column_header_position(item[1].value, item[1].times).height">
+              </rect>
+              <text class="table-cell-text"
+                :x="cal_column_header_position(item[1].value, item[1].times).x + textPaddingX" 
+                :y="cal_column_header_position(item[1].value, item[1].times).y + textPaddingY">
+                {{item[1].value}}
+              </text>
+            </g>
+          </g>
         </g>
-      </g>
-      <!-- row header-->
-      <g v-if="headerFixedFlag.row">
-        <g v-for="item in num2header" :key="item.index"
-          v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
-          <rect class="header-table-cell"
-            :x="cal_row_header_position(item[1].value, item[1].times).x"
-            :y="cal_row_header_position(item[1].value, item[1].times).y"
-            :width="cal_row_header_position(item[1].value, item[1].times).width"
-            :height="cal_row_header_position(item[1].value, item[1].times).height">
-          </rect>
-          <text class="table-cell-text"
-            :x="cal_row_header_position(item[1].value, item[1].times).x + textPaddingX" 
-            :y="cal_row_header_position(item[1].value, item[1].times).y + textPaddingY">
-            {{item[1].value}}
-          </text>
+        <!-- row header-->
+        <g v-if="headerFixedFlag.row">
+          <g v-for="item in num2header" :key="item.index">
+            <g v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
+              <rect class="header-table-cell"
+                :x="cal_row_header_position(item[1].value, item[1].times).x"
+                :y="cal_row_header_position(item[1].value, item[1].times).y"
+                :width="cal_row_header_position(item[1].value, item[1].times).width"
+                :height="cal_row_header_position(item[1].value, item[1].times).height">
+              </rect>
+              <text class="table-cell-text"
+                :x="cal_row_header_position(item[1].value, item[1].times).x + textPaddingX" 
+                :y="cal_row_header_position(item[1].value, item[1].times).y + textPaddingY">
+                {{item[1].value}}
+              </text>
+            </g>
+          </g>
         </g>
-      </g>
-      <!-- value cell -->
-      <g v-if="headerFixedFlag.row && headerFixedFlag.column">
-        <g v-for="item in num2seq" :key="item.index">
-          <rect class="table-cell"
-            :x="markWidth + widthRangeList[cal_value_cell_position(item[1].seq).col]"
-            :y="markHeight + heightRangeList[cal_value_cell_position(item[1].seq).row]"
-            :width="widthRangeList[cal_value_cell_position(item[1].seq).col+1] - widthRangeList[cal_value_cell_position(item[1].seq).col]"
-            :height="rowHeightList[cal_value_cell_position(item[1].seq).row]">
-          </rect>
-          <text class="table-cell-text"
-            :x="markWidth + widthRangeList[cal_value_cell_position(item[1].seq).col] + textPaddingX"
-            :y="markHeight + heightRangeList[cal_value_cell_position(item[1].seq).row] + textPaddingY">
-            {{item[1].value}}
-          </text>
+        <!-- value cell -->
+        <g v-if="headerFixedFlag.row && headerFixedFlag.column">
+          <g v-for="item in num2seq" :key="item.index">
+            <rect class="table-cell"
+              :x="markWidth + widthRangeList[cal_value_cell_position(item[1].seq).col]"
+              :y="markHeight + heightRangeList[cal_value_cell_position(item[1].seq).row]"
+              :width="widthRangeList[cal_value_cell_position(item[1].seq).col+1] - widthRangeList[cal_value_cell_position(item[1].seq).col]"
+              :height="rowHeightList[cal_value_cell_position(item[1].seq).row]">
+            </rect>
+            <text class="table-cell-text"
+              :x="markWidth + widthRangeList[cal_value_cell_position(item[1].seq).col] + textPaddingX"
+              :y="markHeight + heightRangeList[cal_value_cell_position(item[1].seq).row] + textPaddingY">
+              {{item[1].value}}
+            </text>
+          </g>
         </g>
+        <!-- transparent mask for choosing -->
+        <rect v-if="headerFixedFlag.row && headerFixedFlag.column && !isTransformView"
+          id="transparent-mask-for-choosing"
+          :x="markWidth" 
+          :y="markHeight"
+          :width="widthRangeList[columnWidthList.length]"
+          :height="heightRangeList[rowHeightList.length]"
+          @mousedown="handle_mouse_down_mask($event)">
+        </rect>
       </g>
-      <!-- transparent mask for choosing -->
-      <rect v-if="headerFixedFlag.row && headerFixedFlag.column && !isTransformView"
-        id="transparent-mask-for-choosing"
-        :x="markWidth" 
-        :y="markHeight"
-        :width="widthRangeList[columnWidthList.length]"
-        :height="heightRangeList[rowHeightList.length]"
-        @mousedown="handle_mouse_down_mask($event)">
-      </rect>
-      
-
       
       <!-- row mark -->
       <g v-for="(row, rowindex) in rowHeightList" :key="row.index">  
         <!-- rowHeightList -->
         <rect 
-          :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row') && !isTransformView, 
-            'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row') && !isTransformView,
+          :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView), 
+            'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView),
             'hovered-table-mark': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row')}"
           class="table-mark"
           x="0"
@@ -158,8 +224,8 @@
           @mouseout="handle_mouse_out_mark()">
         </rect>
         <text 
-          :class="{'chosen-table-mark-text': selectByMark.row && isMarkSelected(rowindex, 'row') && !isTransformView, 
-            'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row') && !isTransformView}"
+          :class="{'chosen-table-mark-text': selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView), 
+            'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView)}"
           class="table-mark-text"
           :x="markWidth/2"
           :y="markHeightRangeList[rowindex] + markHeight + markTextPaddingY" 
@@ -182,8 +248,8 @@
       <!-- column mark -->
       <g v-for="(column, columnindex) in columnWidthList" :key="column.index"> 
         <rect 
-          :class="{'chosen-table-mark': selectByMark.column && isMarkSelected(columnindex, 'column') && !isTransformView, 
-            'selected-table-mark': !selectByMark.column && isMarkSelected(columnindex, 'column') && !isTransformView,
+          :class="{'chosen-table-mark': selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView), 
+            'selected-table-mark': !selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView),
             'hovered-table-mark': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column')}"
           class="table-mark"
           :x="markWidthRangeList[columnindex] + markWidth"
@@ -197,8 +263,8 @@
         </rect>
         <text 
           :class="{'hovered-table-mark-text': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column'), 
-            'selected-table-mark-text': !selectByMark.column && isMarkSelected(columnindex, 'column') && !isTransformView,
-            'chosen-table-mark-text': selectByMark.column && isMarkSelected(columnindex, 'column') && !isTransformView}"
+            'selected-table-mark-text': !selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView),
+            'chosen-table-mark-text': selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView)}"
           class="table-mark-text"
           :x="markWidthRangeList[columnindex] + markWidth + markColumnWidthList[columnindex]/2"
           :y="markTextPaddingY"
@@ -217,7 +283,7 @@
           @mousedown="handle_mouse_down_mark_line(columnindex, 'column')">
         </rect>
       </g>
-
+      
       <!-- row mark highlight line -->
       <line v-if="!isTransformView" class="highlight-line"
         :x1="markWidth"
@@ -235,7 +301,7 @@
       </line>
 
       <!-- selected area -->
-      <rect v-if="!(headerFixedFlag.row && headerFixedFlag.column) || (headerFixedFlag.row && headerFixedFlag.column && !isTransformView)"
+      <rect v-if="isCurrFlat || !(headerFixedFlag.row && headerFixedFlag.column) || (headerFixedFlag.row && headerFixedFlag.column && !isTransformView)"
         class="selected-area"
         :x="markWidth + widthRangeList[selectedArea.left]" 
         :y="markHeight + heightRangeList[selectedArea.top]" 
@@ -261,21 +327,24 @@
           :y2="markHeight + markHeightRangeList[mouseDownMarkLine.index+1]">
         </line>
       </g>
+      
+      <g v-if="!isCurrFlat">
+        <!-- row header line -->
+        <line :class="{'header-line': headerRange.right!=null}"
+          :x1="markWidth + widthRangeList[headerRange.right+1]"
+          :x2="markWidth + widthRangeList[headerRange.right+1]"
+          :y1="markHeight"
+          :y2="markHeight + heightRangeList[heightRangeList.length-1]">
+        </line>
+        <!-- column header line -->
+        <line :class="{'header-line': headerRange.bottom!=null}"
+          :x1="markWidth"
+          :x2="markWidth + widthRangeList[widthRangeList.length-1]"
+          :y1="markHeight + heightRangeList[headerRange.bottom+1]"
+          :y2="markHeight + heightRangeList[headerRange.bottom+1]">
+        </line>
+      </g>
 
-      <!-- row header line -->
-      <line :class="{'header-line': headerRange.right!=null}"
-        :x1="markWidth + widthRangeList[headerRange.right+1]"
-        :x2="markWidth + widthRangeList[headerRange.right+1]"
-        :y1="markHeight"
-        :y2="markHeight + heightRangeList[heightRangeList.length-1]">
-      </line>
-      <!-- column header line -->
-      <line :class="{'header-line': headerRange.bottom!=null}"
-        :x1="markWidth"
-        :x2="markWidth + widthRangeList[widthRangeList.length-1]"
-        :y1="markHeight + heightRangeList[headerRange.bottom+1]"
-        :y2="markHeight + heightRangeList[headerRange.bottom+1]">
-      </line>
     </svg>
   </div>
 </template>
@@ -352,11 +421,16 @@ export default {
       rowHeaderIndex: 100,  // row headers' indexes starts from 100
       newHeaderIndex: 200, // new headers' indexes starts from 200
 
-      colHeaderChangeSignal: true,
-      rowHeaderChangeSignal: true,
+      // colHeaderChangeSignal: true,
+      // rowHeaderChangeSignal: true,
 
       // isTransformView: false
-      childIsTransformView: this.isTransformView
+      // childIsTransformView: this.isTransformView
+      isCurrFlat: false,
+      flatAttrName: null,
+      flatData: null,
+
+      hasTransposed: false
     }
   },
 
@@ -630,6 +704,8 @@ export default {
         get_cell_sequence(this.headerRange, this.rowHeightList, this.columnWidthList, this.dataValueList,
           this.colHeader, this.rowHeader, this.num2seq, this.seq2num, this.valueIndex)
         
+        this.valueIndex = this.num2seq.size
+        this.clear_selected()
         this.$emit("changeHeaderFixed", true)
       }
     },  
@@ -641,7 +717,73 @@ export default {
 
     //   this.isTransformView = true
     // }, 
+    clear_selected() {
+      this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
+      this.selectedArea = {top:0, left:0, bottom:0, right:0}
+      this.selectedMark = {index:null, type:null}
+      this.selectByMark = {row:false, column:false}
+    },
+    send_change_height_signal() {
+      this.rowHeightList = this.markRowHeightList
+      this.heightChangeSignal = !this.heightChangeSignal
+      this.markHeightChangeSignal= !this.markHeightChangeSignal
+    },
+    send_change_width_signal() {
+      this.columnWidthList = this.markColumnWidthList
+      this.widthChangeSignal = !this.widthChangeSignal
+      this.markWidthChangeSignal = !this.markWidthChangeSignal
+    },
+    set_list_length(list, n, filling) {
+      if (list.length >= n) {
+        return list.splice(0, n)
+      } 
+      else {
+        return list.concat(new Array(n-list.length).fill(filling))
+      }
+    },
+    transform_fold() {
+      this.isCurrFlat = true
+      if (this.flatData == null) {
+        this.flatData = this.get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1)
+        if (this.flatAttrName == null) {
+          this.flatAttrName = []
+          for (var i=0; i<this.flatData[0].length; i++) {
+            if (i == this.flatData[0].length-1) {
+              this.flatAttrName.push("value")
+            }
+            else {
+              var name = "attr" + (i+1)
+              this.flatAttrName.push(name)
+            }
+          }
+        }
+      }
+      this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, this.flatAttrName.length, this.cellWidth)
+      this.markRowHeightList = this.set_list_length(this.markRowHeightList, this.flatData.length+1, this.cellHeight) 
+      this.send_change_height_signal()
+      this.send_change_width_signal()
+    },
+    transform_unfold() {
+      this.isCurrFlat = false
+      if (!this.isHeaderFixed) {
+        // todo: flat识别header结构!!!!!!!!!!!!!!!!!!!!!!!!!
+      }
+
+      var lastColLayer = Array.from(this.colHeader[this.colHeader.length-1])
+      var lastColRange = lastColLayer[lastColLayer.length-1][1].range
+      var col = this.headerRange.right+1 + lastColRange[lastColRange.length-1].end+1
+      this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, col, this.cellWidth)
+
+      var lastRowLayer = Array.from(this.rowHeader[this.rowHeader.length-1])
+      var lastRowRange = lastRowLayer[lastRowLayer.length-1][1].range
+      var row = this.headerRange.right+1 + lastRowRange[lastRowRange.length-1].end+1
+      this.markRowHeightList = this.set_list_length(this.markRowHeightList, row, this.cellHeight)
+
+      this.send_change_height_signal()
+      this.send_change_width_signal()
+    },
     transform_transpose() {
+      this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
         for (var item of this.colHeader[i]) {
           var header = item[0]
@@ -664,32 +806,25 @@ export default {
       this.headerRange.bottom = this.headerRange.right
       this.headerRange.right = tmp
 
+      var colLen = this.columnWidthList.length
+      var rowLen = this.rowHeightList.length
 
-      if (this.columnWidthList.length > this.rowHeightList.length) {
-        tmp = this.columnWidthList.length
-        this.markColumnWidthList.length = this.rowHeightList.length
-
-        for (var i=this.rowHeightList.length; i<tmp; i++) {
-          this.markRowHeightList.push(this.cellHeight)
-        }
-      }      
-      else if (this.columnWidthList.length < this.rowHeightList.length) {
-        tmp = this.rowHeightList.length
-        this.markRowHeightList.length = this.columnWidthList.length
-
-        for (var i=this.columnWidthList.length; i<tmp; i++) {
-          this.markColumnWidthList.push(this.cellWidth)
-        }
+      this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, rowLen, this.cellWidth)
+      this.markRowHeightList = this.set_list_length(this.markRowHeightList, colLen, this.cellHeight)
+      this.send_change_height_signal()
+      this.send_change_width_signal()
+    },
+    handle_transform_swap(name, isSwapUp) {
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_swap(name, this.rowHeader, isSwapUp)
       }
-      this.columnWidthList = this.markColumnWidthList
-      this.rowHeightList = this.markRowHeightList
-      this.widthChangeSignal = !this.widthChangeSignal
-      this.markWidthChangeSignal = !this.markWidthChangeSignal
-      this.heightChangeSignal = !this.heightChangeSignal
-      this.markHeightChangeSignal= !this.markHeightChangeSignal
+      else {
+        this.transform_swap(name, this.colHeader, isSwapUp)
+      }
     },
     transform_swap(name, header, isSwapUp) {
-      var distributionInfo = this.headerDistribution.get(name)
+      var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
       var upLayerNum, downLayerNum
       if (isSwapUp && currLayerNum!=0) {
@@ -700,7 +835,11 @@ export default {
         upLayerNum = currLayerNum
         downLayerNum = currLayerNum + 1
       }
-      else return
+      else {
+        // just for test!!!!!!!!!!!!!!!!!!!!!!
+        this.transform_swap('2001', header, true)
+        return
+      }
 
       var new1st = Array.from(header[upLayerNum])[0][1].parent
       var new2nd = Array.from(header[upLayerNum])[0][1].children
@@ -738,6 +877,7 @@ export default {
 
       // swap position in header array
       header[upLayerNum] = header.splice(downLayerNum, 1,  header[upLayerNum])[0]
+
       // this.rowHeaderChangeSignal = !this.rowHeaderChangeSignal
       // this.colHeaderChangeSignal = !this.colHeaderChangeSignal
 
@@ -764,37 +904,292 @@ export default {
       }
 
     },
-    // to_vis_view() {
-    //   this.isTransformView = false
-    // },
+    handle_transform_2stacked(name) {
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_2stacked(name, this.rowHeader, true)
+      }
+      else {
+        this.transform_2stacked(name, this.colHeader, false)
+      }
+    },
+    transform_2stacked(name, header, isRow) {
+      var distributionInfo = this.headerDistribution.get(name)
+      var layer = distributionInfo.layer
+      var headerInfo = header[layer].get(name)
+      if (headerInfo.children.indexOf("")==-1 && headerInfo.children.indexOf(" ")==-1)  return // already stacked
+
+      // delete child
+      var movingChild = headerInfo.children.shift()
+      headerInfo.cellNum -= 1
+      header[layer].set(name, headerInfo)
+      
+      // delete parent
+      var cheaderInfo = header[layer+1].get(movingChild)
+      var pindex = cheaderInfo.parent.indexOf(name)
+      cheaderInfo.parent.splice(pindex, 1)
+      var deleteRange = cheaderInfo.range.splice(pindex, 1)
+      var deleteIndex = deleteRange[0].start
+      header[layer+1].set(movingChild, cheaderInfo)
+
+      // modify 'ranges'
+      for (var i=0; i<header.length; i++) {
+        for (var item of header[i]) {
+          var info = item[1]
+          var ranges = info.range
+          for (var r=0; r<ranges.length; r++) {
+            if (ranges[r].start > deleteIndex) {
+              ranges[r].start -= 1
+            }
+            if (ranges[r].end > deleteIndex) {
+              ranges[r].end -= 1
+            }
+            info.range = ranges
+            header[i].set(item[0], info)
+          }
+        }
+      }
+      
+      //modify header2num/num2header/headerDistribution
+      var t = this.header2num.get(movingChild)
+      var tt = t.splice(pindex, 1)
+      this.header2num.set(movingChild, t)
+      this.num2header.delete(tt[0])
+      for (var i=pindex; i<t.length; i++) {
+        var hinfo = this.num2header.get(t[i])
+        hinfo.times -= 1
+        this.num2header.set(t[i], hinfo)
+      }
+      var hinfo = this.headerDistribution.get(movingChild)
+      hinfo.count -= 1
+      this.headerDistribution.set(movingChild, hinfo)
+      
+      //modify num2seq/seq2num
+      for (var item of this.seq2num) {
+        if (item[0].has(name) && item[0].has(' ') || item[0].has(name) && item[0].has('')) {
+          this.num2seq.delete(item[1].num)
+          this.seq2num.delete(item[0])
+        }
+      }
+      
+      // modify heightList/widthList
+      if (isRow) {
+        this.markRowHeightList = this.set_list_length(this.markRowHeightList, this.markRowHeightList.length-1, 0)
+        this.send_change_height_signal()
+      }
+      else {
+        this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, this.markColumnWidthList.length-1, 0)
+        this.send_change_width_signal()       
+      }
+    },
+    handle_transform_2linear(name, times) {
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_2linear(name, this.rowHeader, times, true)
+      }
+      else {
+        this.transform_2linear(name, this.colHeader, times, false)
+      }
+    },
+    transform_2linear(name, header, times, isRow) {
+      var distributionInfo = this.headerDistribution.get(name)
+      var layer = distributionInfo.layer
+      var headerInfo = header[layer].get(name)
+      if (headerInfo.children.indexOf("")!=-1 || headerInfo.children.indexOf(" ")!=-1)  return // already linear
+
+      // add child
+      var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
+      headerInfo.children.unshift(newChild)
+      headerInfo.cellNum += 1
+      header[layer].set(name, headerInfo)
+      
+      // add parent
+      var addIndex = headerInfo.range[0].start // add before the first child
+      var addRange = {"start":addIndex, "end":addIndex}
+      var cheaderInfo, pindex
+      if (header[layer+1].has(newChild)) {
+        cheaderInfo = header[layer+1].get(newChild)
+        for (pindex=0; pindex<cheaderInfo.range.length; pindex++) {
+          if (cheaderInfo.range[pindex].start > addIndex) {
+            break
+          }
+        }
+        cheaderInfo.parent.splice(pindex, 0, name)
+        cheaderInfo.range.splice(pindex, 0, addRange)
+      }
+      else {
+        cheaderInfo = new Object
+        cheaderInfo.range = [addRange]
+        cheaderInfo.cellNum = 1
+        cheaderInfo.children = []
+        cheaderInfo.parent = [name]
+        cheaderInfo.isFullyConn = true
+      }      
+      header[layer+1].set(newChild, cheaderInfo)
+
+      //add values
+      if (isRow) {
+        for (var j=0; j<(this.columnWidthList.length-this.headerRange.right-1); j++) {
+          var range = header[layer].get(name).range[times]
+          
+          // calculate seq
+          var rangea = [range.start, j]
+          var rangeb = [range.start+1, j]
+          var seta = this.valueDistribution.get(rangea.toString())
+          var setb = this.valueDistribution.get(rangeb.toString())
+          var seq = new Set([...seta].filter(x => setb.has(x)))
+          var arra = Array.from(seta)
+          var arrseq = Array.from(seq)
+          // find the different index
+          var flag;
+          for(var t=0; t<arra.length; t++) {
+            if (arrseq.indexOf(arra[t]) == -1) {
+              flag = t;
+              break
+            }              
+          }
+          arrseq.splice(flag, 0, newChild)
+          seq = new Set(arrseq)
+
+          // calculate sum
+          var res = 0          
+          for (var i=range.start; i<=range.end; i++) {
+            var curSeq = this.valueDistribution.get([i,j].toString())
+            var v = this.seq2num.get(curSeq).value
+            res += Number(v)
+          } 
+          res = res.toFixed(1)
+          this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
+          this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
+        }
+      }
+      else {
+        for (var i=0; i<(this.rowHeightList.length-this.headerRange.bottom-1); i++) {
+          var range = header[layer].get(name).range[times]
+          
+          // calculate seq
+          var rangea = [i, range.start]
+          var rangeb = [i, range.start+1]
+          var seta = this.valueDistribution.get(rangea.toString())
+          var setb = this.valueDistribution.get(rangeb.toString())
+          var seq = new Set([...seta].filter(x => setb.has(x)))
+          var arra = Array.from(seta)
+          var arrseq = Array.from(seq)
+          // find the different index
+          var flag;
+          for(var t=0; t<arra.length; t++) {
+            if (arrseq.indexOf(arra[t]) == -1) {
+              flag = t;
+              break
+            }              
+          }
+          arrseq.splice(flag, 0, newChild)
+          seq = new Set(arrseq)
+
+          // calculate sum
+          var res = 0          
+          for (var j=range.start; j<=range.end; j++) {
+            var curSeq = this.valueDistribution.get([i,j].toString())
+            var v = this.seq2num.get(curSeq).value
+            res += Number(v)
+          } 
+          res = res.toFixed(1)
+          this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
+          this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
+        }
+      }
+
+      // modify 'ranges'
+      for (var i=0; i<header.length; i++) {
+        for (var item of header[i]) {
+          var info = item[1]
+          var ranges = info.range
+          for (var r=0; r<ranges.length; r++) {
+            if (ranges[r].start >= addIndex) {
+              if (ranges[r].start == addIndex && (i==layer || item[0]==newChild)) {
+                // do nothing
+              }
+              else {
+                ranges[r].start += 1
+              }
+            }
+            if (ranges[r].end >= addIndex) {
+              if (ranges[r].end == addIndex && item[0]==newChild) {
+                // do nothing
+              }
+              else {
+                ranges[r].end += 1
+              }
+            }
+            info.range = ranges
+            header[i].set(item[0], info)
+          }
+        }
+      }
+      
+      //modify header2num/num2header/headerDistribution
+      if (this.headerDistribution.has(newChild)) {
+        var hinfo = this.headerDistribution.get(newChild)
+        var t = this.header2num.get(newChild)
+        t.push(this.newHeaderIndex)
+        this.header2num.set(newChild, t)
+        var tt = {"value":newChild, "times":hinfo.count++}
+        this.num2header.set(this.newHeaderIndex++, tt)        
+        this.headerDistribution.set(newChild, hinfo)
+      }
+      else {
+        this.header2num.set(newChild, [this.newHeaderIndex])
+        this.num2header.set(this.newHeaderIndex, {"value":newChild, "times":0})
+        this.headerDistribution.set(newChild, {"isRowHeader":isRow, "layer":layer+1, "count":1})
+      }
+
+      // modify heightList/widthList
+      if (isRow) {
+        this.markRowHeightList = this.set_list_length(this.markRowHeightList, this.markRowHeightList.length+1, this.cellHeight)
+        this.send_change_height_signal()
+      }
+      else {
+        this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, this.markColumnWidthList.length+1, this.cellWidth)
+        this.send_change_width_signal()       
+      }
+    },
+    transform_derive() {
+
+    },
+    transform_merge() {
+
+    },
     transmit_data_to_vis() {
       var data = this.get_data_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
       var jsdata = this.gen_json_from_data(data)
-      var field = {}
-      for (var j=0; j<data[0].length; j++) {
-        if (j == data[0].length-1) {
-          field["value"] = "quantitative"
-        }
-        else {
-          var name = "attr" + (j+1)
-          field[name] = "nominal"
-        }
-      }
+      // var field = {}
+      // for (var j=0; j<data[0].length; j++) {
+      //   if (j == data[0].length-1) {
+      //     field["value"] = "quantitative"
+      //   }
+      //   else {
+      //     var name = "attr" + (j+1)
+      //     field[name] = "nominal"
+      //   }
+      // }
       // console.log(field)
+      var metadata = this.gen_metadata_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+
 
       var x = this.markWidth + this.widthRangeList[this.selectedArea.left]
       var y = this.markHeight + this.heightRangeList[this.selectedArea.top]
       var width = this.widthRangeList[this.selectedArea.right+1] - this.widthRangeList[this.selectedArea.left]
       var height= this.heightRangeList[this.selectedArea.bottom+1] - this.heightRangeList[this.selectedArea.top]
       var pos = {"x":x, "y":y, "width":width, "height":height}
-      console.log("pos", pos)
-      this.$bus.$emit('visualize-selectedData', pos, jsdata, field)
+      
+      this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
     },
     get_data_from_chosen(top, bottom, left, right) {
+      console.log(top, bottom, left, right)
       var res=[]
       for (var i=top; i<=bottom; i++) {
         for (var j=left; j<=right; j++) {
-          var pos = [i, j].toString()
+          var pos = [i-this.headerRange.bottom-1, j-this.headerRange.right-1].toString()
           var seq = this.valueDistribution.get(pos)
           var value = this.seq2num.get(seq).value
           seq.add(value)
@@ -812,7 +1207,9 @@ export default {
             obj["value"] = data[i][j]
           }
           else {
-            var name = "attr" + (j+1)
+            var info = this.headerDistribution.get(data[i][j])
+            var name = info.isRowHeader ? "y" : "x"
+            name += (info.layer)
             obj[name] = data[i][j]
           }
         }
@@ -821,6 +1218,71 @@ export default {
       console.log("data", res)
       var js = JSON.stringify(res)
     
+      return js
+    },
+    gen_metadata_from_chosen(top, bottom, left, right) {
+      var res = {"x":null, "y":null}
+      var xobj = {"range": 0, "headers":[]}
+      var yobj = {"range": 0, "headers":[]}
+
+      xobj.range = right - left + 1
+      yobj.range = bottom - top + 1
+
+      // col headers
+      for (var i=0; i<this.colHeader.length; i++) {
+        var hobj = new Object
+        hobj["name"] = "x" + i
+        hobj["sort"] = []
+        for (var j=left-this.headerRange.right-1; j<=right-this.headerRange.right-1;) {
+          for (var item of this.colHeader[i]) {
+            var find = false
+            var ranges = item[1].range
+            for (var k=0; k<ranges.length; k++) {
+              if (j <= ranges[k].end && j >= ranges[k].start) {
+                find = true
+                break
+              }
+            }
+            if (find) {
+              hobj.sort.push(item[0])
+              j = ranges[k].end + 1
+              break
+            }
+          }          
+        }
+        xobj.headers.push(hobj)
+      }
+
+      // row headers
+      for (var i=0; i<this.rowHeader.length; i++) {
+        var hobj = new Object
+        hobj["name"] = "y" + i
+        hobj["sort"] = []
+        for (var j=top-this.headerRange.bottom-1; j<=bottom-this.headerRange.bottom-1;) {
+          for (var item of this.rowHeader[i]) {
+            var find = false
+            var ranges = item[1].range
+            for (var k=0; k<ranges.length; k++) {
+              if (j <= ranges[k].end && j >= ranges[k].start) {
+                find = true
+                break
+              }
+            }
+            if (find) {
+              hobj.sort.push(item[0])
+              j = ranges[k].end + 1
+              break
+            }
+          }          
+        }
+        yobj.headers.push(hobj)
+      }
+
+      res.x = xobj
+      res.y = yobj
+      console.log(res)
+
+      var js = JSON.stringify(res)
       return js
     },
     handle_drag() {
@@ -860,14 +1322,14 @@ export default {
         }
         cal_header_range(this.colHeader)
       },
-      colHeaderChangeSignal: function() {
-        for (var i=0; i<this.colHeader.length; i++) {
-          for (var item of this.colHeader[i].values()) {
-            item.range = []
-          }
-        }
-        cal_header_range(this.colHeader)
-      },
+      // colHeaderChangeSignal: function() {
+      //   for (var i=0; i<this.colHeader.length; i++) {
+      //     for (var item of this.colHeader[i].values()) {
+      //       item.range = []
+      //     }
+      //   }
+      //   cal_header_range(this.colHeader)
+      // },
       rowHeader: function() {
         for (var i=0; i<this.rowHeader.length; i++) {
           for (var item of this.rowHeader[i].values()) {
@@ -876,14 +1338,14 @@ export default {
         }
         cal_header_range(this.rowHeader)
       },
-      rowHeaderChangeSignal: function() {
-        for (var i=0; i<this.rowHeader.length; i++) {
-          for (var item of this.rowHeader[i].values()) {
-            item.range = []
-          }
-        }
-        cal_header_range(this.rowHeader)
-      },
+      // rowHeaderChangeSignal: function() {
+      //   for (var i=0; i<this.rowHeader.length; i++) {
+      //     for (var item of this.rowHeader[i].values()) {
+      //       item.range = []
+      //     }
+      //   }
+      //   cal_header_range(this.rowHeader)
+      // },
       isTransformView: function() {
         this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
         this.selectedArea = {top:0, left:0, bottom:0, right:0}
@@ -1051,7 +1513,7 @@ export default {
         if (rowIndex.start == rowIndex.end) {
           res.row = rowIndex.start + this.headerRange.bottom+1
         }        
-        var key=[res.row, res.col].toString()
+        var key=[rowIndex.start, colIndex.start].toString()
         this.valueDistribution.set(key, seq)
         return res
       }
@@ -1080,9 +1542,12 @@ export default {
   #column-header-button {
     margin-top: 1%;
   }
-  .button {
-    margin-top: 1%;
-
+  .tranform-button-container {
+    margin-right: 1%;
+    text-align: right;
+    .button {
+      margin-top: 1%;
+    }
   }
   .table-view-svg {
     height: 100%;
