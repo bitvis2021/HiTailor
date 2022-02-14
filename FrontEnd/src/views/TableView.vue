@@ -259,7 +259,6 @@
           @mousedown="handle_mouse_down_mark(columnindex, 'column')"
           @mouseover="handle_mouse_over_mark(columnindex, 'column')"
           @mouseout="handle_mouse_out_mark()">
-          {{cal_column_mark(columnindex)}}
         </rect>
         <text 
           :class="{'hovered-table-mark-text': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column'), 
@@ -1176,7 +1175,6 @@ export default {
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
     },
     get_data_from_chosen(top, bottom, left, right) {
-      console.log(top, bottom, left, right)
       var res=[]
       for (var i=top; i<=bottom; i++) {
         for (var j=left; j<=right; j++) {
@@ -1199,8 +1197,14 @@ export default {
           }
           else {
             var info = this.headerDistribution.get(data[i][j])
-            var name = info.isRowHeader ? "y" : "x"
-            name += (info.layer)
+            var name
+            if (info.isRowHeader) {
+              name = "column "
+              name += this.cal_column_mark(info.layer)
+            }
+            else {
+              name = "row " + (info.layer+1)
+            }
             obj[name] = data[i][j]
           }
         }
@@ -1222,7 +1226,7 @@ export default {
       // col headers
       for (var i=0; i<this.colHeader.length; i++) {
         var hobj = new Object
-        hobj["name"] = "x" + i
+        hobj["name"] = "row " + (i+1)
         hobj["sort"] = []
         for (var j=left-this.headerRange.right-1; j<=right-this.headerRange.right-1;) {
           for (var item of this.colHeader[i]) {
@@ -1235,7 +1239,14 @@ export default {
               }
             }
             if (find) {
-              hobj.sort.push(item[0])
+              var nname
+              if (i!=0) {
+                nname = xobj.headers. + "." + item[0]
+              }
+              else {
+                nname = item[0]
+              }
+              hobj.sort.push(nname)
               j = ranges[k].end + 1
               break
             }
@@ -1244,10 +1255,39 @@ export default {
         xobj.headers.push(hobj)
       }
 
+      // col headers new
+      for (var j=left-this.headerRange.right-1; j<=right-this.headerRange.right-1;) {
+        var prefix = ""
+        for (var i=0; i<this.colHeader.length; i++) {
+          for (var item of this.colHeader[i]) {
+            var find = false
+            var ranges = item[1].range
+            for (var k=0; k<ranges.length; k++) {
+              if (j <= ranges[k].end && j >= ranges[k].start) {
+                find = true
+                break
+              }
+            }
+            if (find) {
+              var nname
+              if (i!=0) {
+                nname = xobj.headers. + "." + item[0]
+              }
+              else {
+                nname = item[0]
+              }
+              hobj.sort.push(nname)
+              j = ranges[k].end + 1
+              break
+            }
+          } 
+        }         
+      }
+
       // row headers
       for (var i=0; i<this.rowHeader.length; i++) {
         var hobj = new Object
-        hobj["name"] = "y" + i
+        hobj["name"] = "column " + this.cal_column_mark(i)
         hobj["sort"] = []
         for (var j=top-this.headerRange.bottom-1; j<=bottom-this.headerRange.bottom-1;) {
           for (var item of this.rowHeader[i]) {
