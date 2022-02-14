@@ -24,19 +24,22 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-
-    <div class="content-container">
-      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
-    </div>
+    
     <div class="change-view-button-container" v-if="isHeaderFixed">
       <el-radio-group class="change-view-button" v-model="currView" size="medium">
         <el-radio-button label="Transformation"></el-radio-button>
         <el-radio-button label="Visualization"></el-radio-button>
       </el-radio-group>
     </div>
+    
+    <div class="content-container">
+      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
+    </div>
+
     <div class="side-panel">
       <VisView></VisView> 
     </div>
+
     <el-dialog
       title="Dataset"
       id="dataset-dialog"
@@ -121,6 +124,7 @@ export default {
 <style lang="less">
 @side-panel-width: 20%;
 @menu-height: 2.5rem;
+@change-view-button-container-height:3.5rem;
 html {
   font-size: 100%;
 }
@@ -151,11 +155,13 @@ html {
     }
   }
   .change-view-button-container {
-    text-align: left;
-    margin-left: 1%;
+    position: absolute;
+    top:@menu-height;
+    left:0%;
+    height:@change-view-button-container-height;
+    right: @side-panel-width;
     .change-view-button {
-      margin-top: 1%;
-      
+      margin-top: 10px;
     }
   }
   .labelIcon {
@@ -163,7 +169,7 @@ html {
   }
   .content-container {
     position: absolute;
-    top: @menu-height;
+    top: @menu-height + @change-view-button-container-height;
     left: 0%;
     bottom: 0%;
     right: @side-panel-width;
