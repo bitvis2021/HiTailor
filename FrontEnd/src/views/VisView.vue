@@ -1,6 +1,6 @@
 <template>
   <div class="visview-container" v-if="this.showVisPanel">
-    <div
+    <!-- <div
       style="
         background-color: white;
         position: absolute;
@@ -10,7 +10,7 @@
       "
     >
       {{ this.VegaConfigNoData }}
-    </div>
+    </div> -->
     <div id="gen-chart"></div>
     <div id="vis-view">
       <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
@@ -131,7 +131,8 @@ export default {
     this.$bus.$on("visualize-selectedData", (position, jsonData, metaData) => {
       this.showVisPanel = true;
       this.position = position;
-      console.log(metaData)
+      // console.log(metaData)
+      console.log('data',jsonData)
       if (typeof metaData != Object) {
         metaData=JSON.parse(metaData)
       }

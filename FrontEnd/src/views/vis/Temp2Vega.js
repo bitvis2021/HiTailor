@@ -46,6 +46,7 @@ function GetHeaders(channel_obj) {
 // 输入元数据，返回VegaTemplate对象数组
 export function GetTemplates(regionMetaData, data) {
     let templates = [];
+
     if (regionMetaData != undefined && data != undefined) {
         console.log('region',regionMetaData)
         console.log('regionX',regionMetaData["x"])

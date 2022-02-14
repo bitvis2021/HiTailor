@@ -43,7 +43,7 @@
           </el-button>
           <el-button type="primary" plain 
             class="button"
-            @click="handle_transform_swap('2001', false)" > 
+            @click="handle_transform_swap('FALL 2001', false)" > 
             Swap
           </el-button>
           <el-button type="primary" plain 
@@ -837,7 +837,7 @@ export default {
       }
       else {
         // just for test!!!!!!!!!!!!!!!!!!!!!!
-        this.transform_swap('2001', header, true)
+        this.transform_swap('FALL 2001', header, true)
         return
       }
 
