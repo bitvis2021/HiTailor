@@ -1,12 +1,12 @@
 <template>
   <div class="table-view" >
-    <div v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
-      <el-button class="button" id="row-header-button"
+    <div class="header-button-container" v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
+      <el-button class="button" id="row-header-button"  plain size="medium"
         @click="choose_header('row')" > 
         row header 
       </el-button>
 
-      <el-button class="button" id="column-header-button"    
+      <el-button class="button" id="column-header-button"  plain size="medium"   
         @click="choose_header('column')" > 
         column header 
       </el-button>
@@ -24,44 +24,44 @@
  
       <div class="tranform-button-container" v-if="isTransformView">
         <el-button v-if="isCurrFlat"
-          type="primary" plain 
+          type="primary" plain size="medium" 
           class="button"
           @click="transform_unfold()" > 
           Unfold
         </el-button>
 
         <div v-if="!isCurrFlat">
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="transform_fold()" > 
             Fold
           </el-button>
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="transform_transpose()" > 
             Transpose
           </el-button>
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="handle_transform_swap('FALL 2001', false)" > 
             Swap
           </el-button>
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="handle_transform_2stacked('HUMANITIES')" > 
             ToStacked
           </el-button>
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="handle_transform_2linear('HUMANITIES', 0)" > 
             ToLinear
           </el-button>
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="transform_derive()" > 
             Derive
           </el-button>
-          <el-button type="primary" plain 
+          <el-button type="primary" plain size="medium" 
             class="button"
             @click="transform_merge()" > 
             Merge
@@ -69,13 +69,13 @@
         </div>
       </div>
 
-      <div v-if="!isTransformView">
-        <el-button type="primary" plain 
+      <!-- <div v-if="!isTransformView">
+        <el-button type="primary" plain size="medium" 
           class="button"
           @click="transmit_data_to_vis()" > 
           transmit data
-        </el-button>
-      </div>
+        </el-button> 
+      </div> -->
     </div>
 
    
@@ -659,6 +659,9 @@ export default {
       this.mouseOverCell =  {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null}
       this.mouseDownMarkLine = {index:null, type:null}
       this.selectedMark = {index:null, type:null}
+      if (this.headerFixedFlag.row && this.headerFixedFlag.column && !this.isTransformView) {
+        this.transmit_data_to_vis()
+      }
     },
 
     handle_mouse_down_mask(event) {
@@ -1162,19 +1165,7 @@ export default {
     transmit_data_to_vis() {
       var data = this.get_data_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
       var jsdata = this.gen_json_from_data(data)
-      // var field = {}
-      // for (var j=0; j<data[0].length; j++) {
-      //   if (j == data[0].length-1) {
-      //     field["value"] = "quantitative"
-      //   }
-      //   else {
-      //     var name = "attr" + (j+1)
-      //     field[name] = "nominal"
-      //   }
-      // }
-      // console.log(field)
       var metadata = this.gen_metadata_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
-
 
       var x = this.markWidth + this.widthRangeList[this.selectedArea.left]
       var y = this.markHeight + this.heightRangeList[this.selectedArea.top]
@@ -1536,18 +1527,13 @@ export default {
     user-select: none;
     cursor: cell;
   }
-  #row-header-button {
-    margin-top: 1%;
-  }
-  #column-header-button {
-    margin-top: 1%;
+  .header-button-container {
+    margin-top: 5px;
+    text-align: center;
   }
   .tranform-button-container {
-    margin-right: 1%;
-    text-align: right;
-    .button {
-      margin-top: 1%;
-    }
+    margin-top: 5px;
+    text-align: center;
   }
   .table-view-svg {
     height: 100%;
