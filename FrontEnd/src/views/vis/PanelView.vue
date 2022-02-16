@@ -92,11 +92,6 @@ export default {
     },
   },
   mounted() {
-    // console.log('thischart',this.chartDec)
-    // this.$bus.$emit(
-    //   "preview-config",
-    //   // JSON.parse(JSON.stringify(this.chartDec))
-    // );
   },
 };
 </script>

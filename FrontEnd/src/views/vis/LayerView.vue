@@ -1,6 +1,5 @@
 <template>
   <div class="layer">
-    <!-- 临时debug -->
     <mark-view
       :config="this.markJson"
       v-on:apply-config="ApplyMark"

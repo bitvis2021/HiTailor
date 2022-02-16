@@ -1,6 +1,6 @@
 <template>
   <div class="visview-container">
-    <div
+    <!-- <div
       style="
         background-color: white;
         position: absolute;
@@ -10,9 +10,10 @@
       "
     >
       {{ this.VegaConfigNoData }}
-    </div>
+    </div> -->
     <div id="gen-chart"></div>
     <div id="vis-view">
+      <!-- return buttons -->
       <el-row type="flex" justify="end" style="margin-right: 10px">
         <el-button
           v-if="!showTemplates"
@@ -77,16 +78,19 @@ export default {
   methods: {
     ApplyVegaConf(data) {
       this.vegaConfig = data;
-      this.vegaConfig.data=this.visData;
+      this.vegaConfig.data = this.visData;
+      this.$bus.$emit("preview-config");
     },
     ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
     OpenPanelView(template) {
       this.vegaConfig = template.GetVegaConf();
 
-      this.visData=this.vegaConfig.data;
+      this.visData = this.vegaConfig.data;
 
       this.ECSelections = template.GetECSelections();
       this.showTemplates = false;
+
+      this.$bus.$emit("preview-config");
     },
     ApplyVis2Preview() {},
     ApplyVis2Table() {
@@ -117,23 +121,17 @@ export default {
       });
     },
   },
-  beforeCreate() {
-    // this.$bus.$on("apply-config", (visHeight, visWidth, visX, visY, data) => {
-    //   // this.GenFig(visHeight, visWidth, visX, visY, data);
-    // });
-
-    this.$bus.$on("preview-config", (data) => {
-      data.height = 200;
-      data.width = 300;
-      // vegaEmbed("#chart", data, {
-      //   renderer: "svg",
-      //   actions: false,
-      //   // theme: "latimes",
-      // });
-    });
-  },
   mounted() {
     // get event
+    this.$bus.$on("preview-config", () => {
+      let data = this.vegaConfig;
+      data.height = 188;
+      data.width = 288;
+      vegaEmbed("#chart", data, {
+        renderer: "svg",
+        actions: false,
+      });
+    });
     this.$bus.$on("visualize-selectedData", (position, jsonData, metaData) => {
       this.position = position;
       if (typeof metaData != Object) {
@@ -146,7 +144,6 @@ export default {
     });
   },
   beforeDestroy() {
-    // this.$bus.$off("apply-config");
     this.$bus.$off("preview-config");
   },
 };
