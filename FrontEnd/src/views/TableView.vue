@@ -259,7 +259,6 @@
           @mousedown="handle_mouse_down_mark(columnindex, 'column')"
           @mouseover="handle_mouse_over_mark(columnindex, 'column')"
           @mouseout="handle_mouse_out_mark()">
-          {{cal_column_mark(columnindex)}}
         </rect>
         <text 
           :class="{'hovered-table-mark-text': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column'), 
@@ -1164,8 +1163,9 @@ export default {
     },
     transmit_data_to_vis() {
       var data = this.get_data_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
-      var jsdata = this.gen_json_from_data(data)
       var metadata = this.gen_metadata_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+      var chgdata = this.change_data_form(data)
+      var jsdata = this.gen_json_from_data(data, chgdata)
 
       var x = this.markWidth + this.widthRangeList[this.selectedArea.left]
       var y = this.markHeight + this.heightRangeList[this.selectedArea.top]
@@ -1176,7 +1176,6 @@ export default {
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
     },
     get_data_from_chosen(top, bottom, left, right) {
-      console.log(top, bottom, left, right)
       var res=[]
       for (var i=top; i<=bottom; i++) {
         for (var j=left; j<=right; j++) {
@@ -1184,24 +1183,65 @@ export default {
           var seq = this.valueDistribution.get(pos)
           var value = this.seq2num.get(seq).value
           seq.add(value)
-          res.push(Array.from(seq))
+          res.push(Array.from(seq))      
         }
       }
       return res
     },
-    gen_json_from_data(data) {
+    change_data_form(origindata) {
+      var data = JSON.parse(JSON.stringify(origindata))
+      var rh = new Array(this.rowHeader.length).fill("")
+      var ch = new Array(this.colHeader.length).fill("")
+
+      for (var i=0; i<data.length; i++) {      
+        if (i == 0) {
+          // cal prefix position when it's the first line
+          for (var k=0; k<data[i].length-1; k++) {
+            var info = this.headerDistribution.get(data[i][k])
+            if (info.isRowHeader) {
+              rh[info.layer] = k
+            }
+            else {
+              ch[info.layer] = k
+            }
+          }
+        }
+        // add prefix
+        var prefix = ""
+        for (var k=0; k<ch.length; k++) {
+          // column
+          data[i][ch[k]] = prefix + data[i][ch[k]]
+          prefix = (data[i][ch[k]] + ".")
+        }
+        
+        prefix = ""
+        for (var k=0; k<rh.length; k++) {
+          // row
+          data[i][rh[k]] = prefix + data[i][rh[k]]
+          prefix = (data[i][rh[k]] + ".")
+        }          
+      }
+      return data
+    },
+    gen_json_from_data(data, chgdata) {
       var res=[]
       for (var i=0; i<data.length; i++) {
         var obj={}
         for (var j=0; j<data[i].length; j++) {
           if (j == data[i].length-1) {
-            obj["value"] = data[i][j]
+            obj["value"] = chgdata[i][j]
           }
           else {
             var info = this.headerDistribution.get(data[i][j])
-            var name = info.isRowHeader ? "y" : "x"
-            name += (info.layer)
-            obj[name] = data[i][j]
+            var name
+            if (info.isRowHeader) {
+              name = "column "
+              name += this.cal_column_mark(info.layer)
+            }
+            else {
+              name = "row " + (info.layer+1)
+            }
+            obj[name] = chgdata[i][j]
           }
         }
         res.push(obj)
@@ -1220,10 +1260,12 @@ export default {
       yobj.range = bottom - top + 1
 
       // col headers
+      var totalPre = []
       for (var i=0; i<this.colHeader.length; i++) {
         var hobj = new Object
-        hobj["name"] = "x" + i
+        hobj["name"] = "row " + (i+1)
         hobj["sort"] = []
+        var currPre = []
         for (var j=left-this.headerRange.right-1; j<=right-this.headerRange.right-1;) {
           for (var item of this.colHeader[i]) {
             var find = false
@@ -1231,24 +1273,37 @@ export default {
             for (var k=0; k<ranges.length; k++) {
               if (j <= ranges[k].end && j >= ranges[k].start) {
                 find = true
+                var pre = {"start": ranges[k].start, "end":ranges[k].end}
+                currPre.push(pre)
                 break
               }
             }
             if (find) {
-              hobj.sort.push(item[0])
+              var nname = ""
+              for (var q=0; q<totalPre.length; q++) {
+                if (j <= totalPre[q].end && j >= totalPre[q].start) {
+                  nname += xobj.headers[i-1].sort[q] + "."
+                  break
+                }
+              }
+              nname += item[0]
+              hobj.sort.push(nname)
               j = ranges[k].end + 1
               break
             }
           }          
         }
+        totalPre = currPre
         xobj.headers.push(hobj)
       }
 
       // row headers
+      totalPre = []
       for (var i=0; i<this.rowHeader.length; i++) {
         var hobj = new Object
-        hobj["name"] = "y" + i
+        hobj["name"] = "column " + this.cal_column_mark(i)
         hobj["sort"] = []
+        var currPre = []
         for (var j=top-this.headerRange.bottom-1; j<=bottom-this.headerRange.bottom-1;) {
           for (var item of this.rowHeader[i]) {
             var find = false
@@ -1256,22 +1311,33 @@ export default {
             for (var k=0; k<ranges.length; k++) {
               if (j <= ranges[k].end && j >= ranges[k].start) {
                 find = true
+                var pre = {"start": ranges[k].start, "end":ranges[k].end}
+                currPre.push(pre)
                 break
               }
             }
             if (find) {
-              hobj.sort.push(item[0])
+              var nname = ""
+              for (var q=0; q<totalPre.length; q++) {
+                if (j <= totalPre[q].end && j >= totalPre[q].start) {
+                  nname += yobj.headers[i-1].sort[q] + "."
+                  break
+                }
+              }
+              nname += item[0]
+              hobj.sort.push(nname)
               j = ranges[k].end + 1
               break
             }
           }          
         }
+        totalPre = currPre
         yobj.headers.push(hobj)
       }
 
       res.x = xobj
       res.y = yobj
-      console.log(res)
+      console.log("metadata", res)
 
       var js = JSON.stringify(res)
       return js
