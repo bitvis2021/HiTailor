@@ -2,50 +2,41 @@
   <div>
     <el-divider content-position="right">Encoding</el-divider>
     <div class="encoding-card">
-      <div v-for="(encoding, key) in this.encodings" :key="key + encoding.name">
-        <el-row>
-          {{ InitialUpper(encoding.name) }}
-        </el-row>
-        <br />
-        <div
-          v-for="property in encoding.properties"
-          :key="encoding.name + property.name"
-        >
-          <el-row type="flex" class="row-bg" justify="space-between">
-            <span class="propertyText">
-              {{ property.name + ":" }}
-            </span>
-
-            <el-select
-              v-if="property.type == 'select'"
-              v-model="config[encoding.name][property.name]"
-              placeholder="select..."
-            >
-              <el-option
-                v-for="(item, key) in property.selections"
-                :key="encoding.name + property.name + item + key"
-                :label="item"
-                :value="item"
-              >
-              </el-option>
-            </el-select>
-            <!-- else if -->
-          </el-row>
-          <br />
+      <div
+        v-for="(encoding, eName) in this.schema"
+        :key="eName + encoding.name"
+      >
+        <div>
+          {{ eName }}
         </div>
-        <el-row type="flex" class="add-operation" justify="start">
-          <el-dropdown>
-            <span class="el-dropdown-link">
-              <i class="el-icon-circle-plus"></i> Add Property
-            </span>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>1</el-dropdown-item>
-              <el-dropdown-item disabled>2</el-dropdown-item>
-              <el-dropdown-item divided>3</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-        </el-row>
         <br />
+        <el-row
+          type="flex"
+          class="row-bg"
+          justify="space-between"
+          v-for="(property, key) in encoding"
+          :key="key + property.name"
+        >
+          <span class="propertyText">
+            {{ property.name + ":" }}
+          </span>
+          <el-select
+            v-if="property.type == 'select'"
+            v-model="property.value"
+            @change="ApplyConfig"
+            placeholder="select..."
+          >
+            <el-option
+              v-for="item in property.selections"
+              :key="eName + item"
+              :label="item"
+              :value="item"
+            >
+            </el-option>
+          </el-select>
+          <br />
+          <br />
+        </el-row>
         <el-divider></el-divider>
         <br />
       </div>
@@ -65,18 +56,21 @@
   </div>
 </template>
 <script>
+import { EncodingCompiler } from "./SchemaCompiler";
 export default {
   name: "EncodingView",
-  props: ["config", "schema"],
+  props: ["config", "selections"],
   components: {},
   created() {},
   mounted() {
-    console.log(this.schema);
+    this.EC = new EncodingCompiler(this.config, this.selections);
+    this.schema = this.EC.GetSchema();
   },
   data() {
     return {
-      encodings: this.schema,
-      config: this.config,
+      encoding: this.config,
+      schema: {},
+      EC: {},
     };
   },
   methods: {
@@ -84,7 +78,8 @@ export default {
       return word.toUpperCase()[0] + word.slice(1);
     },
     ApplyConfig() {
-      this.$emit("apply-config", this.encodingForm.encoding);
+      this.encoding = this.EC.GetVegaConfig(this.schema);
+      this.$emit("apply-config", this.encoding);
     },
   },
   computed: {},

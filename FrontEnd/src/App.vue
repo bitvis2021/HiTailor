@@ -1,5 +1,5 @@
 <template>
-    <div id="app" v-if="!loadingData"> 
+  <div id="app" v-if="!loadingData">
     <el-menu
       class="el-menu-demo"
       mode="horizontal"
@@ -16,28 +16,38 @@
         v-for="operation in operationArray"
         :key="operation"
         :content="operation"
-        effect="light">
+        effect="light"
+      >
         <el-menu-item
           :index="operation"
-          @click="changeDialogVisible(operation)">
+          @click="changeDialogVisible(operation)"
+        >
           {{ operation }}
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-    
+
     <div class="change-view-button-container" v-if="isHeaderFixed">
-      <el-radio-group class="change-view-button" v-model="currView" size="medium">
+      <el-radio-group
+        class="change-view-button"
+        v-model="currView"
+        size="medium"
+      >
         <el-radio-button label="Transformation"></el-radio-button>
         <el-radio-button label="Visualization"></el-radio-button>
       </el-radio-group>
     </div>
-    
+
     <div class="content-container">
-      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
+      <TableView
+        :isHeaderFixed="isHeaderFixed"
+        :isTransformView="currView == 'Transformation'"
+        @changeHeaderFixed="change_is_header_fixed($event)"
+      ></TableView>
     </div>
 
-    <div class="side-panel">
-      <VisView></VisView> 
+    <div v-show="showPanel" class="vis-panel">
+      <VisView></VisView>
     </div>
 
     <el-dialog
@@ -60,13 +70,16 @@ import VisView from "./views/VisView.vue";
 import { getTabularDataset } from "@/communication/communicator.js";
 import { Dataset } from "@/dataset/dataset.js";
 import DataDialog from "@/views/dialogs/DataDialog.vue";
-
+import { mapState } from "vuex";
 export default {
   name: "app",
   components: {
     VisView,
     TableView,
     DataDialog,
+  },
+  computed: {
+    ...mapState(["showPanel"]),
   },
   data() {
     return {
@@ -76,7 +89,7 @@ export default {
       datasetDialogVisible: false,
       datasetDialogKey: 0,
       loadingData: true,
-      
+
       isHeaderFixed: false,
       currView: "Transformation",
     };
@@ -115,16 +128,16 @@ export default {
       }
     },
     change_is_header_fixed(state) {
-      this.isHeaderFixed = state
+      this.isHeaderFixed = state;
     },
-  }
+  },
 };
 </script>
 
 <style lang="less">
 @side-panel-width: 20%;
 @menu-height: 2.5rem;
-@change-view-button-container-height:3.5rem;
+@change-view-button-container-height: 3.5rem;
 html {
   font-size: 100%;
 }
@@ -156,9 +169,9 @@ html {
   }
   .change-view-button-container {
     position: absolute;
-    top:@menu-height;
-    left:0%;
-    height:@change-view-button-container-height;
+    top: @menu-height;
+    left: 0%;
+    height: @change-view-button-container-height;
     right: @side-panel-width;
     .change-view-button {
       margin-top: 10px;
@@ -174,10 +187,10 @@ html {
     bottom: 0%;
     right: @side-panel-width;
   }
-  svg:not(:root){
+  svg:not(:root) {
     overflow: visible;
   }
-  .side-panel{
+  .vis-panel {
     position: absolute;
     right: 0%;
     width: @side-panel-width;

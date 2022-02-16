@@ -1,65 +1,179 @@
-let positionChannel = ['field', 'aggregate']
-function SchemaCompiler() {
 
-    this.supportedProperties = {
-        x: positionChannel,
-        y: positionChannel
-    }
-}
-
-// input: vega,selections; output: form array
-SchemaCompiler.prototype.GetEncodingSchema = function (vegaEncoding_obj, selections_obj) {
-    let schema = [];
-
-    let getSelection = (selection, encodingName, propertyName) => {
-        if (selection[encodingName] == undefined) {
-            return undefined
+function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
+    // this.positionChannel={
+    //     field
+    // }
+    this.vegaEncoding = VegaEncoding_obj;
+    this.ECSelections = ECSelections_obj;
+    this.sortBindings = Object.assign(this.ECSelections.xSelect.bindings, this.ECSelections.ySelect.bindings)
+    let property = {
+        xField: {
+            name: 'field',
+            type: 'select',
+            selections: this.ECSelections.xSelect.selections.concat(['value']),
+            value: ''
+        },
+        yField: {
+            name: 'field',
+            type: 'select',
+            value: '',
+            selections: this.ECSelections.ySelect.selections.concat(['value'])
+        },
+        allField: {
+            name: 'field',
+            type: 'group select',
+            value: '',
+            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections, value: ['value'] },
+        },
+        aggregate: {
+            name: 'aggregate',
+            type: 'select',
+            value: '',
+            selections: ['count', 'sum', 'mean', 'stdev', 'median', 'min', 'max'],
         }
-        else {
-           return selection[encodingName][propertyName]
-        }
     }
-
-    for (const encodingName in vegaEncoding_obj) {
-        let schemaEncoding = {};
-        schemaEncoding.name = encodingName;
-        schemaEncoding.properties = [];
-        if (Object.hasOwnProperty.call(vegaEncoding_obj, encodingName)) {
-            const vegaEncoding = vegaEncoding_obj[encodingName];
-            for (const propertyName in vegaEncoding) {
-                let supportedProperty = this.GetProperty(propertyName, getSelection(selections_obj, encodingName, propertyName))
-                if (supportedProperty != undefined) {
-                    schemaEncoding.properties.push(supportedProperty)
-                }
+    this.encodings = {
+        // select / group select
+        x: {
+            field: property.xField,
+            aggregate: property.aggregate,
+        },
+        xOffset: {
+            field: property.xField,
+            aggregate: property.aggregate
+        },
+        y: {
+            field: property.yField,
+            aggregate: property.aggregate
+        },
+        yOffset: {
+            field: property.yField,
+            aggregate: property.aggregate
+        },
+        color: {
+            field: property.allField,
+        },
+        detail: {
+            field: property.allField,
+        },
+    }
+    this.__getDisabledEncodings = (vega) => {
+        let ans = [];
+        for (const key in this.encodings) {
+            if (!vega.hasOwnProperty(key)) {
+                ans.push(key)
             }
         }
-        schema.push(schemaEncoding);
+        return ans;
     }
-    return schema
+    this.DisabledEncoding = this.__getDisabledEncodings(this.vegaEncoding);
 }
 
-// input: property name
-SchemaCompiler.prototype.GetProperty = function (name_str, addtionInfo_obj) {
-    let propertySchema = {};
-    propertySchema.name = name_str
-    // type: select+addtionInfo, radio+addtionInfo, slider, color
-    switch (name_str) {
-        case 'field':
-            propertySchema.type = 'select';
-            propertySchema.selections = addtionInfo_obj
-            break;
-        case 'aggregate':
-            propertySchema.type = 'select';
-            propertySchema.selections = ['count', 'sum', 'mean', 'stdev', 'median', 'min', 'max'];
-            break;
-        default:
-            propertySchema = undefined;
-            break;
+EncodingCompiler.prototype.GetSchema = function () {
+    let ans = {}
+    for (const key in this.vegaEncoding) {
+        if (Object.hasOwnProperty.call(this.vegaEncoding, key)) {
+            const encoding = this.vegaEncoding[key];
+            let supportProperty = this.encodings[key];
+            ans[key] = []
+            for (const propertyName in encoding) {
+                if (Object.hasOwnProperty.call(encoding, propertyName)) {
+                    const propertyValue = encoding[propertyName];
+                    if (supportProperty.hasOwnProperty(propertyName)) {
+                        supportProperty[propertyName].value = propertyValue;
+                        ans[key].push(supportProperty[propertyName])
+                    }
+                }
+            }
+            ans[key] = ans[key].reverse();
+        }
     }
-    return propertySchema;
+    return ans;
 }
 
-export { SchemaCompiler };
+EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
+    console.log(this.vegaEncoding);
+    for (const encodingName in schema_obj) {
+        if (Object.hasOwnProperty.call(schema_obj, encodingName)) {
+            // vega没的就加，vega有的就改
+            if (this.vegaEncoding.hasOwnProperty(encodingName)) {
+                for (let index = 0; index < schema_obj[encodingName].length; index++) {
+                    const property = schema_obj[encodingName][index];
+                    if (this.vegaEncoding[encodingName].hasOwnProperty(property.name)) {
+                        this.vegaEncoding[encodingName][property.name] = property.value;
+
+                        // special situation
+                        if (property.name == 'field') {
+                            if (property.value == 'value') {
+                                this.vegaEncoding[encodingName].type = "quantitative";
+                                this.vegaEncoding[encodingName].sort = undefined;
+                            }
+                            else {
+                                this.vegaEncoding[encodingName].type = "nominal";
+                                this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                this.vegaEncoding[encodingName] = {};
+            }
+        }
+    }
+    return this.vegaEncoding;
+}
+
+
+EncodingCompiler.prototype.GetNewEncoding = function (encodingName) {
+    if (this.encodings.hasOwnProperty(encodingName)) {
+        let ans = [];
+        ans.push(this.encodings[encodingName]['field'])
+        return ans;
+    }
+    return undefined
+}
+
+EncodingCompiler.prototype.GetNewProperty = function (encodingName, propertyName) {
+    if (this.encodings.hasOwnProperty(encodingName)) {
+        return this.encodings[encodingName][propertyName];
+    }
+    return undefined
+}
+
+EncodingCompiler.GetSelections = function (metaData_obj) {
+    /*
+        {
+            xSelections:{
+                selections:[],
+                bindings:{key:[sort]}
+            }
+        }
+    */
+
+    let ans = {
+        xSelect: {
+            selections: [],
+            bindings: {}
+        },
+        ySelect: {
+            selections: [],
+            bindings: {}
+        }
+    }
+
+    metaData_obj.x.headers.forEach(element => {
+        ans.xSelect.selections.push(element.name);
+        ans.xSelect.bindings[element.name] = element.sort;
+    });
+    metaData_obj.y.headers.forEach(element => {
+        ans.ySelect.selections.push(element.name);
+        ans.ySelect.bindings[element.name] = element.sort;
+    });
+    return ans;
+}
+
+export { EncodingCompiler };
 
 // mark
 export let markType = ['area', 'arc', 'bar', 'boxplot', 'line', 'point', 'rule'];

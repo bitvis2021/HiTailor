@@ -16,7 +16,7 @@
     </div>
     <div id="panel">
       <layer-view
-        :vegaSchema="this.vegaSchema"
+        :selections="this.selections"
         :vegaConfig="this.vegaConfig"
         v-on:apply-config="this.ApplyConfig"
       ></layer-view>
@@ -29,7 +29,7 @@ import LayerView from "./LayerView.vue";
 export default {
   components: { LayerView },
   name: "PanelView",
-  props: ["vegaConfig", "vegaSchema"],
+  props: ["vegaConfig", "selections"],
   data() {
     return {
       editableTabs: [],
@@ -144,6 +144,7 @@ export default {
     top: 5%;
     max-height: 95%;
     overflow: scroll;
+
     &::-webkit-scrollbar {
       width: 5px;
       background: rgb(255, 255, 255);
