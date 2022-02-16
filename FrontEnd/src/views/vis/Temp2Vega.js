@@ -46,7 +46,7 @@ function Templates() {
 }
 Templates.prototype.AddTemplate = function (template, direction) {
     if (direction == undefined) {
-        direction = 'x'
+        direction = 'horizontal'
     }
 
     if (this.templates[template.name] == undefined) {
@@ -104,9 +104,9 @@ export function GetTemplates(regionMetaData, data) {
 
 
             // - [N-Q simple line chart](https://www.notion.so/N-Q-simple-line-chart-f4dc62567fd648278288403f3966209b)
-            templates.AddTemplate(new VegaTemplate("N-Q Simple Line Chart", 'line', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("N-Q Simple Line Chart", 'line', vegaEncoding, data, selections, './templates/line chart.png'));
             // - [N-Q simple bar chart](https://www.notion.so/N-Q-simple-bar-chart-19e8f37a7b9741e6a9bbb9a861d1e724)
-            templates.AddTemplate(new VegaTemplate("N-Q Simple Bar Chart", 'bar', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("N-Q Simple Bar Chart", 'bar', vegaEncoding, data, selections, './templates/bar chart.png'));
 
             if (regionMetaData.y.range == 1) {
                 vegaEncoding = {
@@ -122,15 +122,15 @@ export function GetTemplates(regionMetaData, data) {
                     detail: { field: defaultX.name, type: "nominal", sort: defaultX.sort },
                 }
             }
-            // - [N-Q range chart example](https://www.notion.so/N-Q-range-chart-example-7f4e860724f24590b325453d2e88f6d4)
-            templates.AddTemplate(new VegaTemplate("N-Q Range Chart", 'line', vegaEncoding, data, selections));
+            // - [N-Q Ranged Dot Plot example](https://www.notion.so/N-Q-range-chart-example-7f4e860724f24590b325453d2e88f6d4)
+            templates.AddTemplate(new VegaTemplate("N-Q Ranged Dot Plot", 'line', vegaEncoding, data, selections, './templates/ranged dot plot.png'));
             delete vegaEncoding['detail'];
 
             // - [N-Q boxplot example](https://www.notion.so/N-Q-boxplot-example-01bfa0004d1e4b758d64d40559a49474)
             templates.AddTemplate(new VegaTemplate("N-Q Box Plot", {
                 "type": "boxplot",
                 "extent": "min-max"
-            }, vegaEncoding, data, selections));
+            }, vegaEncoding, data, selections, './templates/box plot.png'));
 
             // @@N-N-Q grouped bar chart 
             if (GetHeaders(regionMetaData.x).length > 1) {
@@ -139,7 +139,7 @@ export function GetTemplates(regionMetaData, data) {
                 vegaEncoding.color = { field: defaultX.name, type: "nominal" };
                 vegaEncoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
                 vegaEncoding.y = { field: "value", type: "quantitative" };
-                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncoding, data, selections));
+                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncoding, data, selections, './templates/bar chart.png'));
             }
             else if (GetHeaders(regionMetaData.y).length > 1) {
                 // Y direction
@@ -161,36 +161,37 @@ export function GetTemplates(regionMetaData, data) {
             }
 
             // @NQ strip plot 
-            templates.AddTemplate(new VegaTemplate("N-Q Strip chart", 'tick', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("N-Q Strip Plot", 'tick', vegaEncoding, data, selections, './templates/strip plot.png'));
 
             // @N-Q boxplot example 
             vegaEncoding.color = { field: defaultX.name, type: "nominal" };
             templates.AddTemplate(new VegaTemplate("N-Q Box Plot", {
                 "type": "boxplot",
                 "extent": "min-max"
-            }, vegaEncoding, data, selections));
+            }, vegaEncoding, data, selections, './templates/box plot.png'));
             delete vegaEncoding['color'];
 
-            // @N-Q range chart example 
+            // @N-Q Ranged Dot Plot example 
             vegaEncoding.detail = vegaEncoding.x;
-            templates.AddTemplate(new VegaTemplate("N-Q Range Chart", 'line', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("N-Q Ranged Dot Plot", 'line', vegaEncoding, data, selections, './templates/ranged dot plot.png'
+            ));
             delete vegaEncoding['detail'];
 
             // - [A-N-Q aggregated line chart](https://www.notion.so/A-N-Q-aggregated-line-chart-e4f55cc964704719bee6c87244ebd7c8)
             vegaEncoding.y = { aggregate: "mean", field: "value" };
-            templates.AddTemplate(new VegaTemplate("A-N-Q Line Chart", 'line', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("A-N-Q Line Chart", 'line', vegaEncoding, data, selections, './templates/line chart.png'));
 
             // - [A-N-Q bar chart](https://www.notion.so/A-N-Q-bar-chart-1746d78908fd46988ae9266d91f7e114)
             vegaEncoding.y = { aggregate: "sum", field: "value" };
-            templates.AddTemplate(new VegaTemplate("A-N-Q Bar Chart", 'bar', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("A-N-Q Bar Chart", 'bar', vegaEncoding, data, selections, './templates/bar chart.png'));
 
             // @A-N-Q-N stacked bar chart 
             vegaEncoding.color = { field: defaultY.name, type: "nominal" };
-            templates.AddTemplate(new VegaTemplate("A-N-Q-N Stacked Bar Chart", 'bar', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("A-N-Q-N Stacked Bar Chart", 'bar', vegaEncoding, data, selections, './templates/stacked bar chart.png'));
 
             // @N-Q-N Multi Series Line Chart
             vegaEncoding.y = { field: "value", type: "quantitative" }
-            templates.AddTemplate(new VegaTemplate("A-N-Q-N Multi Series Line Chart", 'line', vegaEncoding, data, selections));
+            templates.AddTemplate(new VegaTemplate("A-N-Q-N Multi Series Line Chart", 'line', vegaEncoding, data, selections, './templates/multi line chart.png'));
 
             // @@N-N-Q grouped bar chart 
             if (GetHeaders(regionMetaData.x).length > 1) {
@@ -199,7 +200,7 @@ export function GetTemplates(regionMetaData, data) {
                 vegaEncoding.color = { field: defaultX.name, type: "nominal" };
                 vegaEncoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
                 vegaEncoding.y = { aggregate: "sum", field: "value" };
-                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncoding, data, selections), 'x');
+                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncoding, data, selections, './templates/group bar chart.png'), 'horizontal');
             }
             if (GetHeaders(regionMetaData.y).length > 1) {
                 // Y direction
@@ -208,7 +209,7 @@ export function GetTemplates(regionMetaData, data) {
                 vegaEncoding.color = { field: defaultY.name, type: "nominal" };
                 vegaEncoding.y = { field: defaultY.name, type: "nominal", sort: defaultY2.sort };
                 vegaEncoding.x = { aggregate: "sum", field: "value" };
-                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncoding, data, selections), 'y');
+                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncoding, data, selections, './templates/group bar chart y.png'), 'vertical');
             }
         }
 
