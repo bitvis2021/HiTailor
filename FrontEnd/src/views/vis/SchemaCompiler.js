@@ -57,16 +57,18 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
             field: property.allField,
         },
     }
-    this.__getDisabledEncodings = (vega) => {
-        let ans = [];
-        for (const key in this.encodings) {
-            if (!vega.hasOwnProperty(key)) {
-                ans.push(key)
+
+    this.addProperties = {};
+    for (const key in this.encodings) {
+        if (Object.hasOwnProperty.call(this.encodings, key)) {
+            const element = this.encodings[key];
+            this.addProperties[key] = [];
+            for (const property in element) {
+                this.addProperties[key].push(property);
             }
         }
-        return ans;
     }
-    this.DisabledEncoding = this.__getDisabledEncodings(this.vegaEncoding);
+
 }
 
 EncodingCompiler.prototype.GetSchema = function () {
@@ -140,6 +142,34 @@ EncodingCompiler.prototype.GetNewProperty = function (encodingName, propertyName
     }
     return undefined
 }
+
+EncodingCompiler.prototype.GetProperties = function (schema_obj, encoding_str) {
+    let ans = this.addProperties[encoding_str];
+    for (let index = 0; index < schema_obj[encoding_str].length; index++) {
+        const element = schema_obj[encoding_str][index];
+        let find = ans.indexOf(element.name)
+        if (find != -1) {
+            ans.splice(find, 1);
+        }
+    }
+    return ans;
+}
+
+
+EncodingCompiler.prototype.GetEncodings = function (schema_obj) {
+    let ans = [];
+    for (const key in this.encodings) {
+        ans.push(key);
+    }
+    for (const key in schema_obj) {
+        let find = ans.indexOf(key);
+        if (find != -1) {
+            ans.splice(find, 1);
+        }
+    }
+    return ans;
+}
+
 
 EncodingCompiler.GetSelections = function (metaData_obj) {
     /*

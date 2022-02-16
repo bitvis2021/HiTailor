@@ -34,22 +34,76 @@
             >
             </el-option>
           </el-select>
+          <el-select
+            v-else-if="property.type == 'group select'"
+            placeholder="select..."
+            @change="ApplyConfig"
+            v-model="property.value"
+          >
+            <el-option-group
+              v-for="(group, key) in property.selections"
+              :key="group + key"
+              :label="key"
+            >
+              <el-option
+                v-for="item in group"
+                :key="eName + item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-option-group>
+          </el-select>
           <br />
           <br />
         </el-row>
+        <!-- Add Property Button -->
+        <el-row type="flex" class="add-operation" justify="start">
+          <el-dropdown
+            @command="
+              (value) => {
+                schema[eName].push(EC.GetNewProperty(eName, value));
+              }
+            "
+          >
+            <span class="el-dropdown-link">
+              <i class="el-icon-circle-plus"></i> Add Property
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                v-for="(value, index) in EC.GetProperties(schema, eName)"
+                :command="value"
+                :key="index + value"
+                >{{ value }}</el-dropdown-item
+              >
+              <el-dropdown-item
+                disabled
+                v-if="EC.GetProperties(schema, eName).length == 0"
+                >You have added all properties</el-dropdown-item
+              >
+            </el-dropdown-menu>
+          </el-dropdown>
+        </el-row>
+        <br />
         <el-divider></el-divider>
         <br />
       </div>
     </div>
-    <el-row type="flex" class="add-operation" justify="start">
-      <el-dropdown>
-        <span class="el-dropdown-link">
-          <i class="el-icon-circle-plus"></i> Add Encoding
-        </span>
+    <el-row type="flex" class="add-operation" justify="end">
+      <el-dropdown @command="this.AddEncoding">
+        <el-button type="primary" plain size="small"
+          ><i class="el-icon-plus"></i> Add Encoding
+        </el-button>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item>1</el-dropdown-item>
-          <el-dropdown-item disabled>2</el-dropdown-item>
-          <el-dropdown-item divided>3</el-dropdown-item>
+          <el-dropdown-item
+            v-for="(value, index) in EC.GetEncodings(schema)"
+            :command="value"
+            :key="index + value"
+            >{{ value }}</el-dropdown-item
+          >
+          <el-dropdown-item disabled v-if="EC.GetEncodings(schema).length == 0"
+            >You have added all encodings</el-dropdown-item
+          >
         </el-dropdown-menu>
       </el-dropdown>
     </el-row>
@@ -71,6 +125,7 @@ export default {
       encoding: this.config,
       schema: {},
       EC: {},
+      addProperties: {},
     };
   },
   methods: {
@@ -80,6 +135,14 @@ export default {
     ApplyConfig() {
       this.encoding = this.EC.GetVegaConfig(this.schema);
       this.$emit("apply-config", this.encoding);
+    },
+    AddEncoding(encodingName) {
+      console.log("new Schema", this.schema);
+      this.$set(
+        this.schema,
+        encodingName,
+        this.EC.GetNewEncoding(encodingName)
+      );
     },
   },
   computed: {},
@@ -112,7 +175,6 @@ export default {
   margin: 0px !important;
 }
 .add-operation {
-  padding-left: 10px;
   .el-dropdown-link {
     font-size: 12px !important;
     color: #409eff;
