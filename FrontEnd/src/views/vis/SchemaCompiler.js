@@ -94,40 +94,40 @@ EncodingCompiler.prototype.GetSchema = function () {
 }
 
 EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
-    console.log(this.vegaEncoding);
     for (const encodingName in schema_obj) {
         if (Object.hasOwnProperty.call(schema_obj, encodingName)) {
             // vega没的就加，vega有的就改
-            if (this.vegaEncoding.hasOwnProperty(encodingName)) {
-                for (let index = 0; index < schema_obj[encodingName].length; index++) {
-                    const property = schema_obj[encodingName][index];
-                    if (this.vegaEncoding[encodingName].hasOwnProperty(property.name)) {
-                        this.vegaEncoding[encodingName][property.name] = property.value;
+            if (!this.vegaEncoding.hasOwnProperty(encodingName)) { this.vegaEncoding[encodingName] = {}; }
 
-                        // special situation
-                        if (property.name == 'field') {
-                            if (property.value == 'value') {
-                                this.vegaEncoding[encodingName].type = "quantitative";
-                                this.vegaEncoding[encodingName].sort = undefined;
-                            }
-                            else {
-                                this.vegaEncoding[encodingName].type = "nominal";
-                                this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
-                            }
+            for (let index = 0; index < schema_obj[encodingName].length; index++) {
+                const property = schema_obj[encodingName][index];
+                if (this.vegaEncoding[encodingName].hasOwnProperty(property.name)) {
+                    this.vegaEncoding[encodingName][property.name] = property.value;
+
+                    // special situation
+                    if (property.name == 'field') {
+                        if (property.value == 'value') {
+                            this.vegaEncoding[encodingName].type = "quantitative";
+                            this.vegaEncoding[encodingName].sort = undefined;
+                        }
+                        else {
+                            this.vegaEncoding[encodingName].type = "nominal";
+                            this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
                         }
                     }
                 }
+                else {
+                    this.vegaEncoding[encodingName][property.name] = property.value;
+                }
             }
-            else {
-                this.vegaEncoding[encodingName] = {};
-            }
+
         }
     }
-    return this.vegaEncoding;
+    return EncodingCompiler.PreprocessEncoding(this.vegaEncoding);
 }
 
-
 EncodingCompiler.prototype.GetNewEncoding = function (encodingName) {
+    this.vegaEncoding[encodingName] = { field: '' };
     if (this.encodings.hasOwnProperty(encodingName)) {
         let ans = [];
         ans.push(this.encodings[encodingName]['field'])
@@ -138,13 +138,14 @@ EncodingCompiler.prototype.GetNewEncoding = function (encodingName) {
 
 EncodingCompiler.prototype.GetNewProperty = function (encodingName, propertyName) {
     if (this.encodings.hasOwnProperty(encodingName)) {
-        return this.encodings[encodingName][propertyName];
+        return JSON.parse(JSON.stringify(this.encodings[encodingName][propertyName]));
     }
+    this.vegaEncoding[encodingName][propertyName] = this.encodings[encodingName][propertyName].value;
     return undefined
 }
 
 EncodingCompiler.prototype.GetProperties = function (schema_obj, encoding_str) {
-    let ans = this.addProperties[encoding_str];
+    let ans = [...this.addProperties[encoding_str]];
     for (let index = 0; index < schema_obj[encoding_str].length; index++) {
         const element = schema_obj[encoding_str][index];
         let find = ans.indexOf(element.name)
@@ -170,7 +171,19 @@ EncodingCompiler.prototype.GetEncodings = function (schema_obj) {
     return ans;
 }
 
+EncodingCompiler.prototype.DeletEncodingOnVega = function (encodingName_str) {
+    if (this.vegaEncoding.hasOwnProperty(encodingName_str)) {
+        delete this.vegaEncoding[encodingName_str];
+    }
+}
 
+EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, propertyName_str) {
+    if (this.vegaEncoding.hasOwnProperty(encodingName_str)) {
+        if (this.vegaEncoding[encodingName_str].hasOwnProperty(propertyName_str)) {
+            delete this.vegaEncoding[encodingName_str][propertyName_str];
+        }
+    }
+}
 EncodingCompiler.GetSelections = function (metaData_obj) {
     /*
         {
@@ -201,6 +214,18 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
         ans.ySelect.bindings[element.name] = element.sort;
     });
     return ans;
+}
+
+EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
+    encoding_obj = JSON.parse(JSON.stringify(encoding_obj))
+    // encoding_obj.x.scale = { zero: false };
+    encoding_obj.x.axis = { labels: false, ticks: false, title: null };
+    // encoding_obj.y.scale = { zero: false };
+    encoding_obj.y.axis = { labels: false, ticks: false, title: null };
+    if (encoding_obj.color != undefined) {
+        encoding_obj.color.legend = null;
+    }
+    return encoding_obj
 }
 
 export { EncodingCompiler };

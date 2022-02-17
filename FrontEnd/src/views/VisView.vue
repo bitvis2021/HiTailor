@@ -1,6 +1,6 @@
 <template>
   <div class="visview-container">
-    <!-- <div
+    <div
       style="
         background-color: white;
         position: absolute;
@@ -10,7 +10,7 @@
       "
     >
       {{ this.VegaConfigNoData }}
-    </div> -->
+    </div>
     <div id="gen-chart"></div>
     <div id="vis-view">
       <!-- return buttons -->

@@ -4,7 +4,7 @@ export function VegaTemplate(tempName_str, mark_str, encodingVega_obj, data_arr,
     this.img = previewPic_str
     this.mark = mark_str
     this.data = data_arr
-    this.encoding = this.PreprocessEncoding(encodingVega_obj)
+    this.encoding = EncodingCompiler.PreprocessEncoding(encodingVega_obj)
     this.ECSelections = ECSelections_obj
 }
 
@@ -18,17 +18,6 @@ VegaTemplate.prototype.GetVegaConf = function () {
         mark: this.mark,
         encoding: this.encoding
     }
-}
-VegaTemplate.prototype.PreprocessEncoding = function (encoding_obj) {
-    encoding_obj = JSON.parse(JSON.stringify(encoding_obj))
-    // encoding_obj.x.scale = { zero: false };
-    encoding_obj.x.axis = { labels: false, ticks: false, title: null };
-    // encoding_obj.y.scale = { zero: false };
-    encoding_obj.y.axis = { labels: false, ticks: false, title: null };
-    if (encoding_obj.color != undefined) {
-        encoding_obj.color.legend = null;
-    }
-    return encoding_obj
 }
 
 function GetHeaders(channel_obj) {

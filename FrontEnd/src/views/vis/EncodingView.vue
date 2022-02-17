@@ -6,66 +6,78 @@
         v-for="(encoding, eName) in this.schema"
         :key="eName + encoding.name"
       >
-        <div>
-          {{ eName }}
+        <!-- delete encoding -->
+        <div class="close-box">
+          <el-button
+            size="mini"
+            type="text"
+            class="close-button"
+            @click="DeletEncoding(eName)"
+            ><i class="el-icon-close"></i
+          ></el-button>
         </div>
-        <br />
+        {{ eName }}
         <el-row
           type="flex"
-          class="row-bg"
+          class="row-bg property-box"
           justify="space-between"
           v-for="(property, key) in encoding"
+          :gutter="20"
           :key="key + property.name"
         >
-          <span class="propertyText">
+          <!-- delete property -->
+          <div class="close-button">
+            <el-button
+              v-if="property.name != 'field'"
+              size="mini"
+              type="text"
+              @click="DeletProperty(eName, property.name)"
+              ><i class="el-icon-close"></i
+            ></el-button>
+          </div>
+          <div class="property-text">
             {{ property.name + ":" }}
-          </span>
-          <el-select
-            v-if="property.type == 'select'"
-            v-model="property.value"
-            @change="ApplyConfig"
-            placeholder="select..."
-          >
-            <el-option
-              v-for="item in property.selections"
-              :key="eName + item"
-              :label="item"
-              :value="item"
-            >
-            </el-option>
-          </el-select>
-          <el-select
-            v-else-if="property.type == 'group select'"
-            placeholder="select..."
-            @change="ApplyConfig"
-            v-model="property.value"
-          >
-            <el-option-group
-              v-for="(group, key) in property.selections"
-              :key="group + key"
-              :label="key"
+          </div>
+          <div>
+            <el-select
+              v-if="property.type == 'select'"
+              v-model="property.value"
+              @change="ApplyConfig"
+              placeholder="select..."
             >
               <el-option
-                v-for="item in group"
+                v-for="item in property.selections"
                 :key="eName + item"
                 :label="item"
                 :value="item"
               >
               </el-option>
-            </el-option-group>
-          </el-select>
-          <br />
-          <br />
+            </el-select>
+            <el-select
+              v-else-if="property.type == 'group select'"
+              placeholder="select..."
+              @change="ApplyConfig"
+              v-model="property.value"
+            >
+              <el-option-group
+                v-for="(group, key) in property.selections"
+                :key="group + key"
+                :label="key"
+              >
+                <el-option
+                  v-for="item in group"
+                  :key="eName + item"
+                  :label="item"
+                  :value="item"
+                >
+                </el-option>
+              </el-option-group>
+            </el-select>
+          </div>
         </el-row>
         <!-- Add Property Button -->
         <el-row type="flex" class="add-operation" justify="start">
-          <el-dropdown
-            @command="
-              (value) => {
-                schema[eName].push(EC.GetNewProperty(eName, value));
-              }
-            "
-          >
+          <el-dropdown @command="(command) => AddProperty(eName, command)">
             <span class="el-dropdown-link">
               <i class="el-icon-circle-plus"></i> Add Property
             </span>
@@ -86,11 +98,11 @@
         </el-row>
         <br />
         <el-divider></el-divider>
-        <br />
       </div>
     </div>
+    <br />
     <el-row type="flex" class="add-operation" justify="end">
-      <el-dropdown @command="this.AddEncoding">
+      <el-dropdown @command="AddEncoding">
         <el-button type="primary" plain size="small"
           ><i class="el-icon-plus"></i> Add Encoding
         </el-button>
@@ -137,24 +149,46 @@ export default {
       this.$emit("apply-config", this.encoding);
     },
     AddEncoding(encodingName) {
-      console.log("new Schema", this.schema);
       this.$set(
         this.schema,
         encodingName,
         this.EC.GetNewEncoding(encodingName)
       );
+      this.ApplyConfig();
+    },
+    AddProperty(encodingName, propertyName) {
+      this.schema[encodingName].push(
+        this.EC.GetNewProperty(encodingName, propertyName)
+      );
+      this.ApplyConfig();
+    },
+    DeletEncoding(encodingName) {
+      this.$delete(this.schema, encodingName);
+      // 在vega-lite上操作(因为encoding compiler不是一对一的绑定)
+      this.EC.DeletEncodingOnVega(encodingName);
+      // update config
+      this.ApplyConfig();
+    },
+    DeletProperty(encodingName, propertyName) {
+      let propertyIndex = this.schema[encodingName].findIndex(
+        (item) => item.name == propertyName
+      );
+      this.schema[encodingName].splice(propertyIndex, 1);
+      this.EC.DeletPropertyOnVega(encodingName, propertyName);
+      this.ApplyConfig();
     },
   },
   computed: {},
 };
 </script>
 <style lang="less">
-.propertyText {
+.property-text {
   font-size: 14px;
   line-height: 15px;
-  height: 28px;
-  padding: 0 12px 0 0;
-  margin: 0px;
+  margin-top: 7px;
+  margin-right: 10px;
+  padding-right: 10px;
+  margin-left: 5px;
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   color: #606266;
 }
@@ -178,6 +212,31 @@ export default {
   .el-dropdown-link {
     font-size: 12px !important;
     color: #409eff;
+  }
+}
+.close-box {
+  text-align: right;
+  margin-bottom: -15px;
+
+  .close-button {
+    visibility: hidden;
+  }
+  &:hover .close-button {
+    visibility: visible;
+  }
+}
+.property-box {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 5px;
+  padding-right: 5px;
+  .close-button {
+    visibility: hidden;
+    margin-top: 2px;
+    width: 10px;
+  }
+  &:hover .close-button {
+    visibility: visible;
   }
 }
 </style>
