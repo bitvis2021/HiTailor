@@ -292,22 +292,26 @@ export let markConf = {
         this.properties.innerRadius = new confTemplate.width('inner radius', 1, 100, df_innerRadius);
         this.properties.outerRadius = new confTemplate.width('outer radius', 1, 100, df_outerRadius);
     },
-    area: function (df_color, df_opacity) {
-        this.properties = {};
-        this.properties.opacity = new confTemplate.opacity(df_opacity);
-        this.properties.color = new confTemplate.color(df_color);
-    },
-    bar: function (df_align, df_width) {
-        this.properties = {};
-        this.properties.width = new confTemplate.width('width', 1, 100, df_width);
-        this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
+    // area: function (df_color, df_opacity) {
+    //     this.properties = {};
+    //     this.properties.opacity = new confTemplate.opacity(df_opacity);
+    //     this.properties.color = new confTemplate.color(df_color);
+    // },
+    bar: function (direction_str) {
+        // this.properties = {};
+        // if (direction_str == 'vertical') {
+        //     this.properties.width = new confTemplate.width('width', 1, 100, 30);
+        // }
+        // else {
+        //     this.properties.height = new confTemplate.width('height', 1, 100, 30);
+        // }
+        // this.properties.baseline = new confTemplate.select_radius("base line", ["alphabetic", "top", "middle", "bottom"], "alphabetic");
+        // this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
     },
     boxplot: function (df_size, df_opacity, df_color, df_orient, df_extent) {
         this.properties = {};
-        this.properties.size = new confTemplate.width('width', 1, 100, df_size);
+        this.properties.size = new confTemplate.width('width', 1, 100, 30);
         this.properties.opacity = new confTemplate.opacity(df_opacity);
-        this.properties.color = new confTemplate.color(df_color);
-        this.properties.orient = new confTemplate.select_radius("orient", ["horizontal", "vertical"], df_orient);
     },
     line: function (df_strokeWidth, df_color, df_interpolate) {
         this.properties = {};
@@ -320,10 +324,8 @@ export let markConf = {
         this.properties.size = new confTemplate.width('point size', 1, 100, df_size);
         this.properties.shape = new confTemplate.select("shape", ["circle", "square", "cross", "diamond", "triangle-up", "triangle-down", "triangle-right", "triangle-left", "stroke", "arrow", "arrow", "triangle"], df_shape);
     },
-    line: function (df_strokeWidth, df_color) {
+    tick: function () {
         this.properties = {};
-        this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 100, df_strokeWidth);
-        // this.properties.strokeDash = new confTemplate.select("strokeDash",["basis", "cardinal","catmull-rom","linear","monotone","natural","step","step-after","step-before"],df_interpolate);
-        this.properties.color = new confTemplate.color(df_color);
+        this.properties.thickness = new confTemplate.width('thickness', 1, 100, 2);
     },
 }

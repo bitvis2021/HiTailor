@@ -13,7 +13,7 @@
           placement="top-start"
           title="Choose a direction"
           width="250"
-          trigger="hover"
+          trigger="click"
         >
           <div class="template-pop">
             <div
