@@ -1,13 +1,12 @@
 <template>
   <div class="layer">
-    <!-- 临时debug -->
     <mark-view
       :config="this.markJson"
       v-on:apply-config="ApplyMark"
     ></mark-view>
     <encoding-view
       :config="this.encodingJson"
-      :schema="this.vegaSchema"
+      :selections="this.selections"
       v-on:apply-config="ApplyEncoding"
     ></encoding-view>
   </div>
@@ -17,7 +16,7 @@ import MarkView from "./MarkView.vue";
 import EncodingView from "./EncodingView.vue";
 export default {
   name: "LayerView",
-  props: ["vegaConfig", "vegaSchema"],
+  props: ["vegaConfig", "selections"],
   components: { MarkView, EncodingView },
   data() {
     return {

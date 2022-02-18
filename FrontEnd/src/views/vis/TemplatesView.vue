@@ -1,21 +1,48 @@
 <template>
   <div>
-    <h3>Templates</h3>
+    <el-divider>Templates</el-divider>
+    <br />
     <div class="template-box">
       <div
         class="template-content"
         v-for="(template, index) in templates"
-        :key="index"
-        @click="ApplyTemplate(template)"
+        :key="index + template"
       >
-        <el-image
-          :src="template.img"
-          :fit="'fill'"
-          style="width: 100%; height: 80px"
+        <el-popover
+          v-if="template.length >= 2"
+          placement="top-start"
+          title="Choose a direction"
+          width="250"
+          trigger="click"
         >
-        </el-image>
-        <div>
-          {{ template.name }}
+          <div class="template-pop">
+            <div
+              v-for="(dTemp, index) in template"
+              :key="dTemp + index"
+              @click="ApplyTemplate(dTemp)"
+            >
+              <div slot="reference">
+                <el-image
+                  :src="dTemp.img"
+                  :fit="'cover'"
+                  style="width: 112px; height: 64px"
+                  class="template-img"
+                >
+                </el-image>
+                <div class="demonstration">{{ dTemp.direction }}</div>
+              </div>
+            </div>
+          </div>
+          <div slot="reference">
+            <el-image :src="template[0].img" :fit="'cover'" class="template-img">
+            </el-image>
+            <div class="demonstration">{{ template[0].name }}</div>
+          </div>
+        </el-popover>
+        <div v-else @click="ApplyTemplate(template[0])">
+          <el-image :src="template[0].img" :fit="'cover'" class="template-img">
+          </el-image>
+          <div class="demonstration">{{ template[0].name }}</div>
         </div>
       </div>
     </div>
@@ -38,15 +65,44 @@ export default {
 };
 </script>
 
-<style>
+<style scoped lang="less">
 .template-box {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: start;
+}
+.template-pop {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
 }
 .template-content {
   width: 46%;
   margin: 2%;
+}
+.template-img {
+  width: 140px;
+  height: 80px;
+  border-style: solid;
+  border-width: 2px;
+  // border-radius: 10px;
+  border-color: #dcdfe6;
+  transition-duration: 0.3s;
+  transition: filter cubic-bezier();
+  &:hover {
+    filter: drop-shadow(0px 0px 10px #0000002a);
+    transition-delay: 0.05s;
+  }
   cursor: pointer;
+}
+.demonstration {
+  text-align: center;
+  font-size: 13px;
+  line-height: 14px;
+  margin: 0px;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  color: #606266;
 }
 </style>

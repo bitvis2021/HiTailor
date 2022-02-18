@@ -1,5 +1,5 @@
 <template>
-  <div class="visview-container" v-if="this.showVisPanel">
+  <div class="visview-container">
     <div
       style="
         background-color: white;
@@ -13,31 +13,36 @@
     </div>
     <div id="gen-chart"></div>
     <div id="vis-view">
+      <!-- return buttons -->
+      <el-row type="flex" justify="end" style="margin-right: 10px">
+        <el-button
+          v-if="!showTemplates"
+          @click="showTemplates = true"
+          type="text"
+          ><i class="el-icon-back"></i
+        ></el-button>
+        <div style="width: 250px"></div>
+        <el-button type="text" @click="CLOSE_VIS_PANEL()"
+          ><i class="el-icon-close"></i
+        ></el-button>
+      </el-row>
       <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
-      <div v-if="!showTemplates">
-        <el-row type="flex" class="row-bg">
-          <el-button
-            type="text"
-            @click="ReturnTempView"
-            style="margin-top: -5px; margin-bottom: -10px; margin-left: 5px"
-            ><i class="el-icon-back"></i
-          ></el-button>
-        </el-row>
+      <templates-view
+        v-if="showTemplates"
+        v-on:select-template="OpenPanelView"
+        :templates="this.templates"
+      ></templates-view>
+      <div v-else>
         <div id="chart"></div>
         <div class="panel-view-container">
           <panel-view
-            :vegaSchema="this.vegaSchema"
+            :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
             v-on:apply-config="ApplyVegaConf"
             v-on:apply-vis="ApplyVis2Table"
           ></panel-view>
         </div>
       </div>
-      <templates-view
-        v-if="showTemplates"
-        v-on:select-template="OpenPanelView"
-        :templates="this.templates"
-      ></templates-view>
     </div>
   </div>
 </template>
@@ -47,6 +52,7 @@ import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import { GetTemplates } from "./vis/Temp2Vega";
+import { mapMutations } from "vuex";
 
 export default {
   name: "VisView",
@@ -61,23 +67,30 @@ export default {
   },
   data() {
     return {
-      showVisPanel: false,
       showTemplates: true,
+      visData: {},
       templates: [],
       vegaConfig: {}, // template -> vegaConfig <=> panelView
-      vegaSchema: {}, // template -> vegaSchema -> panelView
+      ECSelections: {}, // template -> vegaSchema -> panelView
       position: {},
     };
   },
   methods: {
     ApplyVegaConf(data) {
       this.vegaConfig = data;
+      this.vegaConfig.data = this.visData;
+      this.$bus.$emit("preview-config");
     },
+    ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
     OpenPanelView(template) {
-      console.log(template);
-      this.vegaSchema = template.GetSchema();
       this.vegaConfig = template.GetVegaConf();
+
+      this.visData = this.vegaConfig.data;
+
+      this.ECSelections = template.GetECSelections();
       this.showTemplates = false;
+
+      this.$bus.$emit("preview-config");
     },
     ApplyVis2Preview() {},
     ApplyVis2Table() {
@@ -88,9 +101,6 @@ export default {
         this.position.y + 0.1,
         this.vegaConfig
       );
-    },
-    ReturnTempView() {
-      this.showTemplates = true;
     },
     GenFig(height, width, x, y, chartJson) {
       chartJson.height = height;
@@ -111,36 +121,29 @@ export default {
       });
     },
   },
-  beforeCreate() {
-    // this.$bus.$on("apply-config", (visHeight, visWidth, visX, visY, data) => {
-    //   // this.GenFig(visHeight, visWidth, visX, visY, data);
-    // });
-
-    this.$bus.$on("preview-config", (data) => {
-      data.height = 200;
-      data.width = 300;
-      // vegaEmbed("#chart", data, {
-      //   renderer: "svg",
-      //   actions: false,
-      //   // theme: "latimes",
-      // });
-    });
-  },
   mounted() {
     // get event
+    this.$bus.$on("preview-config", () => {
+      let data = this.vegaConfig;
+      data.height = 188;
+      data.width = 288;
+      vegaEmbed("#chart", data, {
+        renderer: "svg",
+        actions: false,
+      });
+    });
     this.$bus.$on("visualize-selectedData", (position, jsonData, metaData) => {
-      this.showVisPanel = true;
       this.position = position;
-      console.log(metaData)
       if (typeof metaData != Object) {
-        metaData=JSON.parse(metaData)
+        metaData = JSON.parse(metaData);
       }
       this.templates = GetTemplates(metaData, jsonData);
+
+      this.showTemplates = true;
+      this.OPEN_VIS_PANEL();
     });
-    this.templates = GetTemplates();
   },
   beforeDestroy() {
-    // this.$bus.$off("apply-config");
     this.$bus.$off("preview-config");
   },
 };
