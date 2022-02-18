@@ -70,7 +70,10 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, header
 
         attributes.range.push({"start":start, "end":end})
         if (i>0) {  // first layer doesn't have parents
-          attributes.parent.push(find_header_parent(name, start, end, i, colHeader, true))
+          var parent = find_header_parent(name, start, end, i, colHeader, true)
+          if (attributes.parent.indexOf(parent) == -1) {
+            attributes.parent.push(parent)
+          }
         }
         items.set(name, attributes)
         headerIndex += 1
@@ -154,7 +157,10 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, header
 
         attributes.range.push({"start":start, "end":end})
         if (j>0) {  // first layer doesn't have parents
-          attributes.parent.push(find_header_parent(name, start, end, j, rowHeader,true))
+          var parent = find_header_parent(name, start, end, j, rowHeader,true)
+          if (attributes.parent.indexOf(parent) == -1) {
+            attributes.parent.push(parent)
+          }
         }
         items.set(name, attributes)
         headerIndex += 1
@@ -186,7 +192,11 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, header
       }
       if (findFlag) break
     }
-    if(addflag) src[rindex-1].get(parent).children.push(name)
+    if(addflag) {
+      if (src[rindex-1].get(parent).children.indexOf(name) == -1) {
+        src[rindex-1].get(parent).children.push(name)
+      }
+    }
     return parent
   }
 

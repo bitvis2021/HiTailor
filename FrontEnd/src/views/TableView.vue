@@ -1,8 +1,8 @@
 <template>
-  <div class="table-view" >
+  <div class="table-view" @mouseup="handle_mouse_up()">
     <div class="header-button-container" v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
       <el-button class="button" id="row-header-button"  plain size="medium"
-        @click="choose_header('row')" > 
+        @click="choose_header('row')"> 
         row header 
       </el-button>
 
@@ -11,6 +11,8 @@
         column header 
       </el-button>
     </div>
+
+    
 
     <div v-if="(headerFixedFlag.row && headerFixedFlag.column) ">
       <!-- <button  class="button"
@@ -79,7 +81,7 @@
     </div>
 
    
-
+    <div class="table-view-svg-container">
     <svg class="table-view-svg"
       @mouseup="handle_mouse_up()"
       @mousemove="handle_mouse_move($event)">
@@ -146,15 +148,17 @@
       <g v-if="!isCurrFlat">
         <!-- column header-->
         <g v-if="headerFixedFlag.column">
-          <g v-for="item in num2header" :key="item.index">
-            <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
-              <rect class="header-table-cell"
+          <g v-for="(item, i) in num2header" :key="'col-header-group-'+ i">              
+            <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
+              :id="'column-header-'+i" :key="'column-header-'+i"
+              @click="before_header_interaction('column-header-'+i, false, item[1].value, item[1].times)">
+              <rect class="header-table-cell" :key="'rect-'+i"
                 :x="cal_column_header_position(item[1].value, item[1].times).x"
                 :y="cal_column_header_position(item[1].value, item[1].times).y"
                 :width="cal_column_header_position(item[1].value, item[1].times).width"
                 :height="cal_column_header_position(item[1].value, item[1].times).height">
               </rect>
-              <text class="table-cell-text"
+              <text class="table-cell-text" :key="'text-'+i"
                 :x="cal_column_header_position(item[1].value, item[1].times).x + textPaddingX" 
                 :y="cal_column_header_position(item[1].value, item[1].times).y + textPaddingY">
                 {{item[1].value}}
@@ -164,8 +168,11 @@
         </g>
         <!-- row header-->
         <g v-if="headerFixedFlag.row">
-          <g v-for="item in num2header" :key="item.index">
-            <g v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count">
+          <g v-for="(item, i) in num2header" :key="item.index">
+            <g v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
+              :id="'row-header-'+i" 
+              @click="before_header_interaction('row-header-'+i, true, item[1].value, item[1].times)"
+              >
               <rect class="header-table-cell"
                 :x="cal_row_header_position(item[1].value, item[1].times).x"
                 :y="cal_row_header_position(item[1].value, item[1].times).y"
@@ -343,8 +350,19 @@
           :y2="markHeight + heightRangeList[headerRange.bottom+1]">
         </line>
       </g>
-
+      
     </svg>
+    </div>
+    <!--
+    <svg style="background-color:white; position:absolute; top:100px; left:100px">
+      <g id="test-for-drag">
+        <rect style="fill:green" x="10" y="10" width="50" height="50">
+        </rect>
+        <text x=30 y=60> hihihihihi
+        </text>
+      </g>
+    </svg> -->
+
   </div>
 </template>
 
@@ -659,7 +677,9 @@ export default {
       this.mouseDownMarkLine = {index:null, type:null}
       this.selectedMark = {index:null, type:null}
       if (this.headerFixedFlag.row && this.headerFixedFlag.column && !this.isTransformView) {
-        this.transmit_data_to_vis()
+        if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
+          this.transmit_data_to_vis()
+        }
       }
     },
 
@@ -771,13 +791,13 @@ export default {
         // todo: flat识别header结构!!!!!!!!!!!!!!!!!!!!!!!!!
       }
 
-      var lastColLayer = Array.from(this.colHeader[this.colHeader.length-1])
-      var lastColRange = lastColLayer[lastColLayer.length-1][1].range
+      var lastColLayer = JSON.parse(JSON.stringify(Array.from(this.colHeader[this.colHeader.length-1])))
+      var lastColRange = JSON.parse(JSON.stringify(lastColLayer[lastColLayer.length-1][1].range))
       var col = this.headerRange.right+1 + lastColRange[lastColRange.length-1].end+1
       this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, col, this.cellWidth)
 
-      var lastRowLayer = Array.from(this.rowHeader[this.rowHeader.length-1])
-      var lastRowRange = lastRowLayer[lastRowLayer.length-1][1].range
+      var lastRowLayer = JSON.parse(JSON.stringify(Array.from(this.rowHeader[this.rowHeader.length-1])))
+      var lastRowRange = JSON.parse(JSON.stringify(lastRowLayer[lastRowLayer.length-1][1].range))
       var row = this.headerRange.right+1 + lastRowRange[lastRowRange.length-1].end+1
       this.markRowHeightList = this.set_list_length(this.markRowHeightList, row, this.cellHeight)
 
@@ -819,16 +839,18 @@ export default {
     handle_transform_swap(name, isSwapUp) {
       var distributionInfo = this.headerDistribution.get(name)
       if (distributionInfo.isRowHeader) {
-        this.transform_swap(name, this.rowHeader, isSwapUp)
+        this.transform_swap(name, this.rowHeader, isSwapUp, true)
       }
       else {
-        this.transform_swap(name, this.colHeader, isSwapUp)
+        this.transform_swap(name, this.colHeader, isSwapUp, false)
       }
     },
-    transform_swap(name, header, isSwapUp) {
+    transform_swap(name, header, isSwapUp, isRow) {
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
       var upLayerNum, downLayerNum
+      // fully connected 
+
       if (isSwapUp && currLayerNum!=0) {
         upLayerNum = currLayerNum - 1
         downLayerNum = currLayerNum
@@ -837,11 +859,11 @@ export default {
         upLayerNum = currLayerNum
         downLayerNum = currLayerNum + 1
       }
-      else {
-        // just for test!!!!!!!!!!!!!!!!!!!!!!
-        this.transform_swap('FALL 2001', header, true)
-        return
-      }
+      else return
+
+      // if it's linear, change to stacked
+      // var linearChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
+      // if (header[upLayerNum].children)
 
       var new1st = Array.from(header[upLayerNum])[0][1].parent
       var new2nd = Array.from(header[upLayerNum])[0][1].children
@@ -849,30 +871,30 @@ export default {
       var new4th = Array.from(header[downLayerNum])[0][1].children
 
       for (var item of header[upLayerNum]) {
-        item[1].parent = new2nd
-        item[1].children = new4th
+        item[1].parent = JSON.parse(JSON.stringify(new2nd))
+        item[1].children = JSON.parse(JSON.stringify(new4th))
         header[upLayerNum].set(item[0], item[1])
-        var tmp = this.headerDistribution.get(item[0])
+        var tmp = JSON.parse(JSON.stringify(this.headerDistribution.get(item[0])))
         tmp.layer += 1
         this.headerDistribution.set(item[0], tmp)
       }
       for (var item of header[downLayerNum]) {
-        item[1].parent = new1st
-        item[1].children = new3rd
+        item[1].parent = JSON.parse(JSON.stringify(new1st))
+        item[1].children = JSON.parse(JSON.stringify(new3rd))
         header[downLayerNum].set(item[0], item[1])
-        var tmp = this.headerDistribution.get(item[0])
+        var tmp = JSON.parse(JSON.stringify(this.headerDistribution.get(item[0])))
         tmp.layer -= 1
         this.headerDistribution.set(item[0], tmp)
       }
       if (new1st.length != 0) {
         for (var item of header[upLayerNum-1]) {
-          item[1].children = new2nd
+          item[1].children = JSON.parse(JSON.stringify(new2nd))
           header[upLayerNum-1].set(item[0], item[1])
         }
       }
       if (new4th.length != 0) {
         for (var item of header[downLayerNum+1]) {
-          item[1].parent = new3rd
+          item[1].parent = JSON.parse(JSON.stringify(new3rd))
           header[downLayerNum+1].set(item[0], item[1])
         }
       }
@@ -884,27 +906,63 @@ export default {
       // this.colHeaderChangeSignal = !this.colHeaderChangeSignal
 
       // re-calculate header numbers
+      // up layer
       for (var item of header[upLayerNum]) {
-        var i
-        for (i=this.headerDistribution.get(item[0]).count; i<item[1].parent.length; i++) {
-          this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
-          var tmpindex = this.header2num.get(item[0])
-          tmpindex.push(this.newHeaderIndex++)
-          this.header2num.set(item[0], tmpindex)
+        var i=this.headerDistribution.get(item[0]).count
+        var targetlen = item[1].parent.length
+        if (i > targetlen) {
+          // remove redundancy
+          for (var j=targetlen; j<i-1; j++) {
+            var rmindex = this.header2num.get(item[0]).pop()
+            this.num2header.delete(rmindex)
+          }
+        }
+        else {
+          // add new
+          for (i; i<targetlen; i++) {
+            this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
+            var tmpindex = JSON.parse(JSON.stringify(this.header2num.get(item[0])))
+            tmpindex.push(this.newHeaderIndex++)
+            this.header2num.set(item[0], tmpindex)
+          }
         }
         this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
       }
+      // down layer
       for (var item of header[downLayerNum]) {
-        var i
-        for (i=this.headerDistribution.get(item[0]).count; i<item[1].parent.length; i++) {
-          this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
-          var tmpindex = this.header2num.get(item[0])
-          tmpindex.push(this.newHeaderIndex++)
-          this.header2num.set(item[0], tmpindex)
+        var i=this.headerDistribution.get(item[0]).count
+        var targetlen = item[1].parent.length
+        if (i > targetlen) {
+          // remove redundancy
+          for (var j=targetlen; j<i; j++) {
+            var rmindex = this.header2num.get(item[0]).pop()
+            this.num2header.delete(rmindex)
+          }
+        }
+        else {
+          // add new
+          for (i; i<targetlen; i++) {
+            this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
+            var tmpindex = JSON.parse(JSON.stringify(this.header2num.get(item[0])))
+            tmpindex.push(this.newHeaderIndex++)
+            this.header2num.set(item[0], tmpindex)
+          }
         }
         this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
       }
 
+    },
+    handle_transform_linear_or_stacked(name, times) {
+      var distributionInfo = this.headerDistribution.get(name)
+      var layer = distributionInfo.layer
+      var isRow = distributionInfo.isRowHeader 
+      var header = isRow ? this.rowHeader: this.colHeader
+      var headerInfo = header[layer].get(name)
+      if (headerInfo.children.indexOf("")==-1 && headerInfo.children.indexOf(" ")==-1) // is stacked
+        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow) : this.transform_2linear(name, this.colHeader, times, isRow)
+      else {  // is linear
+        isRow ? this.transform_2stacked(name, this.rowHeader, isRow) : this.transform_2stacked(name, this.colHeader, isRow)
+      }
     },
     handle_transform_2stacked(name) {
       var distributionInfo = this.headerDistribution.get(name)
@@ -916,10 +974,12 @@ export default {
       }
     },
     transform_2stacked(name, header, isRow) {
-      var distributionInfo = this.headerDistribution.get(name)
+      var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
-      var headerInfo = header[layer].get(name)
+      var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
+      if (headerInfo.children.length == 0)  return // no child
       if (headerInfo.children.indexOf("")==-1 && headerInfo.children.indexOf(" ")==-1)  return // already stacked
+      
 
       // delete child
       var movingChild = headerInfo.children.shift()
@@ -927,12 +987,17 @@ export default {
       header[layer].set(name, headerInfo)
       
       // delete parent
-      var cheaderInfo = header[layer+1].get(movingChild)
+      var cheaderInfo = JSON.parse(JSON.stringify(header[layer+1].get(movingChild)))
       var pindex = cheaderInfo.parent.indexOf(name)
       cheaderInfo.parent.splice(pindex, 1)
       var deleteRange = cheaderInfo.range.splice(pindex, 1)
       var deleteIndex = deleteRange[0].start
-      header[layer+1].set(movingChild, cheaderInfo)
+      if (cheaderInfo.parent.length == 0) {
+        header[layer+1].delete(movingChild)
+      }
+      else {
+        header[layer+1].set(movingChild, cheaderInfo)
+      }
 
       // modify 'ranges'
       for (var i=0; i<header.length; i++) {
@@ -953,22 +1018,33 @@ export default {
       }
       
       //modify header2num/num2header/headerDistribution
-      var t = this.header2num.get(movingChild)
+      var t = JSON.parse(JSON.stringify(this.header2num.get(movingChild)))
       var tt = t.splice(pindex, 1)
-      this.header2num.set(movingChild, t)
+      if (t.length == 0) {
+        this.header2num.delete(movingChild)
+      }
+      else {
+        this.header2num.set(movingChild, t)
+      } 
       this.num2header.delete(tt[0])
       for (var i=pindex; i<t.length; i++) {
-        var hinfo = this.num2header.get(t[i])
+        var hinfo = JSON.parse(JSON.stringify(this.num2header.get(t[i])))
         hinfo.times -= 1
         this.num2header.set(t[i], hinfo)
       }
-      var hinfo = this.headerDistribution.get(movingChild)
+      var hinfo = JSON.parse(JSON.stringify(this.headerDistribution.get(movingChild)))
       hinfo.count -= 1
-      this.headerDistribution.set(movingChild, hinfo)
+      if (hinfo.count == 0) {
+        this.headerDistribution.delete(movingChild)
+      }
+      else {
+        this.headerDistribution.set(movingChild, hinfo)
+      }
+      
       
       //modify num2seq/seq2num
       for (var item of this.seq2num) {
-        if (item[0].has(name) && item[0].has(' ') || item[0].has(name) && item[0].has('')) {
+        if (item[0].has(name) && item[0].has(movingChild)) {
           this.num2seq.delete(item[1].num)
           this.seq2num.delete(item[0])
         }
@@ -994,23 +1070,21 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow) {
-      var distributionInfo = this.headerDistribution.get(name)
+      var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
-      var headerInfo = header[layer].get(name)
+      var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
+      if (headerInfo.children.length == 0)  return // no child
       if (headerInfo.children.indexOf("")!=-1 || headerInfo.children.indexOf(" ")!=-1)  return // already linear
 
-      // add child
+      
       var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
-      headerInfo.children.unshift(newChild)
-      headerInfo.cellNum += 1
-      header[layer].set(name, headerInfo)
       
       // add parent
       var addIndex = headerInfo.range[0].start // add before the first child
       var addRange = {"start":addIndex, "end":addIndex}
       var cheaderInfo, pindex
       if (header[layer+1].has(newChild)) {
-        cheaderInfo = header[layer+1].get(newChild)
+        cheaderInfo = JSON.parse(JSON.stringify(header[layer+1].get(newChild))) 
         for (pindex=0; pindex<cheaderInfo.range.length; pindex++) {
           if (cheaderInfo.range[pindex].start > addIndex) {
             break
@@ -1029,10 +1103,15 @@ export default {
       }      
       header[layer+1].set(newChild, cheaderInfo)
 
+      // add child
+      headerInfo.children.unshift(newChild)
+      headerInfo.cellNum += 1
+      header[layer].set(name, headerInfo)
+
       //add values
       if (isRow) {
         for (var j=0; j<(this.columnWidthList.length-this.headerRange.right-1); j++) {
-          var range = header[layer].get(name).range[times]
+          var range = JSON.parse(JSON.stringify(header[layer].get(name).range[times]))
           
           // calculate seq
           var rangea = [range.start, j]
@@ -1067,7 +1146,7 @@ export default {
       }
       else {
         for (var i=0; i<(this.rowHeightList.length-this.headerRange.bottom-1); i++) {
-          var range = header[layer].get(name).range[times]
+          var range = JSON.parse(JSON.stringify(header[layer].get(name).range[times]))
           
           // calculate seq
           var rangea = [i, range.start]
@@ -1101,14 +1180,17 @@ export default {
         }
       }
 
-      // modify 'ranges'
+      // modify 'ranges' and 'cellNum'
       for (var i=0; i<header.length; i++) {
         for (var item of header[i]) {
           var info = item[1]
           var ranges = info.range
+          // if (i <= layer) {
+          //   info.cellNum += 1 // parents' cellNum+1
+          // }
           for (var r=0; r<ranges.length; r++) {
             if (ranges[r].start >= addIndex) {
-              if (ranges[r].start == addIndex && (i==layer || item[0]==newChild)) {
+              if (ranges[r].start == addIndex && (i<=layer || item[0]==newChild)) {
                 // do nothing
               }
               else {
@@ -1131,8 +1213,8 @@ export default {
       
       //modify header2num/num2header/headerDistribution
       if (this.headerDistribution.has(newChild)) {
-        var hinfo = this.headerDistribution.get(newChild)
-        var t = this.header2num.get(newChild)
+        var hinfo = JSON.parse(JSON.stringify(this.headerDistribution.get(newChild)))
+        var t = JSON.parse(JSON.stringify(this.header2num.get(newChild)))
         t.push(this.newHeaderIndex)
         this.header2num.set(newChild, t)
         var tt = {"value":newChild, "times":hinfo.count++}
@@ -1141,7 +1223,7 @@ export default {
       }
       else {
         this.header2num.set(newChild, [this.newHeaderIndex])
-        this.num2header.set(this.newHeaderIndex, {"value":newChild, "times":0})
+        this.num2header.set(this.newHeaderIndex++, {"value":newChild, "times":0})
         this.headerDistribution.set(newChild, {"isRowHeader":isRow, "layer":layer+1, "count":1})
       }
 
@@ -1342,6 +1424,101 @@ export default {
       var js = JSON.stringify(res)
       return js
     },
+
+    add_drag_operation() {
+      // using d3
+      const drag = d3.drag().filter(this.isTransformView)
+        .on('drag', function (d) {
+            d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`
+            ) 
+            var data = d3.select(this)
+            console.log(data)
+          })
+        // .on('end', function draged(d) {
+        //     d3.select(this).attr("x", d.x).attr("y", d.y)
+        //   })
+      
+      // d3.selectAll(".column-header").call(drag);
+      d3.selectAll(".column-header").datum({x:0, y:0}).call(drag);
+      console.log("ininin")
+    },
+    before_header_interaction(id, isRowHeader, name, times) {
+      let self = this
+      // delete other helpers
+      d3.select("#interaction-helper").remove()
+
+      // add a new helper
+      var rect = d3.select("#"+id).select("rect")
+      var text = d3.select("#"+id).select("text")
+      var helper = d3.select(".table-view-svg").append("g").attr("id", "interaction-helper")
+      helper.append("rect")
+          .attr("x", rect.attr("x"))
+          .attr("y", rect.attr("y"))
+          .attr("width", rect.attr("width"))
+          .attr("height", rect.attr("height"))
+          .style("fill","DodgerBlue")
+          .style("fill-opacity","20%")
+          .style("cursor", "move")
+      helper.append("text")
+          .attr("x", text.attr("x"))
+          .attr("y", text.attr("y"))
+          .text(text.text())
+          .style("fill-opacity","60%")
+          .style("cursor", "move")
+          .style("font-family","Helvetica, Tahoma, Arial")
+          .style("-moz-user-select", "none")
+          .style("-webkit-user-select", "none")
+          .style("-ms-user-selec", "none")
+          .style("user-select", "none")
+          
+      // add drag event
+      if (!isRowHeader) {
+        const drag = d3.drag().filter(this.isTransformView)
+          .on('drag', function (d) {
+            d3.select(this).attr("transform", `translate(0, ${d.y})`) 
+          })
+          .on('end', function (d) {
+            if (d.y > 0) {
+              self.transform_swap(name, self.colHeader, false, false)
+            }
+            else if (d.y < 0) {
+              self.transform_swap(name, self.colHeader, true, false)
+            }
+            else {
+              self.handle_transform_linear_or_stacked(name, times)
+            }
+            d3.select(this).remove()
+            
+          })
+        helper.datum({y:0}).call(drag)
+      }
+      else {
+        const drag = d3.drag().filter(this.isTransformView)
+          .on('drag', function (d) {
+              d3.select(this).attr("transform", `translate(${d.x}, 0)`) 
+          })
+          .on('end', function (d) {
+            if (d.x > 0) {
+              self.transform_swap(name, self.rowHeader, false, true)
+            }
+            else if (d.x < 0) {
+              self.transform_swap(name, self.rowHeader, true, true)
+            }
+            else {
+              self.handle_transform_linear_or_stacked(name, times)
+            }
+            d3.select(this).remove()
+          })
+        helper.datum({x:0}).call(drag)
+      }
+      
+      // add dbclick event   
+      // helper.on("dbclick", () => {
+      //   self.handle_transform_linear_or_stacked(name, times)
+      // })
+      
+      
+    },
     handle_drag() {
       console.log("ininin")
     },
@@ -1408,6 +1585,13 @@ export default {
         this.selectedArea = {top:0, left:0, bottom:0, right:0}
         this.selectedMark = {index:null, type:null}
         this.selectByMark = {row:false, column:false}
+        // if (this.isTransformView) {
+        //   this.add_drag_operation()
+        // }
+        // else {
+        //   d3.selectAll(".column-header").on(".drag", null)
+        //   console.log("outoutout")
+        // }
       }, 
       
   },
@@ -1498,7 +1682,7 @@ export default {
       }
     },
     cal_column_header_position() {
-      return (value, times) => {    
+      return (value, times) => {   
         var rindex = this.headerDistribution.get(value).layer
         var start = this.colHeader[rindex].get(value).range[times].start
         var span = this.colHeader[rindex].get(value).cellNum
@@ -1601,96 +1785,104 @@ export default {
     margin-top: 5px;
     text-align: center;
   }
-  .table-view-svg {
-    height: 100%;
-    width: 100%;
+  .table-view-svg-container {
+    height:90%;
+    width:99%;
+    overflow:auto;
     margin-left: 1%;
     margin-top: 1%;
-    .table-mark {
-      fill: rgb(233,233,233);
-      stroke: lightslategrey;
-      stroke-width: 0.2px;
-      cursor: cell;
-    }
-    .selected-table-mark {
-      fill: rgb(213, 215, 218);
-      cursor: cell;
-    }
-    .selected-table-mark-text {
-      fill:steelblue;
-      font-size:105%;
-      text-anchor: middle;
-    }
-    .chosen-table-mark {
-      fill: rgb(204, 231, 243);
-      cursor: cell;
-    }
-    .chosen-table-mark-text {
-      fill:steelblue;
-      font-size:105%;
-      text-anchor: middle;
-    }
-    .hovered-table-mark {
-      fill:rgb(173, 199, 223);
-      cursor:pointer;
-    }
-    .hovered-table-mark-text {
-      cursor:pointer;
-    }
-    .column-mark-transparent-line {
-      fill:white;
-      fill-opacity: 0%;
-      stroke:none;
-      cursor:col-resize;
-    }
-    .row-mark-transparent-line {
-      fill:white;
-      fill-opacity: 0%;
-      stroke:none;
-      cursor:row-resize;
-    }
-    .table-mark-long-line {
-      stroke: black;
-      stroke-width: 0.4px;
-    }
-    .table-cell {
-      fill: white;
-      stroke: lightslategrey;
-      stroke-width: 0.2px;
-      cursor: cell;
-    }
-    .header-table-cell {
-      fill: rgb(245, 248, 250);
-      stroke: lightslategrey;
-      stroke-width: 0.2px;
-      cursor: cell;
-    }
-    .table-cell-text {
-      text-anchor: start;
-    }
-    .table-mark-text {
-      font-size: 105%;
-      text-anchor: middle;
-    }
-    .selected-area {
-      stroke: steelblue;
-      fill: rgb(186, 219, 228);
-      fill-opacity: 20%;
-      stroke-width: 1.5px;
-      cursor: cell;
-    }      
-    .highlight-line {
-      stroke: steelblue;
-      stroke-width: 1.5px;
-    }
-    .header-line {
-      stroke:rgb(43, 98, 134);
-      stroke-width: 0.5px;
-    }
-    #transparent-mask-for-choosing {
-      fill-opacity: 0%;
-      stroke: none;
-      cursor: cell;
+    .table-view-svg {
+      height: 200%;
+      width: 200%;
+      .table-mark {
+        fill: rgb(233,233,233);
+        stroke: lightslategrey;
+        stroke-width: 0.2px;
+        cursor: cell;
+      }
+      .selected-table-mark {
+        fill: rgb(213, 215, 218);
+        cursor: cell;
+      }
+      .selected-table-mark-text {
+        fill:steelblue;
+        font-size:105%;
+        text-anchor: middle;
+      }
+      .chosen-table-mark {
+        fill: rgb(204, 231, 243);
+        cursor: cell;
+      }
+      .chosen-table-mark-text {
+        fill:steelblue;
+        font-size:105%;
+        text-anchor: middle;
+      }
+      .hovered-table-mark {
+        fill:rgb(173, 199, 223);
+        cursor:pointer;
+      }
+      .hovered-table-mark-text {
+        cursor:pointer;
+      }
+      .column-mark-transparent-line {
+        fill:white;
+        fill-opacity: 0%;
+        stroke:none;
+        cursor:col-resize;
+      }
+      .row-mark-transparent-line {
+        fill:white;
+        fill-opacity: 0%;
+        stroke:none;
+        cursor:row-resize;
+      }
+      .table-mark-long-line {
+        stroke: black;
+        stroke-width: 0.4px;
+      }
+      .table-cell {
+        fill: white;
+        stroke: lightslategrey;
+        stroke-width: 0.2px;
+        cursor: cell;
+      }
+      .header-table-cell {
+        fill: rgb(245, 248, 250);
+        stroke: lightslategrey;
+        stroke-width: 0.2px;
+        cursor: cell;
+      }
+      .table-cell-text {
+        text-anchor: start;
+      }
+      .table-mark-text {
+        font-size: 105%;
+        text-anchor: middle;
+      }
+      .selected-area {
+        stroke: steelblue;
+        fill: rgb(186, 219, 228);
+        fill-opacity: 20%;
+        stroke-width: 1.5px;
+        cursor: cell;
+      }      
+      .highlight-line {
+        stroke: steelblue;
+        stroke-width: 1.5px;
+      }
+      .header-line {
+        stroke:rgb(43, 98, 134);
+        stroke-width: 0.5px;
+      }
+      #transparent-mask-for-choosing {
+        fill-opacity: 0%;
+        stroke: none;
+        cursor: cell;
+      }
+      .flip-list-move {
+        transition: transform 1s;
+      }
     }
   }
 }
