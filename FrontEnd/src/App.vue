@@ -131,6 +131,7 @@ export default {
 
 <style lang="less">
 @side-panel-width: 20%;
+@padding:1%;
 @menu-height: 2.5rem;
 @change-view-button-container-height: 3.5rem;
 html {
@@ -178,9 +179,9 @@ html {
   .content-container {
     position: absolute;
     top: @menu-height + @change-view-button-container-height;
-    left: 0%;
-    bottom: 0%;
-    right: @side-panel-width;
+    left: @padding;
+    bottom: @padding;
+    right: @side-panel-width + @padding;
   }
   svg:not(:root) {
     overflow: visible;
