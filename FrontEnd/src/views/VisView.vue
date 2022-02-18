@@ -118,9 +118,19 @@ export default {
       this.showTemplates = true;
       this.OPEN_VIS_PANEL();
     });
+    this.$bus.$on("rerender-selectedData", (prePosition, afterPosition) => {
+      this.VisDB.ReconfigAllCanvas(
+        prePosition.x,
+        prePosition.y,
+        afterPosition.x,
+        afterPosition.y
+      );
+    });
   },
   beforeDestroy() {
     this.$bus.$off("preview-config");
+    this.$bus.$off("visualize-selectedData");
+    this.$bus.$off("rerender-selectedData");
   },
 };
 </script>

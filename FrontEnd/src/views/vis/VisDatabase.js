@@ -15,6 +15,8 @@ VisDatabase.prototype.ClickHandler = function (id) {
 }
 
 VisDatabase.prototype.SelectCanvas = function (id) {
+    console.log("rerender", this.database[id]);
+
     this.database[id].status = status.select;
     let canvas = this.GetCanvas(id);
 
@@ -52,26 +54,39 @@ VisDatabase.prototype.SelectCanvas = function (id) {
 }
 
 VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
+    console.log('rerendering..', pre_x, after_x, pre_y, after_y);
+
     // move col
-    if (pre_x == 0 && after_x == 0) {
+    if (pre_y == 0 && after_y == 0) {
         for (const id in this.database) {
             if (Object.hasOwnProperty.call(this.database, id)) {
                 const metaData = this.database[id];
                 // move right
                 let offset = after_x - pre_x;
-
-                if (pre_x < metaData.x) {
+                if (pre_x <= metaData.x) {
                     this.RepositionCanvas(id, metaData.x + offset, metaData.y)
                 }
-                else if (pre_x > metaData.x && prex <= metaData.x + width) {
-                    this.RerenderCanvas(id, pre_x, metaData.y, height, metaData.width + offset);
+                else if (pre_x > metaData.x && pre_x <= metaData.x + metaData.width) {
+                    this.RerenderCanvas(id, metaData.x, metaData.y, metaData.height, metaData.width + offset);
                 }
-
             }
         }
     }
+    // move row
     else {
-
+        for (const id in this.database) {
+            if (Object.hasOwnProperty.call(this.database, id)) {
+                const metaData = this.database[id];
+                // move right
+                let offset = after_y - pre_y;
+                if (pre_y <= metaData.y) {
+                    this.RepositionCanvas(id, metaData.x , metaData.y+ offset)
+                }
+                else if (pre_y > metaData.y && pre_y <= metaData.y + metaData.height) {
+                    this.RerenderCanvas(id, metaData.x, metaData.y, metaData.height+offset, metaData.width);
+                }
+            }
+        }
     }
 }
 
