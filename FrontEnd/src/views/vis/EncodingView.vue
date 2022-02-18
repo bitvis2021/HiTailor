@@ -20,7 +20,7 @@
         <el-row
           type="flex"
           class="row-bg property-box"
-          justify="space-between"
+          justify="start"
           v-for="(property, key) in encoding"
           :gutter="20"
           :key="key + property.name"
@@ -34,11 +34,18 @@
               @click="DeletProperty(eName, property.name)"
               ><i class="el-icon-close"></i
             ></el-button>
+            <el-button
+              v-else
+              size="mini"
+              type="text"
+              disabled
+              ><i class="el-icon-close"></i
+            ></el-button>
           </div>
           <div class="property-text">
             {{ property.name + ":" }}
           </div>
-          <div>
+          <el-col>
             <el-select
               v-if="property.type == 'select'"
               v-model="property.value"
@@ -73,7 +80,7 @@
                 </el-option>
               </el-option-group>
             </el-select>
-          </div>
+          </el-col>
         </el-row>
         <!-- Add Property Button -->
         <el-row type="flex" class="add-operation" justify="start">

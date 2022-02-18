@@ -1,14 +1,6 @@
 <template>
   <div class="visview-container">
-    <div
-      style="
-        background-color: white;
-        position: absolute;
-        left: -300px;
-        top: 0px;
-        width: 200px;
-      "
-    >
+    <div class="vis-test">
       {{ this.VegaConfigNoData }}
     </div>
     <div id="gen-chart"></div>
@@ -53,6 +45,7 @@ import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import { GetTemplates } from "./vis/Temp2Vega";
 import { mapMutations } from "vuex";
+import { VisDatabase } from "./vis/VisDatabase";
 
 export default {
   name: "VisView",
@@ -73,6 +66,7 @@ export default {
       vegaConfig: {}, // template -> vegaConfig <=> panelView
       ECSelections: {}, // template -> vegaSchema -> panelView
       position: {},
+      VisDB: new VisDatabase(),
     };
   },
   methods: {
@@ -94,31 +88,13 @@ export default {
     },
     ApplyVis2Preview() {},
     ApplyVis2Table() {
-      this.GenFig(
-        this.position.height - 1.2,
-        this.position.width - 1.2,
-        this.position.x + 0.1,
-        this.position.y + 0.1,
+      this.VisDB.GenFig(
+        this.position.height,
+        this.position.width,
+        this.position.x,
+        this.position.y,
         this.vegaConfig
       );
-    },
-    GenFig(height, width, x, y, chartJson) {
-      chartJson.height = height;
-      chartJson.width = width;
-      vegaEmbed("#gen-chart", chartJson, {
-        renderer: "svg",
-        actions: false,
-      }).then(() => {
-        let pic =
-          document.getElementById("gen-chart").childNodes[0].childNodes[0];
-        let target = document.getElementsByClassName("table-view-svg")[0];
-        pic.setAttribute("transform", "translate(" + x + "," + y + ")");
-        pic.childNodes[0].childNodes[0].childNodes[0].setAttribute(
-          "style",
-          "fill:white"
-        );
-        target.appendChild(pic);
-      });
     },
   },
   mounted() {
@@ -176,8 +152,26 @@ export default {
     left: 0%;
     right: 0%;
   }
-  .role-axis {
-    display: none;
-  }
+}
+.role-axis {
+  display: none;
+}
+.vis-test {
+  display: none;
+  background-color: white;
+  position: absolute;
+  left: -300px;
+  top: 0px;
+  width: 200px;
+}
+
+.vis-picture {
+}
+.vis-picture-button {
+  cursor: pointer;
+  fill: rgb(90, 156, 248);
+}
+.vis-picture-button:hover {
+  fill: rgb(153, 195, 250);
 }
 </style>
