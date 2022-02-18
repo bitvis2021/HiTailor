@@ -447,7 +447,10 @@ export default {
       flatAttrName: null,
       flatData: null,
 
-      hasTransposed: false
+      hasTransposed: false,
+
+      visRerenderPrePos:{x:0, y:0},
+      visRerenderAfterPos:{x:0, y:0}
     }
   },
 
@@ -645,6 +648,15 @@ export default {
       this.mouseDownMarkLine.index = index
       this.mouseDownMarkLine.type = type
       this.mouseDownMarkLineState = true
+
+      if (type == "column") {
+        this.visRerenderPrePos.x = this.markWidth + this.markWidthRangeList[index+1]
+        this.visRerenderPrePos.y = 0
+      }
+      else {
+        this.visRerenderPrePos.x = 0
+        this.visRerenderPrePos.y = this.markHeight + this.markHeightRangeList[index+1]
+      }
     },
     handle_mouse_down_selected(event) {
       this.cal_mouse_over_cell(event.offsetX, event.offsetY)
@@ -666,12 +678,27 @@ export default {
         if (this.mouseDownMarkLine.type == "column") {
           this.columnWidthList = this.markColumnWidthList
           this.widthChangeSignal = !this.widthChangeSignal
+
+          this.visRerenderAfterPos.x = this.markWidth + this.markWidthRangeList[this.mouseDownMarkLine.index+1]
+          this.visRerenderAfterPos.y = 0
         }
         if (this.mouseDownMarkLine.type == "row") {
           this.rowHeightList = this.markRowHeightList
           this.heightChangeSignal = !this.heightChangeSignal
+
+          this.visRerenderAfterPos.x = 0
+          this.visRerenderAfterPos.y = this.markHeight + this.markHeightRangeList[this.mouseDownMarkLine.index+1]
         }
         this.mouseDownMarkLineState = false
+
+        if (!this.isTransformView) {
+          if (this.mouseDownMarkLine.type=="column" && this.visRerenderAfterPos.x!=this.visRerenderPrePos.x || 
+            this.mouseDownMarkLine.type=="row" && this.visRerenderAfterPos.y!=this.visRerenderPrePos.y) {
+              this.$bus.$emit('rerender-selectedData', this.visRerenderPrePos, this.visRerenderAfterPos)
+              console.log("rerender", this.visRerenderPrePos, this.visRerenderAfterPos)
+            }
+        }
+        
       }
       this.mouseOverCell =  {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null}
       this.mouseDownMarkLine = {index:null, type:null}
@@ -1076,11 +1103,13 @@ export default {
       if (headerInfo.children.length == 0)  return // no child
       if (headerInfo.children.indexOf("")!=-1 || headerInfo.children.indexOf(" ")!=-1)  return // already linear
 
-      
+      // add child
       var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
+      headerInfo.children.unshift(newChild)
+      header[layer].set(name, headerInfo)
       
       // add parent
-      var addIndex = headerInfo.range[0].start // add before the first child
+      var addIndex = headerInfo.range[times].start // add before the first child
       var addRange = {"start":addIndex, "end":addIndex}
       var cheaderInfo, pindex
       if (header[layer+1].has(newChild)) {
@@ -1102,11 +1131,6 @@ export default {
         cheaderInfo.isFullyConn = true
       }      
       header[layer+1].set(newChild, cheaderInfo)
-
-      // add child
-      headerInfo.children.unshift(newChild)
-      headerInfo.cellNum += 1
-      header[layer].set(name, headerInfo)
 
       //add values
       if (isRow) {
@@ -1185,9 +1209,6 @@ export default {
         for (var item of header[i]) {
           var info = item[1]
           var ranges = info.range
-          // if (i <= layer) {
-          //   info.cellNum += 1 // parents' cellNum+1
-          // }
           for (var r=0; r<ranges.length; r++) {
             if (ranges[r].start >= addIndex) {
               if (ranges[r].start == addIndex && (i<=layer || item[0]==newChild)) {
@@ -1205,9 +1226,9 @@ export default {
                 ranges[r].end += 1
               }
             }
-            info.range = ranges
-            header[i].set(item[0], info)
           }
+          info.range = ranges
+          header[i].set(item[0], info)
         }
       }
       
@@ -1685,12 +1706,12 @@ export default {
       return (value, times) => {   
         var rindex = this.headerDistribution.get(value).layer
         var start = this.colHeader[rindex].get(value).range[times].start
-        var span = this.colHeader[rindex].get(value).cellNum
+        var end = this.colHeader[rindex].get(value).range[times].end
 
         var curHeaderPos = {x:null, y:null, width:null, height:null}
         curHeaderPos.x = this.markWidth + this.widthRangeList[this.headerRange.right+1 + start]
         curHeaderPos.y = this.markHeight + this.heightRangeList[rindex]
-        curHeaderPos.width = this.widthRangeList[this.headerRange.right+1+start+span] - this.widthRangeList[this.headerRange.right+1+start]       
+        curHeaderPos.width = this.widthRangeList[this.headerRange.right+1+end+1] - this.widthRangeList[this.headerRange.right+1+start]       
         curHeaderPos.height = this.rowHeightList[rindex]
         return curHeaderPos
       }
@@ -1699,13 +1720,14 @@ export default {
       return (value, times) => {    
         var cindex = this.headerDistribution.get(value).layer
         var start = this.rowHeader[cindex].get(value).range[times].start
-        var span = this.rowHeader[cindex].get(value).cellNum
+        var end = this.rowHeader[cindex].get(value).range[times].end
+        // var span = this.rowHeader[cindex].get(value).range[times].end - this.rowHeader[cindex].get(value).range[times].start + 1
 
         var curHeaderPos = {x:null, y:null, width:null, height:null}
         curHeaderPos.x = this.markWidth + this.widthRangeList[cindex]
         curHeaderPos.y = this.markHeight + this.heightRangeList[this.headerRange.bottom+1 + start]
         curHeaderPos.width = this.columnWidthList[cindex]       
-        curHeaderPos.height = this.heightRangeList[this.headerRange.bottom+1+start+span] - this.heightRangeList[this.headerRange.bottom+1+start]
+        curHeaderPos.height = this.heightRangeList[this.headerRange.bottom+1+end+1] - this.heightRangeList[this.headerRange.bottom+1+start]
         return curHeaderPos
       }
     },
