@@ -7,7 +7,7 @@ def load_tabular_dataset():
         read tabular dataset and process
     '''
     global tabular_dataset
-    s = parse_sheet("public/test3.xlsx", "Sheet1")
+    s = parse_sheet("public/test1.xlsx", "Sheet1")
     tabular_dataset = s.result()
 
 def get_tabular_dataset():
