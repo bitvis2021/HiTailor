@@ -217,15 +217,16 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
 }
 
 EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
-    encoding_obj = JSON.parse(JSON.stringify(encoding_obj))
-    // encoding_obj.x.scale = { zero: false };
-    encoding_obj.x.axis = { labels: false, ticks: false, title: null };
-    // encoding_obj.y.scale = { zero: false };
-    encoding_obj.y.axis = { labels: false, ticks: false, title: null };
-    if (encoding_obj.color != undefined) {
-        encoding_obj.color.legend = null;
+    let encoding = JSON.parse(JSON.stringify(encoding_obj))
+    console.log("encoding object", encoding);
+    encoding.x.scale = { zero: false };
+    encoding.x.axis = { labels: false, ticks: false, title: null };
+    encoding.y.scale = { zero: false };
+    encoding.y.axis = { labels: false, ticks: false, title: null };
+    if (encoding.color != undefined) {
+        encoding.color.legend = null;
     }
-    return encoding_obj
+    return encoding
 }
 
 export { EncodingCompiler };

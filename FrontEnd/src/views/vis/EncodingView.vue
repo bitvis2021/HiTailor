@@ -34,11 +34,7 @@
               @click="DeletProperty(eName, property.name)"
               ><i class="el-icon-close"></i
             ></el-button>
-            <el-button
-              v-else
-              size="mini"
-              type="text"
-              disabled
+            <el-button v-else size="mini" type="text" disabled
               ><i class="el-icon-close"></i
             ></el-button>
           </div>
@@ -136,14 +132,14 @@ export default {
   components: {},
   created() {},
   mounted() {
-    this.EC = new EncodingCompiler(this.config, this.selections);
+    // this.EC = new EncodingCompiler(this.config, this.selections);
     this.schema = this.EC.GetSchema();
   },
   data() {
     return {
+      EC: new EncodingCompiler(this.config, this.selections),
       encoding: this.config,
       schema: {},
-      EC: {},
       addProperties: {},
     };
   },

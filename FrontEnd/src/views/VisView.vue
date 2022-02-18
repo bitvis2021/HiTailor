@@ -170,8 +170,8 @@ export default {
 .vis-picture-button {
   cursor: pointer;
   fill: rgb(90, 156, 248);
-}
-.vis-picture-button:hover {
-  fill: rgb(153, 195, 250);
+  &:hover {
+    fill: rgb(153, 195, 250);
+  }
 }
 </style>
