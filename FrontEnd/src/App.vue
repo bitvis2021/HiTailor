@@ -24,20 +24,19 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-    
+        
+    <div class="content-container">
+      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
+    </div>
+    <div class="side-panel" v-show="currView!='Transformation'">
+      <VisView></VisView> 
+    </div>
+
     <div class="change-view-button-container" v-if="isHeaderFixed">
       <el-radio-group class="change-view-button" v-model="currView" size="medium">
         <el-radio-button label="Transformation"></el-radio-button>
         <el-radio-button label="Visualization"></el-radio-button>
       </el-radio-group>
-    </div>
-    
-    <div class="content-container">
-      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
-    </div>
-
-    <div class="side-panel">
-      <VisView></VisView> 
     </div>
 
     <el-dialog
