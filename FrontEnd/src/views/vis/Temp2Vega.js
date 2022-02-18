@@ -112,38 +112,6 @@ export function GetTemplates(regionMetaData, data) {
                     detail: { field: defaultX.name, type: "nominal", sort: defaultX.sort },
                 }
             }
-            // - [N-Q Ranged Dot Plot example](https://www.notion.so/N-Q-range-chart-example-7f4e860724f24590b325453d2e88f6d4)
-            templates.AddTemplate(new VegaTemplate("N-Q Ranged Dot Plot", 'line', vegaEncodingX, data, selections, './templates/ranged dot plot.png'));
-            delete vegaEncodingX['detail'];
-
-            // - [N-Q boxplot example](https://www.notion.so/N-Q-boxplot-example-01bfa0004d1e4b758d64d40559a49474)
-            templates.AddTemplate(new VegaTemplate("N-Q Box Plot", {
-                "type": "boxplot",
-                "extent": "min-max"
-            }, vegaEncodingX, data, selections, './templates/box plot y.png'), 'vertical');
-            templates.AddTemplate(new VegaTemplate("N-Q Box Plot", {
-                "type": "boxplot",
-                "extent": "min-max"
-            }, vegaEncodingY, data, selections, './templates/box plot.png'));
-
-            // @@N-N-Q grouped bar chart 
-            if (GetHeaders(regionMetaData.x).length > 1) {
-                let defaultX2 = regionMetaData.x.headers[regionMetaData.x.headers.length - 2]
-                vegaEncodingX.xOffset = { field: defaultX.name, type: "nominal" };
-                vegaEncodingX.color = { field: defaultX.name, type: "nominal" };
-                vegaEncodingX.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
-                vegaEncodingX.y = { field: "value", type: "quantitative" };
-                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncodingX, data, selections, './templates/bar chart.png'));
-            }
-            else if (GetHeaders(regionMetaData.y).length > 1) {
-                // Y direction
-                let defaultY2 = regionMetaData.y.headers[regionMetaData.y.headers.length - 2]
-                vegaEncodingX.yOffset = { field: defaultY.name, type: "nominal" };
-                vegaEncodingX.color = { field: defaultY.name, type: "nominal" };
-                vegaEncodingX.y = { field: defaultY.name, type: "nominal", sort: defaultY2.sort };
-                vegaEncodingX.x = { field: "value", type: "quantitative" };
-                templates.AddTemplate(new VegaTemplate("N-N-Q grouped bar chart", 'bar', vegaEncodingX, data, selections));
-            }
         }
 
 

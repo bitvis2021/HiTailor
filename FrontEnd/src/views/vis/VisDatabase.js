@@ -15,6 +15,8 @@ VisDatabase.prototype.ClickHandler = function (id) {
 }
 
 VisDatabase.prototype.SelectCanvas = function (id) {
+    console.log("rerender", this.database[id]);
+
     this.database[id].status = status.select;
     let canvas = this.GetCanvas(id);
 
@@ -51,6 +53,77 @@ VisDatabase.prototype.SelectCanvas = function (id) {
 
 }
 
+VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
+    console.log('rerendering..', pre_x, after_x, pre_y, after_y);
+
+    // move col
+    if (pre_y == 0 && after_y == 0) {
+        for (const id in this.database) {
+            if (Object.hasOwnProperty.call(this.database, id)) {
+                const metaData = this.database[id];
+                // move right
+                let offset = after_x - pre_x;
+                if (pre_x <= metaData.x) {
+                    this.RepositionCanvas(id, metaData.x + offset, metaData.y)
+                }
+                else if (pre_x > metaData.x && pre_x <= metaData.x + metaData.width) {
+                    this.RerenderCanvas(id, metaData.x, metaData.y, metaData.height, metaData.width + offset);
+                }
+            }
+        }
+    }
+    // move row
+    else {
+        for (const id in this.database) {
+            if (Object.hasOwnProperty.call(this.database, id)) {
+                const metaData = this.database[id];
+                // move right
+                let offset = after_y - pre_y;
+                if (pre_y <= metaData.y) {
+                    this.RepositionCanvas(id, metaData.x , metaData.y+ offset)
+                }
+                else if (pre_y > metaData.y && pre_y <= metaData.y + metaData.height) {
+                    this.RerenderCanvas(id, metaData.x, metaData.y, metaData.height+offset, metaData.width);
+                }
+            }
+        }
+    }
+}
+
+VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width) {
+    // 1. get new metadata
+    // 2. remove old canvas data
+    this.database[id].x = x;
+    this.database[id].y = y;
+    this.database[id].height = height;
+    this.database[id].width = width;
+
+    if (this.GetCanvas(id) != null) {
+        document.getElementById(id).remove();
+    }
+
+    this.RenderCanvas(id);
+}
+
+VisDatabase.prototype.RepositionCanvas = function (id, x, y) {
+    this.database[id].x = x;
+    this.database[id].y = y;
+
+    let new_x = this.database[id].x + 0.5;
+    let new_y = this.database[id].y + 0.5;
+    let canvas = this.GetCanvas(id);
+    canvas.removeAttribute("transform");
+    canvas.setAttribute("transform", "translate(" + new_x + "," + new_y + ")");
+}
+
+VisDatabase.prototype.RemoveAllCanvas = function () {
+    for (const key in this.database) {
+        if (Object.hasOwnProperty.call(this.database, key)) {
+            this.RemoveCanvas(key);
+        }
+    }
+}
+
 VisDatabase.prototype.CancelSelection = function (id) {
     this.database[id].status = status.clear;
     document.getElementById(id + '.select').remove();
@@ -62,7 +135,9 @@ VisDatabase.prototype.GetCanvas = function (id) {
 }
 
 VisDatabase.prototype.RemoveCanvas = function (id) {
-    document.getElementById(id).remove();
+    if (this.GetCanvas(id) != null) {
+        document.getElementById(id).remove();
+    }
     delete this.database[id];
 }
 
@@ -87,29 +162,38 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
-    // 4. append json
-
-    let height = height_num - 1.1;
-    let width = width_num - 1.1;
-    let x = x_num + 0.5;
-    let y = y_num + 0.5;
+    // 4. render
 
     let chartJson = JSON.parse(JSON.stringify(vegaConfig_obj));
-    chartJson.height = height - 0.3;
-    chartJson.width = width - 0.3;
-
-    let table = document.getElementsByClassName("table-view-svg")[0];
-
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x, y, height, width, vegaConfig_obj);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, chartJson);
     this.database[canvas_id] = metaData;
+
+    this.RenderCanvas(canvas_id);
+}
+
+VisDatabase.prototype.RenderCanvas = function (id) {
+    // 1. get meta data
+    // 2. tweak meta data
+    // 3. gen chart
+    // 4. append
+
+    let table = document.getElementsByClassName("table-view-svg")[0];
+    let height = this.database[id].height - 1.1;
+    let width = this.database[id].width - 1.1;
+    let x = this.database[id].x + 0.5;
+    let y = this.database[id].y + 0.5;
+
+    let chartJson = JSON.parse(JSON.stringify(this.database[id].vegaConfig));
+    chartJson.height = height - 0.3;
+    chartJson.width = width - 0.3;
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     if (canvas) {
-        canvas.setAttribute("id", canvas_id);
+        canvas.setAttribute("id", id);
         canvas.setAttribute("width", width);
         canvas.setAttribute("height", height);
         canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
@@ -120,7 +204,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
         background.setAttribute("height", height);
 
         // click event
-        canvas.addEventListener("click", () => (this.ClickHandler(canvas_id)));
+        canvas.addEventListener("click", () => (this.ClickHandler(id)));
 
         table.append(canvas);
 

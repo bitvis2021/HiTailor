@@ -118,9 +118,19 @@ export default {
       this.showTemplates = true;
       this.OPEN_VIS_PANEL();
     });
+    this.$bus.$on("rerender-selectedData", (prePosition, afterPosition) => {
+      this.VisDB.ReconfigAllCanvas(
+        prePosition.x,
+        prePosition.y,
+        afterPosition.x,
+        afterPosition.y
+      );
+    });
   },
   beforeDestroy() {
     this.$bus.$off("preview-config");
+    this.$bus.$off("visualize-selectedData");
+    this.$bus.$off("rerender-selectedData");
   },
 };
 </script>
@@ -170,8 +180,8 @@ export default {
 .vis-picture-button {
   cursor: pointer;
   fill: rgb(90, 156, 248);
-}
-.vis-picture-button:hover {
-  fill: rgb(153, 195, 250);
+  &:hover {
+    fill: rgb(153, 195, 250);
+  }
 }
 </style>
