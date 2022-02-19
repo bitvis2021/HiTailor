@@ -147,7 +147,7 @@
             <g v-for="(item, i) in num2header" :key="'col-header-group-'+ i">              
               <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
                 :id="'column-header-'+i" :key="'column-header-'+i"
-                @click="before_header_interaction('column-header-'+i, false, item[1].value, item[1].times)">
+                @click="before_header_interaction('column-header-'+i, false, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)">
                 <rect class="header-table-cell" :key="'rect-'+i"
                   :x="cal_column_header_position(item[1].value, item[1].times).x"
                   :y="cal_column_header_position(item[1].value, item[1].times).y"
@@ -167,7 +167,7 @@
             <g v-for="(item, i) in num2header" :key="item.index">
               <g v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
                 :id="'row-header-'+i" 
-                @click="before_header_interaction('row-header-'+i, true, item[1].value, item[1].times)"
+                @click="before_header_interaction('row-header-'+i, true, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)"
                 >
                 <rect class="header-table-cell"
                   :x="cal_row_header_position(item[1].value, item[1].times).x"
@@ -862,7 +862,6 @@ export default {
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
       var upLayerNum, downLayerNum
-      // fully connected 
 
       if (isSwapUp && currLayerNum!=0) {
         upLayerNum = currLayerNum - 1
@@ -873,6 +872,22 @@ export default {
         downLayerNum = currLayerNum + 1
       }
       else return
+
+      // check fully connected 
+      var reference = null
+      var differ = false
+      for (var item of header[upLayerNum].keys()) {
+        if (reference == null)  reference = header[upLayerNum].get(item).children
+
+        if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum].get(item).children)) {
+          differ = true
+          break
+        }
+      }
+      if (differ) { // not fully-conn, can't swap
+        return
+      }
+      
 
       // if it's linear, change to stacked
       // var linearChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
@@ -1432,24 +1447,7 @@ export default {
       return js
     },
 
-    add_drag_operation() {
-      // using d3
-      const drag = d3.drag().filter(this.isTransformView)
-        .on('drag', function (d) {
-            d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`
-            ) 
-            var data = d3.select(this)
-            console.log(data)
-          })
-        // .on('end', function draged(d) {
-        //     d3.select(this).attr("x", d.x).attr("y", d.y)
-        //   })
-      
-      // d3.selectAll(".column-header").call(drag);
-      d3.selectAll(".column-header").datum({x:0, y:0}).call(drag);
-      console.log("ininin")
-    },
-    before_header_interaction(id, isRowHeader, name, times) {
+    before_header_interaction(id, isRowHeader, name, times, layer) {
       let self = this
       // delete other helpers
       d3.select("#interaction-helper").remove()
@@ -1457,7 +1455,8 @@ export default {
       // add a new helper
       var rect = d3.select("#"+id).select("rect")
       var text = d3.select("#"+id).select("text")
-      var helper = d3.select(".table-view-svg").append("g").attr("id", "interaction-helper")
+      var tablesvg = d3.select(".table-view-svg")
+      var helper = tablesvg.append("g").attr("id", "interaction-helper")
       helper.append("rect")
           .attr("x", rect.attr("x"))
           .attr("y", rect.attr("y"))
@@ -1477,12 +1476,27 @@ export default {
           .style("-webkit-user-select", "none")
           .style("-ms-user-selec", "none")
           .style("user-select", "none")
-          
+      var guideline = tablesvg.append("line").attr("id", "interaction-helper-line").style("stroke", "CornflowerBlue")
+      
       // add drag event
       if (!isRowHeader) {
         const drag = d3.drag().filter(this.isTransformView)
           .on('drag', function (d) {
-            d3.select(this).attr("transform", `translate(0, ${d.y})`) 
+            guideline.style("stroke-width", "2px")
+              .attr("x1", self.markWidth+self.widthRangeList[self.headerRange.right+1])
+              .attr("x2", self.markWidth+self.widthRangeList[self.widthRangeList.length-1])
+            d3.select(this).attr("transform", `translate(0, ${d.y})`)
+
+            if (d.dy > 0) {
+              var guidelayer = layer+1 > self.headerRange.bottom ? self.headerRange.bottom : layer+1
+              guideline.attr("y1", self.markHeight+self.heightRangeList[guidelayer+1])
+                .attr("y2", self.markHeight+self.heightRangeList[guidelayer+1])
+            }
+            else if (d.dy < 0) {
+              var guidelayer = layer-1 < 0 ? 0 : layer-1
+              guideline.attr("y1", self.markHeight+self.heightRangeList[guidelayer])
+                .attr("y2", self.markHeight+self.heightRangeList[guidelayer])
+            }
           })
           .on('end', function (d) {
             if (d.y > 0) {
@@ -1495,14 +1509,27 @@ export default {
               self.handle_transform_linear_or_stacked(name, times)
             }
             d3.select(this).remove()
-            
+            d3.select("#interaction-helper-line").remove()
           })
-        helper.datum({y:0}).call(drag)
+        helper.datum({y:0, dy:0}).call(drag)
       }
       else {
         const drag = d3.drag().filter(this.isTransformView)
           .on('drag', function (d) {
-              d3.select(this).attr("transform", `translate(${d.x}, 0)`) 
+            guideline.style("stroke-width", "2px")
+              .attr("y1", self.markHeight+self.heightRangeList[self.headerRange.bottom+1])
+              .attr("y2", self.markHeight+self.heightRangeList[self.heightRangeList.length-1])
+            d3.select(this).attr("transform", `translate(${d.x}, 0)`) 
+            if (d.dx > 0) {
+              var guidelayer = layer+1 > self.headerRange.right ? self.headerRange.right : layer+1
+              guideline.attr("x1", self.markWidth+self.widthRangeList[guidelayer+1])
+                .attr("x2", self.markWidth+self.widthRangeList[guidelayer+1])
+            }
+            else if (d.dx < 0) {
+              var guidelayer = layer-1 < 0 ? 0 : layer-1
+              guideline.attr("x1", self.markWidth+self.widthRangeList[guidelayer])
+                .attr("x2", self.markWidth+self.widthRangeList[guidelayer])
+            }
           })
           .on('end', function (d) {
             if (d.x > 0) {
@@ -1515,28 +1542,10 @@ export default {
               self.handle_transform_linear_or_stacked(name, times)
             }
             d3.select(this).remove()
+            d3.select("#interaction-helper-line").remove()
           })
-        helper.datum({x:0}).call(drag)
-      }
-      
-      // add dbclick event   
-      // helper.on("dbclick", () => {
-      //   self.handle_transform_linear_or_stacked(name, times)
-      // })
-      
-      
-    },
-    handle_drag() {
-      console.log("ininin")
-    },
-    handle_drag_start() {
-      console.log('handle_drag_start')
-    },
-    handle_draging() {
-      console.log('handler_draging')
-    },
-    handle_drag_end() {
-      console.log('handler_drag_end')
+        helper.datum({x:0, dx:0}).call(drag)
+      }    
     }
   },
   watch: {
@@ -1592,13 +1601,6 @@ export default {
         this.selectedArea = {top:0, left:0, bottom:0, right:0}
         this.selectedMark = {index:null, type:null}
         this.selectByMark = {row:false, column:false}
-        // if (this.isTransformView) {
-        //   this.add_drag_operation()
-        // }
-        // else {
-        //   d3.selectAll(".column-header").on(".drag", null)
-        //   console.log("outoutout")
-        // }
       }, 
       
   },
