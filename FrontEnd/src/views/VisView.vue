@@ -187,13 +187,14 @@ export default {
   &:hover .vis-picture-hButton {
     visibility: visible;
   }
-}
 
-.vis-picture-mButton {
-  cursor: pointer;
-  visibility: visible;
-  &:hover {
-    fill: rgb(153, 195, 250);
+  .vis-picture-mButton {
+    fill: rgb(90, 156, 248);
+    cursor: pointer;
+    visibility: visible;
+    &:hover {
+      fill: rgb(153, 195, 250);
+    }
   }
 }
 

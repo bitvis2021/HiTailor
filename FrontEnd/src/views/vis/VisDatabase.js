@@ -29,13 +29,12 @@ VisDatabase.prototype.MinimizeHandler = function (id) {
     mButton_box.setAttribute("id", id + '.mButton');
     let mButton = document.createElementNS("http://www.w3.org/2000/svg", "path");
     mButton.setAttribute("d", "M864 96a64 64 0 0 1 64 64v704a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V160a64 64 0 0 1 64-64h704zM256 544a32 32 0 0 0-31.776 28.256L224 576v192l0.224 3.744a32 32 0 0 0 28.032 28.032L256 800h192l3.744-0.224a32 32 0 0 0 28.032-28.032L480 768l-0.224-3.744a32 32 0 0 0-28.032-28.032L448 736h-114.784l131.936-131.872a32 32 0 0 0 2.656-42.24l-2.656-3.04a32 32 0 0 0-42.24-2.656l-3.04 2.656L288 690.72V576l-0.224-3.744A32 32 0 0 0 256 544zM768 224h-192l-3.744 0.224a32 32 0 0 0-28.032 28.032L544 256l0.224 3.744a32 32 0 0 0 28.032 28.032L576 288h114.72l-131.84 131.872a32 32 0 0 0-2.688 42.24l2.656 3.04a32 32 0 0 0 42.24 2.656l3.04-2.656L736 333.216V448l0.224 3.744a32 32 0 0 0 63.552 0L800 448V256l-0.224-3.744a32 32 0 0 0-28.032-28.032L768 224z")
-    // mButton.setAttribute("style", 'visibility:visible');
     mButton_box.setAttribute("class", 'vis-picture-mButton');
     mButton_box.append(mButton);
     mButton_box.addEventListener("click", () => this.MaximizeHandler(id));
-    mButton_box.setAttribute("fill", '#6a9af1');
     canvas.append(mButton_box);
-    
+
+    document.getElementById(id + '.hButton').setAttribute('style', "visibility: hidden;");
 }
 
 VisDatabase.prototype.MaximizeHandler = function (id) {
@@ -45,6 +44,8 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
     let button = document.getElementById(id + '.mButton');
     console.log('maxButton', button);
     button.remove();
+
+    document.getElementById(id + '.hButton').removeAttribute('style');
 }
 
 
