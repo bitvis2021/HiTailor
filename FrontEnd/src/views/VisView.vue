@@ -176,7 +176,31 @@ export default {
 }
 
 .vis-picture {
+  .vis-picture-hButton {
+    fill: rgb(90, 156, 248);
+    visibility: hidden;
+    cursor: pointer;
+    &:hover {
+      fill: rgb(153, 195, 250);
+    }
+  }
+  &:hover .vis-picture-hButton {
+    visibility: visible;
+  }
 }
+
+.vis-picture-mButton {
+  cursor: pointer;
+  visibility: visible;
+  &:hover {
+    fill: rgb(153, 195, 250);
+  }
+}
+
+.vis-picture-mButton:hover + .vis-picture-hButton {
+  visibility: hidden;
+}
+
 .vis-picture-button {
   cursor: pointer;
   fill: rgb(90, 156, 248);
