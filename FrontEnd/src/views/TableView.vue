@@ -81,8 +81,7 @@
       <svg class="table-view-svg" :height="markHeight + heightRangeList[heightRangeList.length-1]" :width="markWidth + widthRangeList[widthRangeList.length-1]"
         @mouseup="handle_mouse_up()"
         @mousemove="handle_mouse_move($event)">
-        <rect x="0" y="0" :width=markWidth :height=markHeight class="table-mark">
-        </rect>
+        <rect x="0" y="0" :width=markWidth :height=markHeight class="table-mark" />
 
         <g v-if="isCurrFlat">
           <g v-for="(item,i) in flatAttrName" :key="item.index">
@@ -185,6 +184,12 @@
           </g>
           <!-- value cell -->
           <g v-if="headerFixedFlag.row && headerFixedFlag.column">
+            <!-- top-left corner -->
+            <rect class="header-table-cell" :x="markWidth" :y="markHeight"
+              :width="widthRangeList[headerRange.right+1]"
+              :height="heightRangeList[headerRange.bottom+1]" >
+            </rect>
+
             <g v-for="item in num2seq" :key="item.index">
               <rect class="table-cell"
                 :x="markWidth + widthRangeList[cal_value_cell_position(item[1].seq).col]"
@@ -874,61 +879,121 @@ export default {
       else return
 
       // check fully connected 
-      var reference = null
+      var reference = null, refernum = null
       var differ = false
-      for (var item of header[upLayerNum].keys()) {
-        if (reference == null)  reference = header[upLayerNum].get(item).children
-
-        if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum].get(item).children)) {
-          differ = true
-          break
+      if (upLayerNum!=0) {
+        for (var item of header[upLayerNum-1].keys()) {
+          if (reference == null) {
+            reference = header[upLayerNum-1].get(item).children[0]
+            refernum = header[upLayerNum-1].get(item).children.length
+          }
+          if (refernum != header[upLayerNum-1].get(item).children.length) {
+            differ = true
+            return  // not fully-conn, can't swap
+          }
+          for (var i=0; i<header[upLayerNum-1].get(item).children.length; i++) {
+            if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum-1].get(item).children[i])) {
+              differ = true
+              return  // not fully-conn, can't swap
+            }
+          }       
         }
       }
-      if (differ) { // not fully-conn, can't swap
-        return
+      reference = null, refernum = null, differ = false
+      for (var item of header[upLayerNum].keys()) {
+        if (reference == null) {
+          reference = header[upLayerNum].get(item).children[0]
+          refernum = header[upLayerNum].get(item).children.length
+        }
+        if (refernum != header[upLayerNum].get(item).children.length) {
+          differ = true
+          return  // not fully-conn, can't swap
+        }
+        for (var i=0; i<header[upLayerNum].get(item).children.length; i++) {
+          if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum].get(item).children[i])) {
+            differ = true
+            return  // not fully-conn, can't swap
+          }
+        }       
       }
+      // if (differ) { 
+      //   return
+      // }
       
 
       // if it's linear, change to stacked
       // var linearChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
-      // if (header[upLayerNum].children)
-
+      // if (header[upLayerNum].children
       var new1st = Array.from(header[upLayerNum])[0][1].parent
-      var new2nd = Array.from(header[upLayerNum])[0][1].children
+      var new2nd = Array.from(header[upLayerNum])[0][1].children[0]
       var new3rd = Array.from(header[downLayerNum])[0][1].parent
-      var new4th = Array.from(header[downLayerNum])[0][1].children
+      var new4th = Array.from(header[downLayerNum])[0][1].children[0]
+
+      var new1stChildNum = upLayerNum-1<0 ? 1 : Array.from(header[upLayerNum-1])[0][1].children.length
+      // var new2ndChildNum = Array.from(header[upLayerNum])[0][1].children.length
+      var new1stCount = upLayerNum-1<0 ? 1 : header[upLayerNum-1].size
+      var new2ndChildNum = upLayerNum-1<0 ? 1 : Array.from(header[upLayerNum])[0][1].parent.length
+      var new3rdChildNum = new1stChildNum * new2nd.length * new1stCount
+      // var new3rdChildNum = Array.from(header[upLayerNum])[0][1].children[0].length
+
+      var new2ndAsParent = [], new3rdAsChild = [], new3rdAsParent = []
+      for (var j=0; j<new2ndChildNum; j++) {
+        for (var i=0; i<new2nd.length; i++) {
+          new2ndAsParent.push({name:new2nd[i], ordinal:j})
+        }
+      }
+      
+      for (var i=0; i<new3rd.length; i++) {
+        if (new3rd[i].ordinal == 0) {
+          new3rdAsChild.push(new3rd[i].name)
+        }
+      }
+
+      for (var j=0; j<new3rdChildNum; j++) {
+        for (var i=0; i<new3rdAsChild.length; i++) {
+          new3rdAsParent.push({name:new3rdAsChild[i], ordinal:j})
+        }
+      }
+      
+
+      if (new1st.length != 0) {
+        for (var item of header[upLayerNum-1]) {
+          item[1].children = new Array(new1stChildNum).fill(new2nd)
+          header[upLayerNum-1].set(item[0], item[1])
+        }
+      }
 
       for (var item of header[upLayerNum]) {
-        item[1].parent = JSON.parse(JSON.stringify(new2nd))
-        item[1].children = JSON.parse(JSON.stringify(new4th))
+        item[1].parent = new2ndAsParent
+        if (new4th != null) {
+          item[1].children  = new Array(new3rdChildNum).fill(new4th)
+        }
+        else {
+          item[1].children = []
+        }
         header[upLayerNum].set(item[0], item[1])
         var tmp = JSON.parse(JSON.stringify(this.headerDistribution.get(item[0])))
         tmp.layer += 1
         this.headerDistribution.set(item[0], tmp)
       }
       for (var item of header[downLayerNum]) {
-        item[1].parent = JSON.parse(JSON.stringify(new1st))
-        item[1].children = JSON.parse(JSON.stringify(new3rd))
+        item[1].parent = new1st
+        item[1].children = new Array(new2ndChildNum).fill(new3rdAsChild)
         header[downLayerNum].set(item[0], item[1])
         var tmp = JSON.parse(JSON.stringify(this.headerDistribution.get(item[0])))
         tmp.layer -= 1
         this.headerDistribution.set(item[0], tmp)
       }
-      if (new1st.length != 0) {
-        for (var item of header[upLayerNum-1]) {
-          item[1].children = JSON.parse(JSON.stringify(new2nd))
-          header[upLayerNum-1].set(item[0], item[1])
-        }
-      }
-      if (new4th.length != 0) {
+
+      if (new4th!=null && new4th.length!=0) {
         for (var item of header[downLayerNum+1]) {
-          item[1].parent = JSON.parse(JSON.stringify(new3rd))
+          item[1].parent = new3rdAsParent
           header[downLayerNum+1].set(item[0], item[1])
         }
       }
 
       // swap position in header array
-      header[upLayerNum] = header.splice(downLayerNum, 1,  header[upLayerNum])[0]
+      header[upLayerNum] = header.splice(downLayerNum, 1, header[upLayerNum])[0]
 
       // this.rowHeaderChangeSignal = !this.rowHeaderChangeSignal
       // this.colHeaderChangeSignal = !this.colHeaderChangeSignal
@@ -986,10 +1051,10 @@ export default {
       var isRow = distributionInfo.isRowHeader 
       var header = isRow ? this.rowHeader: this.colHeader
       var headerInfo = header[layer].get(name)
-      if (headerInfo.children.indexOf("")==-1 && headerInfo.children.indexOf(" ")==-1) // is stacked
+      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
         isRow ? this.transform_2linear(name, this.rowHeader, times, isRow) : this.transform_2linear(name, this.colHeader, times, isRow)
       else {  // is linear
-        isRow ? this.transform_2stacked(name, this.rowHeader, isRow) : this.transform_2stacked(name, this.colHeader, isRow)
+        isRow ? this.transform_2stacked(name, this.rowHeader, times, isRow) : this.transform_2stacked(name, this.colHeader, times, isRow)
       }
     },
     handle_transform_2stacked(name) {
@@ -1001,22 +1066,29 @@ export default {
         this.transform_2stacked(name, this.colHeader, false)
       }
     },
-    transform_2stacked(name, header, isRow) {
+    transform_2stacked(name, header, times, isRow) {
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
-      if (headerInfo.children.length == 0)  return // no child
-      if (headerInfo.children.indexOf("")==-1 && headerInfo.children.indexOf(" ")==-1)  return // already stacked
+      if (headerInfo.children[times].length == 0)  return // no child
+      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  return // already stacked
       
 
       // delete child
-      var movingChild = headerInfo.children.shift()
+      var movingChild = headerInfo.children[times].shift()
       headerInfo.cellNum -= 1
       header[layer].set(name, headerInfo)
       
       // delete parent
       var cheaderInfo = JSON.parse(JSON.stringify(header[layer+1].get(movingChild)))
-      var pindex = cheaderInfo.parent.indexOf(name)
+      // var pindex = cheaderInfo.parent.indexOf(name)
+      var pindex
+      for (var i=0; i<cheaderInfo.parent.length; i++) {
+        if (cheaderInfo.parent[i].name == name && cheaderInfo.parent[i].ordinal == times) {
+          pindex = i
+          break
+        }
+      }
       cheaderInfo.parent.splice(pindex, 1)
       var deleteRange = cheaderInfo.range.splice(pindex, 1)
       var deleteIndex = deleteRange[0].start
@@ -1072,7 +1144,7 @@ export default {
       
       //modify num2seq/seq2num
       for (var item of this.seq2num) {
-        if (item[0].has(name) && item[0].has(movingChild)) {
+        if (item[0].has(name) && item[0].has(movingChild) && (headerInfo.parent.length==0 || headerInfo.parent.length!=0 && item[0].has(headerInfo.parent[times].name))) {
           this.num2seq.delete(item[1].num)
           this.seq2num.delete(item[0])
         }
@@ -1101,12 +1173,12 @@ export default {
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
-      if (headerInfo.children.length == 0)  return // no child
-      if (headerInfo.children.indexOf("")!=-1 || headerInfo.children.indexOf(" ")!=-1)  return // already linear
+      if (headerInfo.children[times].length == 0)  return // no child
+      if (headerInfo.children[times].indexOf("")!=-1 || headerInfo.children[times].indexOf(" ")!=-1)  return // already linear
 
       // add child
       var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
-      headerInfo.children.unshift(newChild)
+      headerInfo.children[times].unshift(newChild)
       header[layer].set(name, headerInfo)
       
       // add parent
@@ -1120,7 +1192,7 @@ export default {
             break
           }
         }
-        cheaderInfo.parent.splice(pindex, 0, name)
+        cheaderInfo.parent.splice(pindex, 0, {name:name, ordinal:times})
         cheaderInfo.range.splice(pindex, 0, addRange)
       }
       else {
@@ -1128,7 +1200,7 @@ export default {
         cheaderInfo.range = [addRange]
         cheaderInfo.cellNum = 1
         cheaderInfo.children = []
-        cheaderInfo.parent = [name]
+        cheaderInfo.parent = [{name:name, ordinal:times}]
         cheaderInfo.isFullyConn = true
       }      
       header[layer+1].set(newChild, cheaderInfo)
@@ -1286,8 +1358,9 @@ export default {
           var pos = [i-this.headerRange.bottom-1, j-this.headerRange.right-1].toString()
           var seq = this.valueDistribution.get(pos)
           var value = this.seq2num.get(seq).value
-          seq.add(value)
-          res.push(Array.from(seq))      
+          var arrseq = Array.from(seq)
+          arrseq.push(value)
+          res.push(arrseq)      
         }
       }
       return res
@@ -1451,6 +1524,7 @@ export default {
       let self = this
       // delete other helpers
       d3.select("#interaction-helper").remove()
+      d3.select("#interaction-helper-line").remove()
 
       // add a new helper
       var rect = d3.select("#"+id).select("rect")
@@ -1596,6 +1670,13 @@ export default {
       //   }
       //   cal_header_range(this.rowHeader)
       // },
+      num2seq: {
+        handler() {
+          console.log(this.num2seq)
+        },
+        deep: true
+
+      },
       isTransformView: function() {
         this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
         this.selectedArea = {top:0, left:0, bottom:0, right:0}
@@ -1700,6 +1781,7 @@ export default {
     console.log("this.rowDistributionList", this.rowDistributionList)
     console.log("this.widthRangeList", this.widthRangeList)
     console.log("this.heightRangeList", this.heightRangeList)
+    console.log("this.dataValueList", this.dataValueList)
   },
   computed: {
     ...mapState([
