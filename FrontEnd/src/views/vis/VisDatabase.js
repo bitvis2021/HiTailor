@@ -1,8 +1,11 @@
 import vegaEmbed from "vega-embed";
 
+// todo: 把vega lite 与data部分 decouple. 在gen config的时候才进行组装。
+// 应该从这里获得selection
+
+
 export function VisDatabase() {
     this.database = {};
-    this.vegaDatabase = {};
     this.bus = {};
 }
 
@@ -190,7 +193,7 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaConfig) {
+function visMetaData(id, x, y, height, width, vegaConfig,metaData,visData) {
     this.id = id;
     this.x = x;
     this.y = y;
@@ -198,21 +201,15 @@ function visMetaData(id, x, y, height, width, vegaConfig) {
     this.width = width;
     this.vegaConfig = vegaConfig;
     this.status = status.clear;
+    this.metaData = metaData;
+    this.visData = visData;
 }
 
-VisDatabase.prototype.AddVegaData = function (id_str, vegaData_obj, metaData_obj, data_array) {
-    let data = {
-        id: id_str,
-        vegaData: vegaData_obj,
-        metaData: metaData_obj,
-        data: data_array
-    }
-    this.vegaDatabase[id_str] = data;
-}
+
 
 VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
-    this.database[id].vegaData = vegaConfig;
-    console.log('setting vega', vegaConfig);
+    // 之前在这里的时候赋值不成功
+    this.database[id].vegaConfig = vegaConfig;
 }
 
 VisDatabase.prototype.GetVegaConfig = function (id) {
@@ -220,23 +217,19 @@ VisDatabase.prototype.GetVegaConfig = function (id) {
     return this.database[id].vegaConfig;
 }
 
-VisDatabase.prototype.GetMetaData = function (id) {
-    return this.vegaDatabase[id].vegaConfig;
-}
 // table id==table-view-svg
 // vis generator==gen-chart
 
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj) {
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj, metaData_obj, visData_arr) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
     // 4. render
 
-    let chartJson = vegaConfig_obj;
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, chartJson);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, vegaConfig_obj, metaData_obj, visData_arr);
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);
@@ -245,6 +238,10 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
 
 VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
     this.bus = bus_vmObj;
+}
+
+VisDatabase.prototype.ObjectData = function () {
+    // Get Object data
 }
 
 VisDatabase.prototype.RenderCanvas = function (id) {
@@ -263,7 +260,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     chartJson.height = height - 0.3;
     chartJson.width = width - 0.3;
 
-    console.log("chart JSON",chartJson);
+    console.log("chart JSON", chartJson);
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");

@@ -72,25 +72,27 @@ export default {
     return {
       showTemplates: true,
       showTweakPanel: false,
-      visData: {},
       templates: [],
-      vegaConfig: {}, // template -> vegaConfig <=> panelView
-      ECSelections: {}, // template -> vegaSchema -> panelView
       position: {},
-      metaData: {},
+      ECSelections: {}, // template -> vegaSchema -> panelView
+      vegaConfig: {}, // template -> vegaConfig <=> panelView
       VisDB: new VisDatabase(),
-      currentId: "",
+      visData: {}, // data from visualize selected data
+      metaData: {},
+      figID: "",
     };
   },
   methods: {
-    ApplyVegaConf(data) {
-      this.vegaConfig = JSON.parse(JSON.stringify(data));
-      console.log("now encoding", this.vegaConfig);
-      this.vegaConfig.data = this.visData;
-      this.VisDB.SetVegaConfig(this.currentId, this.vegaConfig);
-      this.$bus.$emit("preview-config");
-    },
     ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
+    ApplyVegaConf(data) {
+      this.vegaConfig = data;
+      this.vegaConfig.data = this.visData;
+      this.VisDB.SetVegaConfig(this.figID, this.vegaConfig);
+      this.$bus.$emit("preview-config"); // preview picture
+    },
+    GetTemplate(vegaConfig, data) {
+      // 从template view中获得vegaConfig以及对应的数据组织形式
+    },
     OpenPanelView(template) {
       this.vegaConfig = template.GetVegaConf();
 
@@ -102,26 +104,21 @@ export default {
 
       this.$bus.$emit("preview-config");
     },
-    ApplyVis2Preview() {},
     ApplyVis2Table() {
-      this.currentId = this.VisDB.GenFig(
+      this.figID = this.VisDB.GenFig(
         this.position.height,
         this.position.width,
         this.position.x,
         this.position.y,
-        this.vegaConfig
-      );
-      this.VisDB.AddVegaData(
-        this.currentId,
         this.vegaConfig,
-        this.visData,
-        this.metaData
+        this.metaData,
+        this.visData
       );
     },
     ApplyTweak2Table() {
       this.showTemplates = true;
       this.showTweakPanel = false;
-      this.VisDB.RerenderCanvas(this.currentId);
+      this.VisDB.RerenderCanvas(this.figID);
     },
   },
   mounted() {

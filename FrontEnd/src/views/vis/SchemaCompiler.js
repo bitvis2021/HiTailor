@@ -220,7 +220,7 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
 }
 
 EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
-    let encoding = JSON.parse(JSON.stringify(encoding_obj)) // 这里有可能坑
+    let encoding = encoding_obj // 可能有坑
     console.log("encoding object", encoding);
     encoding.x.scale = { zero: false };
     encoding.x.axis = { labels: false, ticks: false, title: null };
