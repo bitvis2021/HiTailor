@@ -5,7 +5,7 @@ export function VisDatabase() {
 
 }
 
-VisDatabase.prototype.ClickHandler = function (id) {
+VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database[id].status == status.clear) {
         this.SelectCanvas(id);
     }
@@ -241,7 +241,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         background.setAttribute("height", height);
 
         // click event
-        canvas.addEventListener("click", () => (this.ClickHandler(id)));
+        canvas.addEventListener("click", () => (this.SelectHandler(id)));
 
         table.append(canvas);
 
