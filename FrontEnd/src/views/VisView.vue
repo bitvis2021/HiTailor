@@ -26,12 +26,22 @@
       ></templates-view>
       <div v-else>
         <div id="chart"></div>
+
+        <!-- 直接点击已生成图像时，弹出的面板是tweakpanel -->
         <div class="panel-view-container">
           <panel-view
+            v-if="!showTweakPanel"
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
             v-on:apply-config="ApplyVegaConf"
             v-on:apply-vis="ApplyVis2Table"
+          ></panel-view>
+          <panel-view
+            v-else
+            :selections="this.ECSelections"
+            :vegaConfig="this.vegaConfig"
+            v-on:apply-config="ApplyVegaConf"
+            v-on:apply-vis="ApplyTweak2Table"
           ></panel-view>
         </div>
       </div>
@@ -61,21 +71,28 @@ export default {
   data() {
     return {
       showTemplates: true,
-      visData: {},
+      showTweakPanel: false,
       templates: [],
-      vegaConfig: {}, // template -> vegaConfig <=> panelView
-      ECSelections: {}, // template -> vegaSchema -> panelView
       position: {},
+      ECSelections: {}, // template -> vegaSchema -> panelView
+      vegaConfig: {}, // template -> vegaConfig <=> panelView
       VisDB: new VisDatabase(),
+      visData: {}, // data from visualize selected data
+      metaData: {},
+      figID: "",
     };
   },
   methods: {
+    ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
     ApplyVegaConf(data) {
       this.vegaConfig = data;
       this.vegaConfig.data = this.visData;
-      this.$bus.$emit("preview-config");
+      this.VisDB.SetVegaConfig(this.figID, this.vegaConfig);
+      this.$bus.$emit("preview-config"); // preview picture
     },
-    ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
+    GetTemplate(vegaConfig, data) {
+      // 从template view中获得vegaConfig以及对应的数据组织形式
+    },
     OpenPanelView(template) {
       this.vegaConfig = template.GetVegaConf();
 
@@ -83,18 +100,25 @@ export default {
 
       this.ECSelections = template.GetECSelections();
       this.showTemplates = false;
+      this.showTweakPanel = false;
 
       this.$bus.$emit("preview-config");
     },
-    ApplyVis2Preview() {},
     ApplyVis2Table() {
-      this.VisDB.GenFig(
+      this.figID = this.VisDB.GenFig(
         this.position.height,
         this.position.width,
         this.position.x,
         this.position.y,
-        this.vegaConfig
+        this.vegaConfig,
+        this.metaData,
+        this.visData
       );
+    },
+    ApplyTweak2Table() {
+      this.showTemplates = true;
+      this.showTweakPanel = false;
+      this.VisDB.RerenderCanvas(this.figID);
     },
   },
   mounted() {
@@ -114,7 +138,7 @@ export default {
         metaData = JSON.parse(metaData);
       }
       this.templates = GetTemplates(metaData, jsonData);
-
+      this.metaData = metaData;
       this.showTemplates = true;
       this.OPEN_VIS_PANEL();
     });
@@ -126,11 +150,26 @@ export default {
         afterPosition.y
       );
     });
+
+    this.VisDB.RegisterBus(this.$bus);
+    this.$bus.$on("open-tweakPanel", (vegaData) => {
+      this.showTweakPanel = true;
+      this.showTemplates = false;
+      this.vegaConfig = vegaData;
+      this.$bus.$emit("preview-config");
+    });
+    this.$bus.$on("close-tweakPanel", () => {
+      this.showTweakPanel = false;
+      this.showTemplates = true;
+      this.CLOSE_VIS_PANEL();
+    });
   },
   beforeDestroy() {
     this.$bus.$off("preview-config");
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
+    this.$bus.$off("close-tweakPanel");
+    this.$bus.$off("open-tweakPanel");
   },
 };
 </script>
@@ -167,7 +206,7 @@ export default {
   display: none;
 }
 .vis-test {
-  display: none;
+  // display: none;
   background-color: white;
   position: absolute;
   left: -300px;
@@ -176,7 +215,32 @@ export default {
 }
 
 .vis-picture {
+  .vis-picture-hButton {
+    fill: rgb(90, 156, 248);
+    visibility: hidden;
+    cursor: pointer;
+    &:hover {
+      fill: rgb(153, 195, 250);
+    }
+  }
+  &:hover .vis-picture-hButton {
+    visibility: visible;
+  }
+
+  .vis-picture-mButton {
+    fill: rgb(90, 156, 248);
+    cursor: pointer;
+    visibility: visible;
+    &:hover {
+      fill: rgb(153, 195, 250);
+    }
+  }
 }
+
+.vis-picture-mButton:hover + .vis-picture-hButton {
+  visibility: hidden;
+}
+
 .vis-picture-button {
   cursor: pointer;
   fill: rgb(90, 156, 248);

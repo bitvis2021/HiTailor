@@ -74,20 +74,23 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
 EncodingCompiler.prototype.GetSchema = function () {
     let ans = {}
     for (const key in this.vegaEncoding) {
-        if (Object.hasOwnProperty.call(this.vegaEncoding, key)) {
-            const encoding = this.vegaEncoding[key];
-            let supportProperty = this.encodings[key];
-            ans[key] = []
-            for (const propertyName in encoding) {
-                if (Object.hasOwnProperty.call(encoding, propertyName)) {
-                    const propertyValue = encoding[propertyName];
-                    if (supportProperty.hasOwnProperty(propertyName)) {
-                        supportProperty[propertyName].value = propertyValue;
-                        ans[key].push(supportProperty[propertyName])
+        if (this.encodings.hasOwnProperty(key)) {
+
+            if (Object.hasOwnProperty.call(this.vegaEncoding, key)) {
+                const encoding = this.vegaEncoding[key];
+                let supportProperty = this.encodings[key];
+                ans[key] = []
+                for (const propertyName in encoding) {
+                    if (Object.hasOwnProperty.call(encoding, propertyName)) {
+                        const propertyValue = encoding[propertyName];
+                        if (supportProperty.hasOwnProperty(propertyName)) {
+                            supportProperty[propertyName].value = propertyValue;
+                            ans[key].push(supportProperty[propertyName])
+                        }
                     }
                 }
+                ans[key] = ans[key].reverse();
             }
-            ans[key] = ans[key].reverse();
         }
     }
     return ans;
@@ -217,14 +220,16 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
 }
 
 EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
-    let encoding = JSON.parse(JSON.stringify(encoding_obj))
+    let encoding = encoding_obj // 可能有坑
     console.log("encoding object", encoding);
     encoding.x.scale = { zero: false };
     encoding.x.axis = { labels: false, ticks: false, title: null };
     encoding.y.scale = { zero: false };
     encoding.y.axis = { labels: false, ticks: false, title: null };
+    encoding.tooltip = [];
     if (encoding.color != undefined) {
-        encoding.color.legend = null;
+        encoding.color.legend = false;
+        encoding.tooltip.push(encoding.color);
     }
     return encoding
 }

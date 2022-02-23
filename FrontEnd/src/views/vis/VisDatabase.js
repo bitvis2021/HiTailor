@@ -1,18 +1,61 @@
 import vegaEmbed from "vega-embed";
 
+// todo: 把vega lite 与data部分 decouple. 在gen config的时候才进行组装。
+// 应该从这里获得selection
+
+
 export function VisDatabase() {
     this.database = {};
-
+    this.bus = {};
 }
 
-VisDatabase.prototype.ClickHandler = function (id) {
+VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database[id].status == status.clear) {
         this.SelectCanvas(id);
+
+        // todo: Bind vis data and id, then commit vegalite here
+        this.bus.$emit("open-tweakPanel", this.GetVegaConfig(id));
     }
     else if (this.database[id].status == status.select) {
         this.CancelSelection(id);
+        this.bus.$emit("close-tweakPanel");
     }
 }
+
+VisDatabase.prototype.MinimizeHandler = function (id) {
+    // alert("minimize", id);
+    console.log(this.GetCanvas(id));
+    let canvas = this.GetCanvas(id);
+    // canvas.removeAttribute("class")
+    canvas.setAttribute("style", "visibility: hidden;");
+
+
+    // max button
+    let mButton_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    // max button position
+    mButton_box.setAttribute("transform", "scale(" + 0.02 + "," + 0.02 + ") translate(-60,-70)");
+    mButton_box.setAttribute("id", id + '.mButton');
+    let mButton = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    mButton.setAttribute("d", "M864 96a64 64 0 0 1 64 64v704a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V160a64 64 0 0 1 64-64h704zM256 544a32 32 0 0 0-31.776 28.256L224 576v192l0.224 3.744a32 32 0 0 0 28.032 28.032L256 800h192l3.744-0.224a32 32 0 0 0 28.032-28.032L480 768l-0.224-3.744a32 32 0 0 0-28.032-28.032L448 736h-114.784l131.936-131.872a32 32 0 0 0 2.656-42.24l-2.656-3.04a32 32 0 0 0-42.24-2.656l-3.04 2.656L288 690.72V576l-0.224-3.744A32 32 0 0 0 256 544zM768 224h-192l-3.744 0.224a32 32 0 0 0-28.032 28.032L544 256l0.224 3.744a32 32 0 0 0 28.032 28.032L576 288h114.72l-131.84 131.872a32 32 0 0 0-2.688 42.24l2.656 3.04a32 32 0 0 0 42.24 2.656l3.04-2.656L736 333.216V448l0.224 3.744a32 32 0 0 0 63.552 0L800 448V256l-0.224-3.744a32 32 0 0 0-28.032-28.032L768 224z")
+    mButton_box.setAttribute("class", 'vis-picture-mButton');
+    mButton_box.append(mButton);
+    mButton_box.addEventListener("click", () => this.MaximizeHandler(id));
+    canvas.append(mButton_box);
+
+    document.getElementById(id + '.hButton').setAttribute('style', "visibility: hidden;");
+}
+
+VisDatabase.prototype.MaximizeHandler = function (id) {
+    // alert("maximize", id);
+    let canvas = this.GetCanvas(id);
+    canvas.removeAttribute("style");
+    let button = document.getElementById(id + '.mButton');
+    console.log('maxButton', button);
+    button.remove();
+
+    document.getElementById(id + '.hButton').removeAttribute('style');
+}
+
 
 VisDatabase.prototype.SelectCanvas = function (id) {
     console.log("rerender", this.database[id]);
@@ -41,20 +84,21 @@ VisDatabase.prototype.SelectCanvas = function (id) {
     button_border.setAttribute("cy", '12');
     button_border.setAttribute("stroke", 'rgb(221,223,229)');
     button_border.setAttribute("stroke-width", '1');
-    //button
+    // button
     let button = document.createElementNS("http://www.w3.org/2000/svg", "path");
     button.setAttribute("d", "M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M17,15.59L15.59,17L12,13.41L8.41,17L7,15.59 L10.59,12L7,8.41L8.41,7L12,10.59L15.59,7L17,8.41L13.41,12L17,15.59z")
     button_box.append(button_border);
     button_box.append(button);
 
+
     canvas.append(path);
-    canvas.append(button_box)
+    canvas.append(button_box);
     return canvas;
 
 }
 
 VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
-    console.log('rerendering..', pre_x, after_x, pre_y, after_y);
+    // console.log('rerendering..', pre_x, after_x, pre_y, after_y);
 
     // move col
     if (pre_y == 0 && after_y == 0) {
@@ -80,10 +124,10 @@ VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after
                 // move right
                 let offset = after_y - pre_y;
                 if (pre_y <= metaData.y) {
-                    this.RepositionCanvas(id, metaData.x , metaData.y+ offset)
+                    this.RepositionCanvas(id, metaData.x, metaData.y + offset)
                 }
                 else if (pre_y > metaData.y && pre_y <= metaData.y + metaData.height) {
-                    this.RerenderCanvas(id, metaData.x, metaData.y, metaData.height+offset, metaData.width);
+                    this.RerenderCanvas(id, metaData.x, metaData.y, metaData.height + offset, metaData.width);
                 }
             }
         }
@@ -93,10 +137,13 @@ VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after
 VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width) {
     // 1. get new metadata
     // 2. remove old canvas data
-    this.database[id].x = x;
-    this.database[id].y = y;
-    this.database[id].height = height;
-    this.database[id].width = width;
+    if (x != undefined) {
+        this.database[id].x = x;
+        this.database[id].y = y;
+        this.database[id].height = height;
+        this.database[id].width = width;
+
+    }
 
     if (this.GetCanvas(id) != null) {
         document.getElementById(id).remove();
@@ -146,7 +193,7 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaConfig) {
+function visMetaData(id, x, y, height, width, vegaConfig,metaData,visData) {
     this.id = id;
     this.x = x;
     this.y = y;
@@ -154,24 +201,47 @@ function visMetaData(id, x, y, height, width, vegaConfig) {
     this.width = width;
     this.vegaConfig = vegaConfig;
     this.status = status.clear;
+    this.metaData = metaData;
+    this.visData = visData;
+}
+
+
+
+VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
+    // 之前在这里的时候赋值不成功
+    this.database[id].vegaConfig = vegaConfig;
+}
+
+VisDatabase.prototype.GetVegaConfig = function (id) {
+    console.log('getting vega', this.database[id].vegaConfig);
+    return this.database[id].vegaConfig;
 }
 
 // table id==table-view-svg
 // vis generator==gen-chart
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj) {
+
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj, metaData_obj, visData_arr) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
     // 4. render
 
-    let chartJson = JSON.parse(JSON.stringify(vegaConfig_obj));
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, chartJson);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, vegaConfig_obj, metaData_obj, visData_arr);
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);
+    return canvas_id;
+}
+
+VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
+    this.bus = bus_vmObj;
+}
+
+VisDatabase.prototype.ObjectData = function () {
+    // Get Object data
 }
 
 VisDatabase.prototype.RenderCanvas = function (id) {
@@ -186,9 +256,11 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = JSON.parse(JSON.stringify(this.database[id].vegaConfig));
+    let chartJson = this.GetVegaConfig(id);
     chartJson.height = height - 0.3;
     chartJson.width = width - 0.3;
+
+    console.log("chart JSON", chartJson);
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -197,6 +269,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         canvas.setAttribute("width", width);
         canvas.setAttribute("height", height);
         canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
+        canvas.setAttribute("class", "vis-picture");
 
         // add back ground
         background.setAttribute("style", "fill:rgb(255,255,255)");
@@ -204,10 +277,12 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         background.setAttribute("height", height);
 
         // click event
-        canvas.addEventListener("click", () => (this.ClickHandler(id)));
+        canvas.addEventListener("click", () => (this.SelectHandler(id)));
 
         table.append(canvas);
 
+
+        console.log("rendering json", chartJson);
         // get svg from #gen-chart
         vegaEmbed("#gen-chart", chartJson, {
             renderer: "svg",
@@ -228,7 +303,24 @@ VisDatabase.prototype.RenderCanvas = function (id) {
             // then add vis picture
             canvas.append(pic);
 
-            document.getElementById("gen-chart").childNodes[0].remove();
+
+            // hidden button
+            let hButton_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            // hidden button position
+            hButton_box.setAttribute("transform", "scale(" + 0.02 + "," + 0.02 + ") translate(-60,-70)");
+            hButton_box.setAttribute("id", id + '.hButton');
+            let hButton = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            hButton.setAttribute("d", "M864 96a64 64 0 0 1 64 64v704a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V160a64 64 0 0 1 64-64h704zM448 544H256l-3.744 0.224a32 32 0 0 0-28.032 28.032L224 576l0.224 3.744a32 32 0 0 0 28.032 28.032L256 608h114.72l-131.84 131.872a32 32 0 0 0-2.688 42.24l2.656 3.04a32 32 0 0 0 42.24 2.656l3.04-2.656L416 653.216V768l0.224 3.744a32 32 0 0 0 63.552 0L480 768v-192l-0.224-3.744a32 32 0 0 0-28.032-28.032L448 544z m128-320a32 32 0 0 0-31.776 28.256L544 256v192l0.224 3.744a32 32 0 0 0 28.032 28.032L576 480h192l3.744-0.224a32 32 0 0 0 28.032-28.032L800 448l-0.224-3.744a32 32 0 0 0-28.032-28.032L768 416h-114.784l131.936-131.872a32 32 0 0 0 2.656-42.24l-2.656-3.04a32 32 0 0 0-42.24-2.656l-3.04 2.656L608 370.72V256l-0.224-3.744A32 32 0 0 0 576 224z")
+            hButton_box.setAttribute("class", 'vis-picture-hButton');
+            hButton_box.append(hButton);
+            hButton_box.addEventListener("click", () => this.MinimizeHandler(id));
+            hButton_box.setAttribute("fill", '#6a9af1');
+            canvas.append(hButton_box);
+
+
+            for (let index = document.getElementById("gen-chart").childNodes.length - 1; index >= 0; index--) {
+                document.getElementById("gen-chart").childNodes[index].remove();
+            }
         });
     }
 }
