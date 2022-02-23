@@ -3,7 +3,7 @@ import vegaEmbed from "vega-embed";
 export function VisDatabase() {
     this.database = {};
     this.vegaDatabase = {};
-    this.bus={};
+    this.bus = {};
 }
 
 VisDatabase.prototype.SelectHandler = function (id) {
@@ -11,7 +11,7 @@ VisDatabase.prototype.SelectHandler = function (id) {
         this.SelectCanvas(id);
 
         // todo: Bind vis data and id, then commit vegalite here
-        this.bus.$emit("open-tweakPanel",{mark:"apply"});
+        this.bus.$emit("open-tweakPanel", this.GetVegaConfig(id));
     }
     else if (this.database[id].status == status.select) {
         this.CancelSelection(id);
@@ -95,7 +95,7 @@ VisDatabase.prototype.SelectCanvas = function (id) {
 }
 
 VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
-    console.log('rerendering..', pre_x, after_x, pre_y, after_y);
+    // console.log('rerendering..', pre_x, after_x, pre_y, after_y);
 
     // move col
     if (pre_y == 0 && after_y == 0) {
@@ -134,10 +134,13 @@ VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after
 VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width) {
     // 1. get new metadata
     // 2. remove old canvas data
-    this.database[id].x = x;
-    this.database[id].y = y;
-    this.database[id].height = height;
-    this.database[id].width = width;
+    if (x != undefined) {
+        this.database[id].x = x;
+        this.database[id].y = y;
+        this.database[id].height = height;
+        this.database[id].width = width;
+
+    }
 
     if (this.GetCanvas(id) != null) {
         document.getElementById(id).remove();
@@ -204,20 +207,21 @@ VisDatabase.prototype.AddVegaData = function (id_str, vegaData_obj, metaData_obj
         metaData: metaData_obj,
         data: data_array
     }
-    this.vegaDatabase[id] = data;
+    this.vegaDatabase[id_str] = data;
 }
 
 VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
-    this.vegaDatabase[id].vegaData = vegaConfig;
-
+    this.database[id].vegaData = vegaConfig;
+    console.log('setting vega', vegaConfig);
 }
 
 VisDatabase.prototype.GetVegaConfig = function (id) {
-    return this.vegaDatabase[id].vegaData;
+    console.log('getting vega', this.database[id].vegaConfig);
+    return this.database[id].vegaConfig;
 }
 
 VisDatabase.prototype.GetMetaData = function (id) {
-    return this.vegaDatabase[id].metaData;
+    return this.vegaDatabase[id].vegaConfig;
 }
 // table id==table-view-svg
 // vis generator==gen-chart
@@ -228,7 +232,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
     // 3. add canvas object to database
     // 4. render
 
-    let chartJson = JSON.parse(JSON.stringify(vegaConfig_obj));
+    let chartJson = vegaConfig_obj;
     let canvas_id = this.GenID();
 
     // add to db
@@ -240,7 +244,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
 }
 
 VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
-    this.bus=bus_vmObj;
+    this.bus = bus_vmObj;
 }
 
 VisDatabase.prototype.RenderCanvas = function (id) {
@@ -255,9 +259,11 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = JSON.parse(JSON.stringify(this.database[id].vegaConfig));
+    let chartJson = this.GetVegaConfig(id);
     chartJson.height = height - 0.3;
     chartJson.width = width - 0.3;
+
+    console.log("chart JSON",chartJson);
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -278,6 +284,8 @@ VisDatabase.prototype.RenderCanvas = function (id) {
 
         table.append(canvas);
 
+
+        console.log("rendering json", chartJson);
         // get svg from #gen-chart
         vegaEmbed("#gen-chart", chartJson, {
             renderer: "svg",
@@ -312,7 +320,10 @@ VisDatabase.prototype.RenderCanvas = function (id) {
             hButton_box.setAttribute("fill", '#6a9af1');
             canvas.append(hButton_box);
 
-            document.getElementById("gen-chart").childNodes[0].remove();
+
+            for (let index = document.getElementById("gen-chart").childNodes.length - 1; index >= 0; index--) {
+                document.getElementById("gen-chart").childNodes[index].remove();
+            }
         });
     }
 }

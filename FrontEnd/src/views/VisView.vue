@@ -26,6 +26,8 @@
       ></templates-view>
       <div v-else>
         <div id="chart"></div>
+
+        <!-- 直接点击已生成图像时，弹出的面板是tweakpanel -->
         <div class="panel-view-container">
           <panel-view
             v-if="!showTweakPanel"
@@ -75,13 +77,17 @@ export default {
       vegaConfig: {}, // template -> vegaConfig <=> panelView
       ECSelections: {}, // template -> vegaSchema -> panelView
       position: {},
+      metaData: {},
       VisDB: new VisDatabase(),
+      currentId: "",
     };
   },
   methods: {
     ApplyVegaConf(data) {
-      this.vegaConfig = data;
+      this.vegaConfig = JSON.parse(JSON.stringify(data));
+      console.log("now encoding", this.vegaConfig);
       this.vegaConfig.data = this.visData;
+      this.VisDB.SetVegaConfig(this.currentId, this.vegaConfig);
       this.$bus.$emit("preview-config");
     },
     ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
@@ -98,17 +104,24 @@ export default {
     },
     ApplyVis2Preview() {},
     ApplyVis2Table() {
-      this.VisDB.GenFig(
+      this.currentId = this.VisDB.GenFig(
         this.position.height,
         this.position.width,
         this.position.x,
         this.position.y,
         this.vegaConfig
       );
+      this.VisDB.AddVegaData(
+        this.currentId,
+        this.vegaConfig,
+        this.visData,
+        this.metaData
+      );
     },
     ApplyTweak2Table() {
       this.showTemplates = true;
       this.showTweakPanel = false;
+      this.VisDB.RerenderCanvas(this.currentId);
     },
   },
   mounted() {
@@ -128,7 +141,7 @@ export default {
         metaData = JSON.parse(metaData);
       }
       this.templates = GetTemplates(metaData, jsonData);
-
+      this.metaData = metaData;
       this.showTemplates = true;
       this.OPEN_VIS_PANEL();
     });
@@ -146,6 +159,7 @@ export default {
       this.showTweakPanel = true;
       this.showTemplates = false;
       this.vegaConfig = vegaData;
+      this.$bus.$emit("preview-config");
     });
     this.$bus.$on("close-tweakPanel", () => {
       this.showTweakPanel = false;
@@ -195,7 +209,7 @@ export default {
   display: none;
 }
 .vis-test {
-  display: none;
+  // display: none;
   background-color: white;
   position: absolute;
   left: -300px;

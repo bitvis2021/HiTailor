@@ -7,11 +7,6 @@
             Apply
           </el-button>
         </el-col>
-        <el-col :span="8">
-          <el-button type="text" size="mini">
-            <i class="el-icon-circle-plus"></i>Add Layer
-          </el-button>
-        </el-col>
       </el-row>
     </div>
     <div id="panel">
@@ -43,53 +38,7 @@ export default {
     },
     ApplyConfig(data) {
       this.$emit("apply-config", data);
-    },
-    AddTab() {
-      let newTabName = "layer" + ++this.tabIndex;
-      this.editableTabs.push({
-        title: newTabName,
-        name: newTabName,
-      });
-      this.editableTabsValue = newTabName;
-      if (this.tabIndex == 1) {
-        // json not having layer to having layer
-        this.currentVegaJson.layer = [
-          {
-            mark: this.currentVegaJson.mark,
-            encoding: this.currentVegaJson.encoding,
-          },
-        ];
-        delete this.currentVegaJson.mark;
-        delete this.currentVegaJson.encoding;
-
-        this.currentVegaJson.layer.push({ mark: "point" });
-
-        this.AddTab(newTabName);
-      }
-    },
-    CloseTab(name) {
-      this.tabIndex = this.tabIndex - 1;
-      let delIndex = this.editableTabs.length;
-      for (let index = 0; index < this.editableTabs.length; index++) {
-        if (this.editableTabs[index].name === name) {
-          delIndex = index;
-        }
-        if (index > delIndex) {
-          let newTabName = "layer" + index;
-          this.editableTabs[index].title = newTabName;
-          this.editableTabs[index].name = newTabName;
-        }
-      }
-      this.editableTabs.splice(delIndex, 1);
-
-      // json having layer to not having layer
-      if (this.tabIndex == 1) {
-        this.currentVegaJson.mark = this.currentVegaJson.layer[0].mark;
-        this.currentVegaJson.encoding = this.currentVegaJson.layer[0].encoding;
-        delete this.currentVegaJson.layer;
-        this.CloseTab(this.editableTabs[0].name);
-      }
-    },
+    }
   },
   mounted() {
   },
