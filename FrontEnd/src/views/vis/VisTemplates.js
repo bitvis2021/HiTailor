@@ -1,3 +1,5 @@
+// Reconsitution temp2vega
+
 export let supportedTemplate={
     NQ_Simple_Bar_Chart:"N-Q Simple Bar Chart",
     NQ_Simple_Line_Chart:"N-Q Simple Line Chart",

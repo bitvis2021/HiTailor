@@ -30,8 +30,9 @@
     <div class="content-container">
       <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
     </div>
-    <div class="vis-panel" v-show="showPanel&&(currView!='Transformation')">
-      <VisView></VisView> 
+    <div class="vis-panel" v-show="currView!='Transformation'">
+      <VisView v-show="showPanel"></VisView> 
+      <div v-show="!showPanel"> Select Data to Continue</div>
     </div>
 
     <div class="change-view-button-container" v-if="isHeaderFixed">
