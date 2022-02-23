@@ -2,15 +2,20 @@ import vegaEmbed from "vega-embed";
 
 export function VisDatabase() {
     this.database = {};
-
+    this.vegaDatabase = {};
+    this.bus={};
 }
 
 VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database[id].status == status.clear) {
         this.SelectCanvas(id);
+
+        // todo: Bind vis data and id, then commit vegalite here
+        this.bus.$emit("open-tweakPanel",{mark:"apply"});
     }
     else if (this.database[id].status == status.select) {
         this.CancelSelection(id);
+        this.bus.$emit("close-tweakPanel");
     }
 }
 
@@ -192,8 +197,31 @@ function visMetaData(id, x, y, height, width, vegaConfig) {
     this.status = status.clear;
 }
 
+VisDatabase.prototype.AddVegaData = function (id_str, vegaData_obj, metaData_obj, data_array) {
+    let data = {
+        id: id_str,
+        vegaData: vegaData_obj,
+        metaData: metaData_obj,
+        data: data_array
+    }
+    this.vegaDatabase[id] = data;
+}
+
+VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
+    this.vegaDatabase[id].vegaData = vegaConfig;
+
+}
+
+VisDatabase.prototype.GetVegaConfig = function (id) {
+    return this.vegaDatabase[id].vegaData;
+}
+
+VisDatabase.prototype.GetMetaData = function (id) {
+    return this.vegaDatabase[id].metaData;
+}
 // table id==table-view-svg
 // vis generator==gen-chart
+
 VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj) {
     // 1. set json
     // 2. append canvas
@@ -208,6 +236,11 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);
+    return canvas_id;
+}
+
+VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
+    this.bus=bus_vmObj;
 }
 
 VisDatabase.prototype.RenderCanvas = function (id) {

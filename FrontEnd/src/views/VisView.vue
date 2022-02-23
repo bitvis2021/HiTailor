@@ -28,10 +28,18 @@
         <div id="chart"></div>
         <div class="panel-view-container">
           <panel-view
+            v-if="!showTweakPanel"
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
             v-on:apply-config="ApplyVegaConf"
             v-on:apply-vis="ApplyVis2Table"
+          ></panel-view>
+          <panel-view
+            v-else
+            :selections="this.ECSelections"
+            :vegaConfig="this.vegaConfig"
+            v-on:apply-config="ApplyVegaConf"
+            v-on:apply-vis="ApplyTweak2Table"
           ></panel-view>
         </div>
       </div>
@@ -61,6 +69,7 @@ export default {
   data() {
     return {
       showTemplates: true,
+      showTweakPanel: false,
       visData: {},
       templates: [],
       vegaConfig: {}, // template -> vegaConfig <=> panelView
@@ -83,6 +92,7 @@ export default {
 
       this.ECSelections = template.GetECSelections();
       this.showTemplates = false;
+      this.showTweakPanel = false;
 
       this.$bus.$emit("preview-config");
     },
@@ -95,6 +105,10 @@ export default {
         this.position.y,
         this.vegaConfig
       );
+    },
+    ApplyTweak2Table() {
+      this.showTemplates = true;
+      this.showTweakPanel = false;
     },
   },
   mounted() {
@@ -126,11 +140,25 @@ export default {
         afterPosition.y
       );
     });
+
+    this.VisDB.RegisterBus(this.$bus);
+    this.$bus.$on("open-tweakPanel", (vegaData) => {
+      this.showTweakPanel = true;
+      this.showTemplates = false;
+      this.vegaConfig = vegaData;
+    });
+    this.$bus.$on("close-tweakPanel", () => {
+      this.showTweakPanel = false;
+      this.showTemplates = true;
+      this.CLOSE_VIS_PANEL();
+    });
   },
   beforeDestroy() {
     this.$bus.$off("preview-config");
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
+    this.$bus.$off("close-tweakPanel");
+    this.$bus.$off("open-tweakPanel");
   },
 };
 </script>
