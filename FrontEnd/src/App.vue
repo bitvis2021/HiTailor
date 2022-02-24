@@ -26,13 +26,17 @@
         </el-menu-item>
       </el-tooltip>
     </el-menu>
-        
+
     <div class="content-container">
-      <TableView :isHeaderFixed="isHeaderFixed" :isTransformView="currView=='Transformation'" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
+      <TableView
+        :isHeaderFixed="isHeaderFixed"
+        :isTransformView="currView == 'Transformation'"
+        @changeHeaderFixed="change_is_header_fixed($event)"
+      ></TableView>
     </div>
-    <div class="vis-panel" v-show="currView!='Transformation'">
-      <VisView v-show="showPanel"></VisView> 
-      <div v-show="!showPanel"> Select Data to Continue</div>
+    <div id="vis-panel" v-show="currView != 'Transformation'">
+      <VisView v-show="showPanel"></VisView>
+      <div v-show="!showPanel">Select Data to Continue</div>
     </div>
 
     <div class="change-view-button-container" v-if="isHeaderFixed">
@@ -132,7 +136,7 @@ export default {
 
 <style lang="less">
 @side-panel-width: 20%;
-@padding:1%;
+@padding: 1%;
 @menu-height: 2.5rem;
 @change-view-button-container-height: 3.5rem;
 html {
@@ -187,9 +191,9 @@ html {
   svg:not(:root) {
     overflow: visible;
   }
-  .vis-panel {
+  #vis-panel {
     position: absolute;
-    right: 0%;
+    right: 1%;
     width: @side-panel-width;
     top: @menu-height;
     bottom: 0%;

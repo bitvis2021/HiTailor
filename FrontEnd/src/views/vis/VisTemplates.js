@@ -16,43 +16,94 @@ export let supportedTemplate = {
 }
 
 export function GetTemplate(templateName_str, metaData_obj, visData_arr, direction) {
-    let encoding = {};
+    let vegaConfig;
+    let selections;
+    let picture;
+
+    let defaultVal = {};
+    let selections_cell = selections_cell = EncodingCompiler.GetSelections(metaData_obj);
+
+    let is_X = false;
     if (direction == undefined || direction == 'x' || direction == 'horizontal') {
-        encoding.x = { field: "value", type: "quantitative" };
-        encoding.y = { field: defaultNominal_str, type: "nominal", sort: sort_arr };
+        is_X = true;
+        defaultVal = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
     }
     else {
-        encoding.y = { field: "value", type: "quantitative" };
-        encoding.x = { field: defaultNominal_str, type: "nominal", sort: sort_arr };
+        defaultVal = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
     }
 
     switch (templateName_str) {
-        case NQ_Simple_Bar_Chart:
+        case supportedTemplate.NQ_Simple_Bar_Chart:
 
+            break;
+        // - [A-N-Q bar chart](https://www.notion.so/A-N-Q-bar-chart-1746d78908fd46988ae9266d91f7e114)
+        case supportedTemplate.ANQ_Bar_Chart:
+            selections = selections_cell;
+            picture = './templates/bar chart.png'
+            vegaConfig = {
+                mark: "bar",
+                data: { values: visData_arr },
+                encoding: {
+                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    y: { aggregate: "sum", field: "value" }
+                }
+            }
+            if (!is_X) {
+                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                picture = './templates/bar chart y.png'
+            }
             break;
 
         default:
             break;
+    }
+
+
+    if (vegaConfig != undefined) {
+        return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
     }
 }
 
 export function GetTemplates(metaData_obj, visData_arr) {
     // two forms of visData
     let templates = new Templates;
-    let defaultX = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
 
-    let selections_cell = EncodingCompiler.GetSelections(metaData_obj);
-    // - [A-N-Q bar chart](https://www.notion.so/A-N-Q-bar-chart-1746d78908fd46988ae9266d91f7e114)
-    let vegaConfig = {
-        mark: "bar",
-        data: { values: visData_arr },
-        encoding: {
-            x: { field: defaultX.name, type: "nominal", sort: defaultX.sort },
-            y: { aggregate: "sum", field: "value" }
+    if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
+        if (metaData_obj.x.range == 1) {
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'x'))
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_arr, 'x'))
+        }
+        else {
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
         }
     }
+    if (metaData_obj.x.range >= 2 && metaData_obj.y.range >= 2) {
+        let aggregateChart = [
+            supportedTemplate.NQ_Strip_Plot,
+            supportedTemplate.NQ_Box_Plot,
+            supportedTemplate.NQ_Ranged_Dot_Plot,
+            supportedTemplate.ANQN_Multi_Series_Line_Chart,
+            supportedTemplate.ANQ_Line_Chart,
+            supportedTemplate.ANQ_Bar_Chart,
+            supportedTemplate.ANQN_Stacked_Bar_Chart,
+            supportedTemplate.ANQN_Multi_Series_Line_Chart
+        ]
+        for (let i = 0; i < aggregateChart.length; i++) {
+            const chartName = aggregateChart[i];
+            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'x'))
+            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'y'), 'vertical')
+        }
 
-    templates.AddTemplate(new VegaTemplate(supportedTemplate.ANQ_Bar_Chart, vegaConfig, selections_cell, './templates/bar chart.png'));
+        // @@N-N-Q grouped bar chart
+        if (GetHeaders(metaData_obj.x).length > 1) {
+            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'x'));
+        }
+        if (GetHeaders(metaData_obj.y).length > 1) {
+            // Y direction
+            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'y'), 'vertical');
+        }
+    }
 
     return templates.GetTemplates();
 }
@@ -70,14 +121,16 @@ function Templates() {
     this.templates = {}
 }
 Templates.prototype.AddTemplate = function (template, direction) {
-    if (direction == undefined) {
-        direction = 'horizontal'
-    }
+    if (template != undefined) {
+        if (direction == undefined) {
+            direction = 'horizontal'
+        }
 
-    if (this.templates[template.name] == undefined) {
-        this.templates[template.name] = {}
+        if (this.templates[template.name] == undefined) {
+            this.templates[template.name] = {}
+        }
+        this.templates[template.name][direction] = template
     }
-    this.templates[template.name][direction] = template
 }
 
 Templates.prototype.GetTemplates = function () {
@@ -104,4 +157,14 @@ VegaTemplate.prototype.GetVegaConfig = function () {
 }
 VegaTemplate.prototype.GetSelections = function () {
     return this.selections;
+}
+
+function GetHeaders(channel_obj) {
+    let ans = []
+    console.log(channel_obj)
+    for (let index = 0; index < channel_obj.headers.length; index++) {
+        const field = channel_obj.headers[index];
+        ans.push(field.name)
+    }
+    return ans
 }

@@ -86,9 +86,9 @@ export default {
     border-radius: 10px;
     text-align: left;
     top: 5%;
-    max-height: 95%;
+    height: 60vh;
     overflow: scroll;
-
+    margin-top: 5px;
     &::-webkit-scrollbar {
       width: 5px;
       background: rgb(255, 255, 255);

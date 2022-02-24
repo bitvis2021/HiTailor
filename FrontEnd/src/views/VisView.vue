@@ -6,15 +6,11 @@
     <div id="gen-chart"></div>
     <div id="vis-view">
       <!-- return buttons -->
-      <el-row type="flex" justify="start" style="margin-left: 10px">
+      <el-row type="flex" justify="start" style="margin-left: 5px">
         <!-- v-if="!showTemplates" -->
-        <el-button @click="ClickReturnButton" type="text"
+        <el-button @click="ClickReturnButton" type="text" size="medium"
           ><i class="el-icon-back"></i
         ></el-button>
-        <!-- <div style="width: 250px"></div> -->
-        <!-- <el-button type="text" @click="CLOSE_VIS_PANEL()"
-          ><i class="el-icon-close"></i
-        ></el-button> -->
       </el-row>
       <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
       <templates-view
@@ -185,16 +181,17 @@ export default {
     // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
       let data = JSON.parse(JSON.stringify(this.vegaConfig));
-      data.height = 188;
-      data.width = 288;
+      // data.height = 188;
+      // data.width = 288;
+      data.height = document.getElementById("vis-panel").clientHeight*0.25;
+      data.width = document.body.clientWidth * 0.2;
       console.log("preview data", data);
       vegaEmbed("#chart", data, {
         renderer: "svg",
         actions: false,
-        height: 200,
-        width: 300,
       });
     });
+
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.OPEN_VIS_PANEL();
@@ -221,13 +218,12 @@ export default {
 
     // Make VisDatabase to send signal
     this.VisDB.RegisterBus(this.$bus);
-    
+
     // User click vis figure
     this.$bus.$on("select-canvas", (figMetadata) => {
       console.log("meta data", figMetadata);
       this.figID = figMetadata.id;
       this.OpenTweakView(figMetadata.vegaConfig, figMetadata.selections);
-
     });
   },
   beforeDestroy() {
@@ -254,14 +250,12 @@ export default {
     left: 0%;
     right: 0%;
     background-color: white;
-    // padding: 0px 10px 0px 10px;
     .el-form-item {
       margin-top: 2px !important;
       margin-bottom: 2px !important;
     }
   }
   .panel-view-container {
-    // position: absolute;
     top: 240px;
     bottom: 0%;
     left: 0%;
@@ -272,19 +266,14 @@ export default {
   display: none;
 }
 .vis-test {
-  // display: none;
+  display: none;
   background-color: white;
   position: absolute;
   left: -300px;
   top: 0px;
   width: 200px;
 }
-#chart {
-  width: 300px;
-  height: 200px;
-  display: inline-block;
-  margin-right: 2%;
-}
+
 .vis-picture {
   .vis-picture-hButton {
     fill: rgb(90, 156, 248);
@@ -306,10 +295,6 @@ export default {
       fill: rgb(153, 195, 250);
     }
   }
-}
-
-.vis-picture-mButton:hover + .vis-picture-hButton {
-  visibility: hidden;
 }
 
 .vis-picture-button {
