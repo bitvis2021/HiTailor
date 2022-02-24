@@ -221,9 +221,9 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
 
 EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
     let encoding = encoding_obj // 可能有坑
-    encoding.x.scale = { zero: false };
+    // encoding.x.scale = { zero: false };
     encoding.x.axis = { labels: false, ticks: false, title: null };
-    encoding.y.scale = { zero: false };
+    // encoding.y.scale = { zero: false };
     encoding.y.axis = { labels: false, ticks: false, title: null };
     encoding.tooltip = [];
     if (encoding.color != undefined) {

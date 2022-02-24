@@ -99,6 +99,7 @@ Templates.prototype.GetTemplates = function () {
     return ans;
 }
 VegaTemplate.prototype.GetVegaConfig = function () {
+    this.vegaConfig.encoding = EncodingCompiler.PreprocessEncoding(this.vegaConfig.encoding);
     return this.vegaConfig;
 }
 VegaTemplate.prototype.GetSelections = function () {

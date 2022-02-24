@@ -6,17 +6,15 @@
     <div id="gen-chart"></div>
     <div id="vis-view">
       <!-- return buttons -->
-      <el-row type="flex" justify="end" style="margin-right: 10px">
-        <el-button
-          v-if="!showTemplates"
-          @click="showTemplates = true"
-          type="text"
+      <el-row type="flex" justify="start" style="margin-left: 10px">
+        <!-- v-if="!showTemplates" -->
+        <el-button @click="ClickReturnButton" type="text"
           ><i class="el-icon-back"></i
         ></el-button>
-        <div style="width: 250px"></div>
-        <el-button type="text" @click="CLOSE_VIS_PANEL()"
+        <!-- <div style="width: 250px"></div> -->
+        <!-- <el-button type="text" @click="CLOSE_VIS_PANEL()"
           ><i class="el-icon-close"></i
-        ></el-button>
+        ></el-button> -->
       </el-row>
       <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
       <templates-view
@@ -30,18 +28,22 @@
         <!-- 直接点击已生成图像时，弹出的面板是tweakpanel -->
         <div class="panel-view-container">
           <panel-view
-            v-if="!showTweakPanel"
+            v-if="showTweakPanel"
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
             v-on:apply-config="ApplyVegaConf"
-            v-on:apply-vis="ApplyVis2Table"
+            v-on:apply-vis="ApplyTweak2Table"
           ></panel-view>
+          <div v-else-if="showUnitPanel">
+            <br />
+            Unit Panel
+          </div>
           <panel-view
             v-else
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
             v-on:apply-config="ApplyVegaConf"
-            v-on:apply-vis="ApplyTweak2Table"
+            v-on:apply-vis="ApplyVis2Table"
           ></panel-view>
         </div>
       </div>
@@ -56,6 +58,7 @@ import TemplatesView from "./vis/TemplatesView.vue";
 import { GetTemplates } from "./vis/VisTemplates";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
+import { tupleid } from "vega";
 // visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
 // visualize-data -> visView (template) -> VisTemplates -> (vegaConfig) visView -> Panel -> (meataData+vegaConfig+data) VisDataBase -> visualization
 export default {
@@ -73,6 +76,7 @@ export default {
     return {
       showTemplates: true,
       showTweakPanel: false,
+      showUnitPanel: false,
       templates: [],
 
       ECSelections: {}, // template -> vegaSchema -> panelView
@@ -99,17 +103,17 @@ export default {
 
       this.showTemplates = true;
       this.showTweakPanel = false;
-
-      this.OPEN_VIS_PANEL();
+      this.showUnitPanel = false;
     },
 
     // Open panel view to tweak data
     OpenPanelView(vegaData, selections) {
       this.vegaConfig = vegaData;
       this.ECSelections = selections;
-      console.log('now config',this.vegaConfig)
+      console.log("now config", this.vegaConfig);
       this.showTweakPanel = false;
       this.showTemplates = false;
+      this.showUnitPanel = false;
       this.$bus.$emit("preview-config");
     },
 
@@ -120,7 +124,26 @@ export default {
 
       this.showTweakPanel = true;
       this.showTemplates = false;
+      this.showUnitPanel = false;
       this.$bus.$emit("preview-config");
+    },
+
+    OpenUnitView() {
+      this.showUnitPanel = true;
+      this.showTemplates = false;
+      this.showTweakPanel = false;
+    },
+
+    ClickReturnButton() {
+      if (this.showTweakPanel) {
+        // regenerate template from the data
+        alert("it is not implemented");
+      }
+      if (this.showTemplates) {
+        this.CLOSE_VIS_PANEL();
+        return;
+      }
+      this.OpenTemplateView(this.metaData, this.visData);
     },
 
     // User modified panel to update preview figure on top of the panel
@@ -158,6 +181,7 @@ export default {
     },
   },
   mounted() {
+    this.OPEN_VIS_PANEL();
     // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
       let data = JSON.parse(JSON.stringify(this.vegaConfig));
@@ -167,16 +191,22 @@ export default {
       vegaEmbed("#chart", data, {
         renderer: "svg",
         actions: false,
+        height: 200,
+        width: 300,
       });
     });
-
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
+      this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
       if (typeof metaData != Object) {
         metaData = JSON.parse(metaData);
       }
-      this.OpenTemplateView(metaData, visData);
+      if (metaData.x.range == 1 && metaData.y.range == 1) {
+        this.OpenUnitView();
+      } else {
+        this.OpenTemplateView(metaData, visData);
+      }
     });
 
     // User move table line and modify available space
@@ -191,23 +221,21 @@ export default {
 
     // Make VisDatabase to send signal
     this.VisDB.RegisterBus(this.$bus);
-    this.$bus.$on("open-tweakPanel", (figMetadata) => {
+    
+    // User click vis figure
+    this.$bus.$on("select-canvas", (figMetadata) => {
       console.log("meta data", figMetadata);
       this.figID = figMetadata.id;
       this.OpenTweakView(figMetadata.vegaConfig, figMetadata.selections);
+
     });
-    // this.$bus.$on("close-tweakPanel", () => {
-    // this.showTweakPanel = false;
-    // this.showTemplates = true;
-    // this.CLOSE_VIS_PANEL();
-    // });
   },
   beforeDestroy() {
     this.$bus.$off("preview-config");
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
     // this.$bus.$off("close-tweakPanel");
-    this.$bus.$off("open-tweakPanel");
+    this.$bus.$off("select-canvas");
   },
 };
 </script>
@@ -233,7 +261,7 @@ export default {
     }
   }
   .panel-view-container {
-    position: absolute;
+    // position: absolute;
     top: 240px;
     bottom: 0%;
     left: 0%;
@@ -251,10 +279,11 @@ export default {
   top: 0px;
   width: 200px;
 }
-#chart{
-  width: 300;
-  height: 200;
+#chart {
+  width: 300px;
+  height: 200px;
   display: inline-block;
+  margin-right: 2%;
 }
 .vis-picture {
   .vis-picture-hButton {

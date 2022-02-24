@@ -14,11 +14,20 @@ VisDatabase.prototype.SelectHandler = function (id) {
         this.SelectCanvas(id);
 
         // todo: Bind vis data and id, then commit vegalite here
-        this.bus.$emit("open-tweakPanel", this.database[id]);
+        this.bus.$emit("select-canvas", this.database[id]);
     }
     else if (this.database[id].status == status.select) {
         this.CancelSelection(id);
         // this.bus.$emit("close-tweakPanel");
+    }
+
+    // close other selection
+    for (const key in this.database) {
+        if (Object.hasOwnProperty.call(this.database, key)) {
+            if (key != id) {
+                this.CancelSelection(key);
+            }
+        }
     }
 }
 
@@ -169,8 +178,10 @@ VisDatabase.prototype.RemoveAllCanvas = function () {
 
 VisDatabase.prototype.CancelSelection = function (id) {
     this.database[id].status = status.clear;
-    document.getElementById(id + '.select').remove();
-    document.getElementById(id + '.button').remove();
+    if (document.getElementById(id + '.select') != undefined) {
+        document.getElementById(id + '.select').remove();
+        document.getElementById(id + '.button').remove();
+    }
 }
 
 VisDatabase.prototype.GetCanvas = function (id) {
@@ -189,7 +200,7 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaConfig,metaData,selections) {
+function visMetaData(id, x, y, height, width, vegaConfig, metaData, selections) {
     this.id = id;
     this.x = x;
     this.y = y;
