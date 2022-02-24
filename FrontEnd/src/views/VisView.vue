@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import vegaEmbed from "vega-embed";
+import vegaEmbed, { vega } from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import { GetTemplates } from "./vis/VisTemplates";
@@ -104,19 +104,19 @@ export default {
     },
 
     // Open panel view to tweak data
-    OpenPanelView(vegaData,selections) {
+    OpenPanelView(vegaData, selections) {
       this.vegaConfig = vegaData;
-      this.ECSelections=selections;
-
+      this.ECSelections = selections;
+      console.log('now config',this.vegaConfig)
       this.showTweakPanel = false;
       this.showTemplates = false;
       this.$bus.$emit("preview-config");
     },
 
     // Update vegaConfig from VisDatabase, and then close everthing but open the tweak view.
-    OpenTweakView(vegaData,selections) {
+    OpenTweakView(vegaData, selections) {
       this.vegaConfig = vegaData;
-      this.ECSelections=selections;
+      this.ECSelections = selections;
 
       this.showTweakPanel = true;
       this.showTemplates = false;
@@ -133,7 +133,7 @@ export default {
     SelectTemplate(template) {
       // templateName + originData => vegaConfig
       // 从template view中获得vegaConfig以及对应的数据组织形式
-      this.OpenPanelView(template.GetVegaConfig(),template.selections);
+      this.OpenPanelView(template.GetVegaConfig(), template.selections);
     },
 
     // Initially apply vega-lite config to the table, then register the config in database
@@ -151,6 +151,7 @@ export default {
 
     // Update tweaked data to vis database and then generate the vega-lite config to the table
     ApplyTweak2Table() {
+      console.log("apply tweak");
       this.showTemplates = true;
       this.showTweakPanel = false;
       this.VisDB.RerenderCanvas(this.figID);
@@ -159,9 +160,10 @@ export default {
   mounted() {
     // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
-      let data = this.vegaConfig;
+      let data = JSON.parse(JSON.stringify(this.vegaConfig));
       data.height = 188;
       data.width = 288;
+      console.log("preview data", data);
       vegaEmbed("#chart", data, {
         renderer: "svg",
         actions: false,
@@ -174,7 +176,7 @@ export default {
       if (typeof metaData != Object) {
         metaData = JSON.parse(metaData);
       }
-      this.OpenTemplateView(metaData,visData);
+      this.OpenTemplateView(metaData, visData);
     });
 
     // User move table line and modify available space
@@ -189,8 +191,10 @@ export default {
 
     // Make VisDatabase to send signal
     this.VisDB.RegisterBus(this.$bus);
-    this.$bus.$on("open-tweakPanel", (vegaData) => {
-      this.OpenTweakView(vegaData);
+    this.$bus.$on("open-tweakPanel", (figMetadata) => {
+      console.log("meta data", figMetadata);
+      this.figID = figMetadata.id;
+      this.OpenTweakView(figMetadata.vegaConfig, figMetadata.selections);
     });
     // this.$bus.$on("close-tweakPanel", () => {
     // this.showTweakPanel = false;
@@ -247,7 +251,11 @@ export default {
   top: 0px;
   width: 200px;
 }
-
+#chart{
+  width: 300;
+  height: 200;
+  display: inline-block;
+}
 .vis-picture {
   .vis-picture-hButton {
     fill: rgb(90, 156, 248);

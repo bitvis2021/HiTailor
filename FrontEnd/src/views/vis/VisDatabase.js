@@ -14,11 +14,11 @@ VisDatabase.prototype.SelectHandler = function (id) {
         this.SelectCanvas(id);
 
         // todo: Bind vis data and id, then commit vegalite here
-        this.bus.$emit("open-tweakPanel", this.GetVegaConfig(id));
+        this.bus.$emit("open-tweakPanel", this.database[id]);
     }
     else if (this.database[id].status == status.select) {
         this.CancelSelection(id);
-        this.bus.$emit("close-tweakPanel");
+        // this.bus.$emit("close-tweakPanel");
     }
 }
 
