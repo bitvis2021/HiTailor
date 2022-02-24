@@ -24,7 +24,6 @@ VisDatabase.prototype.SelectHandler = function (id) {
 
 VisDatabase.prototype.MinimizeHandler = function (id) {
     // alert("minimize", id);
-    console.log(this.GetCanvas(id));
     let canvas = this.GetCanvas(id);
     // canvas.removeAttribute("class")
     canvas.setAttribute("style", "visibility: hidden;");
@@ -50,7 +49,6 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
     let canvas = this.GetCanvas(id);
     canvas.removeAttribute("style");
     let button = document.getElementById(id + '.mButton');
-    console.log('maxButton', button);
     button.remove();
 
     document.getElementById(id + '.hButton').removeAttribute('style');
@@ -58,7 +56,6 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
 
 
 VisDatabase.prototype.SelectCanvas = function (id) {
-    console.log("rerender", this.database[id]);
 
     this.database[id].status = status.select;
     let canvas = this.GetCanvas(id);
@@ -98,7 +95,6 @@ VisDatabase.prototype.SelectCanvas = function (id) {
 }
 
 VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
-    // console.log('rerendering..', pre_x, after_x, pre_y, after_y);
 
     // move col
     if (pre_y == 0 && after_y == 0) {
@@ -193,7 +189,7 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaConfig,metaData,visData) {
+function visMetaData(id, x, y, height, width, vegaConfig,metaData,selections) {
     this.id = id;
     this.x = x;
     this.y = y;
@@ -202,7 +198,7 @@ function visMetaData(id, x, y, height, width, vegaConfig,metaData,visData) {
     this.vegaConfig = vegaConfig;
     this.status = status.clear;
     this.metaData = metaData;
-    this.visData = visData;
+    this.selections = selections;
 }
 
 
@@ -213,14 +209,13 @@ VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
 }
 
 VisDatabase.prototype.GetVegaConfig = function (id) {
-    console.log('getting vega', this.database[id].vegaConfig);
     return this.database[id].vegaConfig;
 }
 
 // table id==table-view-svg
 // vis generator==gen-chart
 
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj, metaData_obj, visData_arr) {
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj, metaData_obj, selections_obj) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
@@ -229,7 +224,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, vegaConfig_obj, metaData_obj, visData_arr);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, vegaConfig_obj, metaData_obj, selections_obj);
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);
@@ -260,7 +255,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     chartJson.height = height - 0.3;
     chartJson.width = width - 0.3;
 
-    console.log("chart JSON", chartJson);
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -282,7 +276,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         table.append(canvas);
 
 
-        console.log("rendering json", chartJson);
         // get svg from #gen-chart
         vegaEmbed("#gen-chart", chartJson, {
             renderer: "svg",

@@ -221,7 +221,6 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
 
 EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
     let encoding = encoding_obj // 可能有坑
-    console.log("encoding object", encoding);
     encoding.x.scale = { zero: false };
     encoding.x.axis = { labels: false, ticks: false, title: null };
     encoding.y.scale = { zero: false };

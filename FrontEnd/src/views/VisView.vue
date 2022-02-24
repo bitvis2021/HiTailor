@@ -1,7 +1,7 @@
 <template>
   <div class="visview-container">
     <div class="vis-test">
-      {{ this.VegaConfigNoData }}
+      {{ this.vegaConfig }}
     </div>
     <div id="gen-chart"></div>
     <div id="vis-view">
@@ -21,7 +21,7 @@
       <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
       <templates-view
         v-if="showTemplates"
-        v-on:select-template="OpenPanelView"
+        v-on:select-template="SelectTemplate"
         :templates="this.templates"
       ></templates-view>
       <div v-else>
@@ -53,10 +53,11 @@
 import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
-import { GetTemplates } from "./vis/Temp2Vega";
+import { GetTemplates } from "./vis/VisTemplates";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
-
+// visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
+// visualize-data -> visView (template) -> VisTemplates -> (vegaConfig) visView -> Panel -> (meataData+vegaConfig+data) VisDataBase -> visualization
 export default {
   name: "VisView",
   components: {
@@ -73,37 +74,69 @@ export default {
       showTemplates: true,
       showTweakPanel: false,
       templates: [],
-      position: {},
+
       ECSelections: {}, // template -> vegaSchema -> panelView
-      vegaConfig: {}, // template -> vegaConfig <=> panelView
+
       VisDB: new VisDatabase(),
+      figID: "",
+      position: {},
+
+      vegaConfig: {}, // template -> vegaConfig <=> panelView
       visData: {}, // data from visualize selected data
       metaData: {},
-      figID: "",
     };
   },
   methods: {
     ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
-    ApplyVegaConf(data) {
-      this.vegaConfig = data;
-      this.vegaConfig.data = this.visData;
-      this.VisDB.SetVegaConfig(this.figID, this.vegaConfig);
-      this.$bus.$emit("preview-config"); // preview picture
-    },
-    GetTemplate(vegaConfig, data) {
-      // 从template view中获得vegaConfig以及对应的数据组织形式
-    },
-    OpenPanelView(template) {
-      this.vegaConfig = template.GetVegaConf();
 
-      this.visData = this.vegaConfig.data;
+    // Input data and metadata to VisTemplates. Then get the templates. Open the template view.
+    OpenTemplateView(metaData, visData) {
+      this.templates = GetTemplates(metaData, visData);
 
-      this.ECSelections = template.GetECSelections();
-      this.showTemplates = false;
+      // get data that is needed in visualization
+      this.visData = visData;
+      this.metaData = metaData;
+
+      this.showTemplates = true;
       this.showTweakPanel = false;
 
+      this.OPEN_VIS_PANEL();
+    },
+
+    // Open panel view to tweak data
+    OpenPanelView(vegaData,selections) {
+      this.vegaConfig = vegaData;
+      this.ECSelections=selections;
+
+      this.showTweakPanel = false;
+      this.showTemplates = false;
       this.$bus.$emit("preview-config");
     },
+
+    // Update vegaConfig from VisDatabase, and then close everthing but open the tweak view.
+    OpenTweakView(vegaData,selections) {
+      this.vegaConfig = vegaData;
+      this.ECSelections=selections;
+
+      this.showTweakPanel = true;
+      this.showTemplates = false;
+      this.$bus.$emit("preview-config");
+    },
+
+    // User modified panel to update preview figure on top of the panel
+    ApplyVegaConf(data) {
+      this.vegaConfig = data;
+      this.$bus.$emit("preview-config"); // preview picture
+    },
+
+    // User select template from templateView, then update the vegaConfig
+    SelectTemplate(template) {
+      // templateName + originData => vegaConfig
+      // 从template view中获得vegaConfig以及对应的数据组织形式
+      this.OpenPanelView(template.GetVegaConfig(),template.selections);
+    },
+
+    // Initially apply vega-lite config to the table, then register the config in database
     ApplyVis2Table() {
       this.figID = this.VisDB.GenFig(
         this.position.height,
@@ -112,9 +145,11 @@ export default {
         this.position.y,
         this.vegaConfig,
         this.metaData,
-        this.visData
+        this.ECSelections
       );
     },
+
+    // Update tweaked data to vis database and then generate the vega-lite config to the table
     ApplyTweak2Table() {
       this.showTemplates = true;
       this.showTweakPanel = false;
@@ -122,7 +157,7 @@ export default {
     },
   },
   mounted() {
-    // get event
+    // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
       let data = this.vegaConfig;
       data.height = 188;
@@ -132,16 +167,17 @@ export default {
         actions: false,
       });
     });
-    this.$bus.$on("visualize-selectedData", (position, jsonData, metaData) => {
-      this.position = position;
+
+    // User select data
+    this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
+      this.position = position; // for visDatabase to use
       if (typeof metaData != Object) {
         metaData = JSON.parse(metaData);
       }
-      this.templates = GetTemplates(metaData, jsonData);
-      this.metaData = metaData;
-      this.showTemplates = true;
-      this.OPEN_VIS_PANEL();
+      this.OpenTemplateView(metaData,visData);
     });
+
+    // User move table line and modify available space
     this.$bus.$on("rerender-selectedData", (prePosition, afterPosition) => {
       this.VisDB.ReconfigAllCanvas(
         prePosition.x,
@@ -151,24 +187,22 @@ export default {
       );
     });
 
+    // Make VisDatabase to send signal
     this.VisDB.RegisterBus(this.$bus);
     this.$bus.$on("open-tweakPanel", (vegaData) => {
-      this.showTweakPanel = true;
-      this.showTemplates = false;
-      this.vegaConfig = vegaData;
-      this.$bus.$emit("preview-config");
+      this.OpenTweakView(vegaData);
     });
-    this.$bus.$on("close-tweakPanel", () => {
-      this.showTweakPanel = false;
-      this.showTemplates = true;
-      this.CLOSE_VIS_PANEL();
-    });
+    // this.$bus.$on("close-tweakPanel", () => {
+    // this.showTweakPanel = false;
+    // this.showTemplates = true;
+    // this.CLOSE_VIS_PANEL();
+    // });
   },
   beforeDestroy() {
     this.$bus.$off("preview-config");
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
-    this.$bus.$off("close-tweakPanel");
+    // this.$bus.$off("close-tweakPanel");
     this.$bus.$off("open-tweakPanel");
   },
 };
