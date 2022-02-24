@@ -40,9 +40,9 @@
       <TableView></TableView> 
     </div>
 
-    <div class="vis-panel">
-      <VisView v-show="showPanel"></VisView> 
-      <div v-show="!showPanel"> Select Data to Continue</div>
+    <div id="vis-panel">
+      <VisView v-show="showPanel"></VisView>
+      <div v-show="!showPanel">Select Data to Continue</div>
     </div>
 
     <!-- 
