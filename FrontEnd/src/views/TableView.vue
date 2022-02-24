@@ -1,60 +1,60 @@
 <template>
   <div class="table-view" @mouseup="handle_mouse_up()">
     <div class="header-button-container" v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
-      <el-button class="button" id="row-header-button"  plain size="medium"
+      <button class="button" id="row-header-button"  plain size="small"
         @click="choose_header('row')"> 
         row header 
-      </el-button>
-      <el-button class="button" id="column-header-button"  plain size="medium"   
+      </button>
+      <button class="button" id="column-header-button"  plain size="small"   
         @click="choose_header('column')" > 
         column header 
-      </el-button>
+      </button>
     </div>
 
-    <div class="tranform-button-container" v-if="isTransformView && headerFixedFlag.row && headerFixedFlag.column">
-      <el-button v-if="isCurrFlat"
-        type="primary" plain size="medium" 
+    <div class="tranform-button-container" v-if="isHeaderFixed">
+      <button v-if="isCurrFlat"
+        type="primary" plain size="small" 
         class="button"
         @click="transform_unfold()" > 
         Unfold
-      </el-button>
+      </button>
 
       <div v-if="!isCurrFlat">
-        <el-button type="primary" plain size="medium" 
+        <button type="primary" plain size="small" 
           class="button"
           @click="transform_fold()" > 
           Fold
-        </el-button>
-        <el-button type="primary" plain size="medium" 
+        </button>
+        <button type="primary" plain size="small" 
           class="button"
           @click="transform_transpose()" > 
           Transpose
-        </el-button>
-        <el-button type="primary" plain size="medium" 
+        </button>
+        <button type="primary" plain size="small" 
           class="button"
           @click="handle_transform_swap('FALL 2001', false)" > 
           Swap
-        </el-button>
-        <el-button type="primary" plain size="medium" 
+        </button>
+        <button type="primary" plain size="small" 
           class="button"
           @click="handle_transform_2stacked('HUMANITIES')" > 
           ToStacked
-        </el-button>
-        <el-button type="primary" plain size="medium" 
+        </button>
+        <button type="primary" plain size="small" 
           class="button"
           @click="handle_transform_2linear('HUMANITIES', 0)" > 
           ToLinear
-        </el-button>
-        <el-button type="primary" plain size="medium" 
+        </button>
+        <button type="primary" plain size="small" 
           class="button"
           @click="transform_derive()" > 
           Derive
-        </el-button>
-        <el-button type="primary" plain size="medium" 
+        </button>
+        <button type="primary" plain size="small" 
           class="button"
           @click="transform_merge()" > 
           Merge
-        </el-button>
+        </button>
       </div>
     </div>
 
@@ -69,11 +69,11 @@
       </button> -->
  
       <!-- <div v-if="!isTransformView">
-        <el-button type="primary" plain size="medium" 
+        <button type="primary" plain size="small" 
           class="button"
           @click="transmit_data_to_vis()" > 
           transmit data
-        </el-button> 
+        </button> 
       </div> 
     </div> -->
 
@@ -117,7 +117,7 @@
         </g>
 
         <!-- cell before choosing header-->
-        <g v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
+        <g v-if="!isCurrFlat && !isHeaderFixed">
           <g v-for="(row, rowindex) in rowDistributionList" :key="row.index"
             :transform="'translate(' + markWidth + ',' + (heightRangeList[rowindex] + markHeight) + ')'">
             <g v-for="(column, columnindex) in row" :key="column.index">
@@ -183,7 +183,7 @@
             </g>
           </g>
           <!-- value cell -->
-          <g v-if="headerFixedFlag.row && headerFixedFlag.column">
+          <g v-if="isHeaderFixed">
             <!-- top-left corner -->
             <rect class="header-table-cell" :x="markWidth" :y="markHeight"
               :width="widthRangeList[headerRange.right+1]"
@@ -205,12 +205,12 @@
             </g>
           </g>
           <!-- transparent mask for choosing -->
-          <rect v-if="headerFixedFlag.row && headerFixedFlag.column && !isTransformView"
+          <rect v-if="isHeaderFixed"
             id="transparent-mask-for-choosing"
-            :x="markWidth" 
-            :y="markHeight"
-            :width="widthRangeList[columnWidthList.length]"
-            :height="heightRangeList[rowHeightList.length]"
+            :x="markWidth + widthRangeList[headerRange.right+1]" 
+            :y="markHeight + heightRangeList[headerRange.bottom+1]"
+            :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
+            :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
             @mousedown="handle_mouse_down_mask($event)">
           </rect>
         </g>
@@ -219,8 +219,8 @@
         <g v-for="(row, rowindex) in rowHeightList" :key="row.index">  
           <!-- rowHeightList -->
           <rect 
-            :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView), 
-              'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView),
+            :class="{'chosen-table-mark': selectByMark.row && isMarkSelected(rowindex, 'row'), 
+              'selected-table-mark': !selectByMark.row && isMarkSelected(rowindex, 'row'),
               'hovered-table-mark': (mouseOverMark.index==rowindex && mouseOverMark.type=='row') || (selectedMark.index==rowindex && selectedMark.type=='row')}"
             class="table-mark"
             x="0"
@@ -232,8 +232,8 @@
             @mouseout="handle_mouse_out_mark()">
           </rect>
           <text 
-            :class="{'chosen-table-mark-text': selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView), 
-              'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView)}"
+            :class="{'chosen-table-mark-text': selectByMark.row && isMarkSelected(rowindex, 'row') , 
+              'selected-table-mark-text': !selectByMark.row && isMarkSelected(rowindex, 'row')}"
             class="table-mark-text"
             :x="markWidth/2"
             :y="markHeightRangeList[rowindex] + markHeight + markTextPaddingY" 
@@ -243,8 +243,7 @@
             {{rowindex + 1}}
           </text>
           <!-- row mark transparent line -->
-          <rect v-for="(row, rowindex) in rowHeightList" :key="row.index"
-            class='row-mark-transparent-line'
+          <rect class='row-mark-transparent-line'
             x="0"
             :y="markHeightRangeList[rowindex+1] + markHeight - markLinePadding/2"
             :height="markLinePadding"
@@ -256,8 +255,8 @@
         <!-- column mark -->
         <g v-for="(column, columnindex) in columnWidthList" :key="column.index"> 
           <rect 
-            :class="{'chosen-table-mark': selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView), 
-              'selected-table-mark': !selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView),
+            :class="{'chosen-table-mark': selectByMark.column && isMarkSelected(columnindex, 'column'), 
+              'selected-table-mark': !selectByMark.column && isMarkSelected(columnindex, 'column'),
               'hovered-table-mark': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column')}"
             class="table-mark"
             :x="markWidthRangeList[columnindex] + markWidth"
@@ -270,8 +269,8 @@
           </rect>
           <text 
             :class="{'hovered-table-mark-text': (mouseOverMark.index==columnindex && mouseOverMark.type=='column') || (selectedMark.index==columnindex && selectedMark.type=='column'), 
-              'selected-table-mark-text': !selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView),
-              'chosen-table-mark-text': selectByMark.column && isMarkSelected(columnindex, 'column') && (!headerFixedFlag.row|| !headerFixedFlag.column || !isTransformView)}"
+              'selected-table-mark-text': !selectByMark.column && isMarkSelected(columnindex, 'column'),
+              'chosen-table-mark-text': selectByMark.column && isMarkSelected(columnindex, 'column')}"
             class="table-mark-text"
             :x="markWidthRangeList[columnindex] + markWidth + markColumnWidthList[columnindex]/2"
             :y="markTextPaddingY"
@@ -281,8 +280,7 @@
             {{cal_column_mark(columnindex)}}
           </text>
           <!-- column mark transparent line -->
-          <rect v-for="(column, columnindex) in markColumnWidthList" :key="column.index"
-            class='column-mark-transparent-line'
+          <rect class='column-mark-transparent-line'
             :x="markWidthRangeList[columnindex+1] + markWidth - markLinePadding/2"
             y="0"
             :width="markLinePadding"
@@ -292,7 +290,7 @@
         </g>
         
         <!-- row mark highlight line -->
-        <line v-if="!isTransformView" class="highlight-line"
+        <line class="highlight-line" v-if="selectedArea!=null"
           :x1="markWidth"
           :x2="markWidth"
           :y1="heightRangeList[selectedArea.top] + markHeight"
@@ -300,7 +298,7 @@
         </line>
 
         <!-- column mark highlight line -->
-        <line v-if="!isTransformView" class="highlight-line"
+        <line class="highlight-line" v-if="selectedArea!=null"
           :x1="widthRangeList[selectedArea.left] + markWidth"
           :x2="widthRangeList[selectedArea.right+1] + markWidth"
           :y1="markHeight"
@@ -308,7 +306,7 @@
         </line>
 
         <!-- selected area -->
-        <rect v-if="isCurrFlat || !(headerFixedFlag.row && headerFixedFlag.column) || (headerFixedFlag.row && headerFixedFlag.column && !isTransformView)"
+        <rect v-if="isCurrFlat || !isCurrFlat && selectedArea!=null"
           class="selected-area"
           :x="markWidth + widthRangeList[selectedArea.left]" 
           :y="markHeight + heightRangeList[selectedArea.top]" 
@@ -364,8 +362,8 @@
 export default {
   name: 'TableView',
   props: {
-    "isHeaderFixed": Boolean,
-    "isTransformView": Boolean
+    // "isHeaderFixed": Boolean,
+    // "isTransformView": Boolean
   },
   data() {
     return {
@@ -399,7 +397,7 @@ export default {
       markHeightChangeSignal: true,
 
       selectedCell: {cstart:null, cend:null, rstart:null, rend:null},
-      selectedArea: {top:0, left:0, bottom:0, right:0},
+      selectedArea: null,
       selectedMark: {index:null, type:null},
 
       mouseOverCell: {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null},
@@ -434,6 +432,7 @@ export default {
 
       // isTransformView: false
       // childIsTransformView: this.isTransformView
+      isHeaderFixed: false,
       isCurrFlat: false,
       flatAttrName: null,
       flatData: null,
@@ -682,19 +681,19 @@ export default {
         }
         this.mouseDownMarkLineState = false
 
-        if (!this.isTransformView) {
+        // if (!this.isTransformView) {
           if (this.mouseDownMarkLine.type=="column" && this.visRerenderAfterPos.x!=this.visRerenderPrePos.x || 
             this.mouseDownMarkLine.type=="row" && this.visRerenderAfterPos.y!=this.visRerenderPrePos.y) {
               this.$bus.$emit('rerender-selectedData', this.visRerenderPrePos, this.visRerenderAfterPos)
               console.log("rerender", this.visRerenderPrePos, this.visRerenderAfterPos)
             }
-        }
+        // }
         
       }
       this.mouseOverCell =  {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null}
       this.mouseDownMarkLine = {index:null, type:null}
       this.selectedMark = {index:null, type:null}
-      if (this.headerFixedFlag.row && this.headerFixedFlag.column && !this.isTransformView) {
+      if (this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
           this.transmit_data_to_vis()
         }
@@ -1554,7 +1553,7 @@ export default {
       
       // add drag event
       if (!isRowHeader) {
-        const drag = d3.drag().filter(this.isTransformView)
+        const drag = d3.drag()
           .on('drag', function (d) {
             guideline.style("stroke-width", "2px")
               .attr("x1", self.markWidth+self.widthRangeList[self.headerRange.right+1])
@@ -1588,7 +1587,7 @@ export default {
         helper.datum({y:0, dy:0}).call(drag)
       }
       else {
-        const drag = d3.drag().filter(this.isTransformView)
+        const drag = d3.drag()
           .on('drag', function (d) {
             guideline.style("stroke-width", "2px")
               .attr("y1", self.markHeight+self.heightRangeList[self.headerRange.bottom+1])
@@ -1677,12 +1676,12 @@ export default {
         deep: true
 
       },
-      isTransformView: function() {
-        this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
-        this.selectedArea = {top:0, left:0, bottom:0, right:0}
-        this.selectedMark = {index:null, type:null}
-        this.selectByMark = {row:false, column:false}
-      }, 
+      // isTransformView: function() {
+      //   this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
+      //   this.selectedArea = {top:0, left:0, bottom:0, right:0}
+      //   this.selectedMark = {index:null, type:null}
+      //   this.selectByMark = {row:false, column:false}
+      // }, 
       
   },
   beforeMount: function() {
@@ -1751,6 +1750,7 @@ export default {
     }
     this.headerFixedFlag.row = true
     this.headerFixedFlag.column = true
+    this.isHeaderFixed = true
 
     this.colHeader = []
     get_column_header(this.headerIndex, this.colHeaderIndex, this.colHeader, this.headerRange, 
@@ -1769,6 +1769,8 @@ export default {
     this.clear_selected()
     this.$emit("changeHeaderFixed", true)
 
+    // this.selectedArea = {top:this.headerRange.bottom+1, left:this.headerRange.right+1, bottom:this.headerRange.bottom+1, right:this.headerRange.right+1}
+
     this.cal_range_list(this.columnWidthList, "width")
     this.cal_range_list(this.rowHeightList, "height")
     this.cal_range_list(this.markColumnWidthList, "mark width")
@@ -1782,6 +1784,7 @@ export default {
     console.log("this.widthRangeList", this.widthRangeList)
     console.log("this.heightRangeList", this.heightRangeList)
     console.log("this.dataValueList", this.dataValueList)
+    // this.transmit_data_to_vis()
   },
   computed: {
     ...mapState([
@@ -1789,6 +1792,7 @@ export default {
       ]),
     isMarkSelected() { 
       return (index, type) => { 
+        if (this.selectedArea == null)  return false
         if (type == "row") {
           if (index >= this.selectedArea.top && index <= this.selectedArea.bottom) {
             return true
@@ -1892,8 +1896,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
-@padding:1%;
-@transform-button-container-height: 3.5rem;
+@padding:0.7rem;
+@transform-button-container-height: 2.5rem;
+@transform-button-height: 2rem;
 .table-view {
   position: absolute;
   height: 100%;
@@ -1912,17 +1917,51 @@ export default {
   }
   .tranform-button-container {
     // margin-top: 5px;
-    // position:absolute;
+    height:@transform-button-container-height;
+    // margin-bottom: @padding;
+    position:absolute;
+    // text-align: center;
+    // background-color: white;
+    // border-bottom:1px solid #c8c6c4;
     // height:@transform-button-container-height;
-    margin-bottom: @padding;
-    text-align: center;
+    width:100%;
+    display: -webkit-flex;
+    display: flex;
+    flex-direction: row;
+    // padding-top: 4px;
+    padding-left: @padding;
+    // padding-right: 10px;
+    // padding-bottom: 4px;
+    background: white;
+    align-items: center;
+    border-bottom: 1px solid #c8c6c4;
+    .button {
+      font-size: 100%;
+      background-color: transparent;
+      color: #1580d1;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      margin-right:@padding;
+      height: @transform-button-height;
+    }
+    .button:hover {
+      background-color: #e4e9eeb6;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      margin-right:@padding;
+      height: @transform-button-height;
+    }
   }
   .table-view-svg-container {
     position: absolute;
     // height:100%;
-    left:0%;
+    left: @padding;
     right:0%;
-    top:7%;
+    top:@transform-button-container-height +  @padding;
     bottom:0%;
     overflow:auto;
     // margin-top:1%;
