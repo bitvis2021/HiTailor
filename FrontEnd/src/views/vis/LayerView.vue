@@ -20,6 +20,7 @@ export default {
   components: { MarkView, EncodingView },
   data() {
     return {
+      visData: this.vegaConfig.data,
       markJson: this.vegaConfig.mark,
       encodingJson: this.vegaConfig.encoding,
     };
@@ -27,18 +28,20 @@ export default {
   methods: {
     ApplyMark(data) {
       this.markJson = data;
-      this.$emit("apply-config", {
-        mark: this.markJson,
-        encoding: this.encodingJson,
-      });
+      this.EmitVegaConfig();
     },
     ApplyEncoding(data) {
       this.encodingJson = data;
+      this.EmitVegaConfig(); 
+    },
+    EmitVegaConfig()
+    {
       this.$emit("apply-config", {
+        data: this.visData,
         mark: this.markJson,
         encoding: this.encodingJson,
       });
-    },
+    }
   },
   computed: {},
   mounted() {

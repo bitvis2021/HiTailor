@@ -200,9 +200,9 @@ html {
   svg:not(:root) {
     overflow: visible;
   }
-  .vis-panel {
+  #vis-panel {
     position: absolute;
-    right: 0%;
+    right: 1%;
     width: @side-panel-width;
     top: @menu-height;
     bottom: 0%;

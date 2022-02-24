@@ -64,13 +64,13 @@ export default {
 </style>
 <style scoped lang="less">
 .panel-view {
-  position: absolute;
+  // position: absolute;
   left: 0%;
   width: 100%;
   top: 0%;
   height: 100%;
   #apply-button {
-    position: absolute;
+    // position: absolute;
     left: 0%;
     width: 100%;
     height: 8%;
@@ -81,14 +81,14 @@ export default {
     // border-bottom: solid #efefef 1px;
   }
   #panel {
-    position: absolute;
+    // position: absolute;
     padding: 0px 5px 0px 5px;
     border-radius: 10px;
     text-align: left;
     top: 5%;
-    max-height: 95%;
+    height: 60vh;
     overflow: scroll;
-
+    margin-top: 5px;
     &::-webkit-scrollbar {
       width: 5px;
       background: rgb(255, 255, 255);
@@ -101,7 +101,7 @@ export default {
     }
   }
   #add-layer {
-    position: absolute;
+    // position: absolute;
     right: 10%;
   }
 
