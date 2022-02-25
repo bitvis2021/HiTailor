@@ -11,7 +11,7 @@
       <el-menu-item class="labelIcon" id="title">
         {{ appName }}
       </el-menu-item>
-      <el-tooltip
+      <!-- <el-tooltip
         class="labelIcon"
         v-for="operation in operationArray"
         :key="operation"
@@ -24,21 +24,28 @@
         >
           {{ operation }}
         </el-menu-item>
-      </el-tooltip>
+      </el-tooltip> -->
+      <el-menu-item v-for="operation in operationArray" :key="operation"
+        @click="changeDialogVisible(operation)"
+      >
+        {{ operation }}
+      </el-menu-item>
     </el-menu>
+        
+    <!-- <div class="content-container">
+      <TableView :isHeaderFixed="isHeaderFixed" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
+    </div> -->
 
     <div class="content-container">
-      <TableView
-        :isHeaderFixed="isHeaderFixed"
-        :isTransformView="currView == 'Transformation'"
-        @changeHeaderFixed="change_is_header_fixed($event)"
-      ></TableView>
+      <TableView></TableView> 
     </div>
-    <div id="vis-panel" v-show="currView != 'Transformation'">
+
+    <div id="vis-panel">
       <VisView v-show="showPanel"></VisView>
       <div v-show="!showPanel">Select Data to Continue</div>
     </div>
 
+    <!-- 
     <div class="change-view-button-container" v-if="isHeaderFixed">
       <el-radio-group
         class="change-view-button"
@@ -49,6 +56,7 @@
         <el-radio-button label="Visualization"></el-radio-button>
       </el-radio-group>
     </div>
+    -->
 
     <el-dialog
       title="Dataset"
@@ -90,8 +98,8 @@ export default {
       datasetDialogKey: 0,
       loadingData: true,
 
-      isHeaderFixed: false,
-      currView: "Transformation",
+      // isHeaderFixed: false,
+      // currView: "Transformation",
     };
   },
   beforeMount: function () {
@@ -127,18 +135,18 @@ export default {
         this.datasetDialogVisible = true;
       }
     },
-    change_is_header_fixed(state) {
-      this.isHeaderFixed = state;
-    },
+    // change_is_header_fixed(state) {
+    //   this.isHeaderFixed = state;
+    // },
   },
 };
 </script>
 
 <style lang="less">
 @side-panel-width: 20%;
-@padding: 1%;
+@padding:0.7rem;
 @menu-height: 2.5rem;
-@change-view-button-container-height: 3.5rem;
+// @change-view-button-container-height: 3.5rem;
 html {
   font-size: 100%;
 }
@@ -168,25 +176,26 @@ html {
       }
     }
   }
-  .change-view-button-container {
-    position: absolute;
-    top: @menu-height;
-    left: 0%;
-    height: @change-view-button-container-height;
-    right: @side-panel-width;
-    .change-view-button {
-      margin-top: 10px;
-    }
-  }
+  // .change-view-button-container {
+  //   position: absolute;
+  //   top: @menu-height;
+  //   left: 0%;
+  //   height: @change-view-button-container-height;
+  //   right: @side-panel-width;
+  //   .change-view-button {
+  //     margin-top: 10px;
+  //   }
+  // }
   .labelIcon {
     font-size: 1rem;
   }
   .content-container {
     position: absolute;
-    top: @menu-height + @change-view-button-container-height;
-    left: @padding;
+    top: @menu-height;
+    left: 0;
     bottom: @padding;
-    right: @side-panel-width + @padding;
+    right: @side-panel-width;
+    margin-right:@padding;
   }
   svg:not(:root) {
     overflow: visible;
