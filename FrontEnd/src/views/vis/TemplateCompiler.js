@@ -1,6 +1,11 @@
 import { EncodingCompiler } from './SchemaCompiler'
 // Reconsitution temp2vega
 // Target: decouple vis 
+// select area (metadata/visData) -> templates -> template (vegaConfig) -> panel (tweaked config) -> vis
+// recommand (templatename_str,metadata/visData) -> template (vegaConfig) -> panel
+
+// vegaConfig -> tweakableConfig / invisibileConfig
+// tweakableConfig -> templateCompiler (+invisibleConfig) -> vega-lite JSON
 
 export let supportedTemplate = {
     NQ_Simple_Bar_Chart: "N-Q Simple Bar Chart",
@@ -111,6 +116,15 @@ export function GetTemplates(metaData_obj, visData_arr) {
 export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
     this.name = tempName_str;
     this.vegaConfig = vegaConfig_obj;
+    if (this.vegaConfig == undefined) {
+        this.vegaConfig = {
+            mark: "bar",
+            encoding: {
+                x: {},
+                y: {},
+            }
+        }
+    }
     this.img = previewPic_str;
     this.selections = selections_obj;
 }
@@ -151,10 +165,26 @@ Templates.prototype.GetTemplates = function () {
     }
     return ans;
 }
+
+// User visible config
 VegaTemplate.prototype.GetVegaConfig = function () {
     this.vegaConfig.encoding = EncodingCompiler.PreprocessEncoding(this.vegaConfig.encoding);
     return this.vegaConfig;
 }
+
+// Real vega-lite data
+VegaTemplate.prototype.GetVegaLite = function () {
+    this.vegaConfig.encoding = EncodingCompiler.PreprocessEncoding(this.vegaConfig.encoding);
+    return this.vegaConfig;
+}
+
+// Input tweaked config from panel, and then process it turing it into true vega-lite json.
+// Actually, after rewritting this function, it is a compiler.
+VegaTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
+    this.vegaConfig = vegaConfig_obj;
+    return this.vegaConfig;
+}
+
 VegaTemplate.prototype.GetSelections = function () {
     return this.selections;
 }

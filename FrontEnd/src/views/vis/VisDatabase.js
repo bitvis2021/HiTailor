@@ -14,7 +14,7 @@ VisDatabase.prototype.SelectHandler = function (id) {
         this.SelectCanvas(id);
 
         // todo: Bind vis data and id, then commit vegalite here
-        this.bus.$emit("select-canvas", this.database[id]);
+        this.bus.$emit("select-canvas", id);
     }
     else if (this.database[id].status == status.select) {
         this.CancelSelection(id);
@@ -200,33 +200,39 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaConfig, metaData, selections) {
+function visMetaData(id, x, y, height, width, vegaTemplate) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.height = height;
     this.width = width;
-    this.vegaConfig = vegaConfig;
+    this.vegaTemplate = vegaTemplate;
     this.status = status.clear;
-    this.metaData = metaData;
-    this.selections = selections;
 }
 
 
 
 VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
     // 之前在这里的时候赋值不成功
-    this.database[id].vegaConfig = vegaConfig;
+    this.database[id].vegaTemplate.CompileTweakedConfig(vegaConfig);
 }
 
-VisDatabase.prototype.GetVegaConfig = function (id) {
-    return this.database[id].vegaConfig;
+VisDatabase.prototype.GetVegaLite = function (id) {
+    return this.database[id].vegaTemplate.GetVegaLite();
+}
+
+VisDatabase.prototype.SetTemplate = function (id, template) {
+    return this.database[id].vegaTemplate = template;
+}
+
+VisDatabase.prototype.GetTemplate = function (id) {
+    return this.database[id].vegaTemplate;
 }
 
 // table id==table-view-svg
 // vis generator==gen-chart
 
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, vegaConfig_obj, metaData_obj, selections_obj) {
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
@@ -235,7 +241,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, ve
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, vegaConfig_obj, metaData_obj, selections_obj);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj);
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);
@@ -262,7 +268,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = this.GetVegaConfig(id);
+    let chartJson = this.GetVegaLite(id);
     chartJson.height = height - 0.3;
     chartJson.width = width - 0.3;
 
@@ -286,15 +292,22 @@ VisDatabase.prototype.RenderCanvas = function (id) {
 
         table.append(canvas);
 
-
         // get svg from #gen-chart
-        vegaEmbed("#gen-chart", chartJson, {
+        let tempSvgFragament_Id = "gen-" + id;
+
+        if (document.getElementById(tempSvgFragament_Id) == undefined) {
+            let svgFragment = document.createElement("div");
+            svgFragment.setAttribute("id", tempSvgFragament_Id);
+            document.getElementById("gen-chart").appendChild(svgFragment);
+        } // it never release
+
+        vegaEmbed("#" + tempSvgFragament_Id, chartJson, {
             renderer: "svg",
             actions: false,
         }).then(() => {
             // get vis picture
             let pic =
-                document.getElementById("gen-chart").childNodes[0].childNodes[0];
+                document.getElementById(tempSvgFragament_Id).childNodes[0].childNodes[0];
 
             // define offset
             pic.removeAttribute("transform");
@@ -320,11 +333,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
             hButton_box.addEventListener("click", () => this.MinimizeHandler(id));
             hButton_box.setAttribute("fill", '#6a9af1');
             canvas.append(hButton_box);
-
-
-            for (let index = document.getElementById("gen-chart").childNodes.length - 1; index >= 0; index--) {
-                document.getElementById("gen-chart").childNodes[index].remove();
-            }
         });
     }
 }
