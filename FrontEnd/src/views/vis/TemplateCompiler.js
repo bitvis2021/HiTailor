@@ -20,13 +20,22 @@ export let supportedTemplate = {
     NNQ_grouped_bar_chart: "N-N-Q grouped bar chart",
 }
 
-export function GetTemplate(templateName_str, metaData_obj, visData_arr, direction) {
+export function GetTemplate(templateName_str, metaData_obj, visData_str, direction) {
     let vegaConfig;
     let selections;
     let picture;
 
     let defaultVal = {};
     let selections_cell = selections_cell = EncodingCompiler.GetSelections(metaData_obj);
+
+    // let selections_obj, visData_obj
+
+    // vertical
+    let [visData_vertical, selections_vertical] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'vertical');
+
+    // horizon
+    let [visData_horizon, selections_horizon] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'horizon');
+
 
     let is_X = false;
     if (direction == undefined || direction == 'x' || direction == 'horizontal') {
@@ -39,7 +48,25 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
     switch (templateName_str) {
         case supportedTemplate.NQ_Simple_Bar_Chart:
-
+            selections = selections_cell;
+            picture = './templates/simple bar chart.png'
+            vegaConfig = {
+                mark: "bar",
+                data: { values: visData_str },
+                encoding: {
+                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    y: { field: "value", type: 'quantitative' }
+                }
+            }
+            if (!is_X) {
+                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                selections.xSelect.selections = [];
+                picture = './templates/simple bar chart y.png'
+            }
+            else {
+                selections.ySelect.selections = [];
+            }
             break;
         // - [A-N-Q bar chart](https://www.notion.so/A-N-Q-bar-chart-1746d78908fd46988ae9266d91f7e114)
         case supportedTemplate.ANQ_Bar_Chart:
@@ -47,7 +74,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             picture = './templates/bar chart.png'
             vegaConfig = {
                 mark: "bar",
-                data: { values: visData_arr },
+                data: { values: visData_str },
                 encoding: {
                     x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
                     y: { aggregate: "sum", field: "value" }
@@ -69,18 +96,18 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     }
 }
 
-export function GetTemplates(metaData_obj, visData_arr) {
+export function GetTemplates(metaData_obj, visData_str) {
     // two forms of visData
     let templates = new Templates;
 
     if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-        if (metaData_obj.x.range == 1) {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'x'))
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_arr, 'x'))
+        if (metaData_obj.y.range == 1) {
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'x'))
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_str, 'x'))
         }
         else {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_str, 'y'), 'vertical')
         }
     }
     if (metaData_obj.x.range >= 2 && metaData_obj.y.range >= 2) {
@@ -96,17 +123,17 @@ export function GetTemplates(metaData_obj, visData_arr) {
         ]
         for (let i = 0; i < aggregateChart.length; i++) {
             const chartName = aggregateChart[i];
-            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'x'))
-            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_str, 'x'))
+            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_str, 'y'), 'vertical')
         }
 
         // @@N-N-Q grouped bar chart
         if (GetHeaders(metaData_obj.x).length > 1) {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'x'));
+            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_str, 'x'));
         }
         if (GetHeaders(metaData_obj.y).length > 1) {
             // Y direction
-            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'y'), 'vertical');
+            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_str, 'y'), 'vertical');
         }
     }
 
@@ -129,6 +156,96 @@ export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previ
     this.selections = selections_obj;
 }
 
+// return [obj_visData, ECSelections]
+function GetObjSelections(visData_arr, metaData_obj, direction_str) {
+    let objs = {}
+    let is_vertical = true;
+    if (direction_str == 'horizon' || direction_str == 'x') {
+        is_vertical = false;
+    }
+    for (const key in visData_arr[0]) {
+        if (Object.hasOwnProperty.call(visData_arr[0], key)) {
+            objs[key] = {};
+        }
+    }
+
+    for (let i = 0; i < visData_arr.length; i++) {
+        const cell = visData_arr[i];
+        for (const key in cell) {
+            if (Object.hasOwnProperty.call(cell, key)) {
+                const rowName = cell[key];
+                if (objs[key][rowName] != undefined) {
+
+                    objs[key][rowName].push(cell['value']);
+                }
+                else {
+                    objs[key][rowName] = [];
+                    objs[key][rowName].push(cell['value']);
+                }
+            }
+        }
+    }
+    let selections = {};
+    let selections_name = [];
+    for (const key in objs) {
+        if (is_vertical && key.substring(0, 3) == 'row') {
+            for (const selection in objs[key]) {
+                if (Object.hasOwnProperty.call(objs[key], selection)) {
+                    const arr = objs[key][selection];
+                    if (arr.length != metaData_obj.y.range) {
+                        break;
+                    }
+                    selections[selection] = arr;
+                    selections_name.push(selection);
+                }
+            }
+        }
+        else if (!is_vertical && key.substring(0, 3) == 'col') {
+            for (const selection in objs[key]) {
+                if (Object.hasOwnProperty.call(objs[key], selection)) {
+                    const arr = objs[key][selection];
+                    if (arr.length != metaData_obj.x.range) {
+                        break;
+                    }
+                    selections[selection] = arr;
+                    selections_name.push(selection);
+                }
+            }
+        }
+    }
+
+    let obj_visData = []
+    if (is_vertical) {
+        for (let i = 0; i < metaData_obj.y.range; i++) {
+            let cell = {};
+            for (const key in selections) {
+                cell[key] = selections[key][i];
+            }
+            obj_visData.push(cell);
+        }
+    }
+    else {
+        for (let i = 0; i < metaData_obj.x.range; i++) {
+            let cell = {};
+            for (const key in selections) {
+                cell[key] = selections[key][i];
+            }
+            obj_visData.push(cell);
+        }
+    }
+
+    let ECSelections = {
+        xSelect: {
+            selections: selections_name,
+            bindings: null,
+        },
+        ySelect: {
+            selections: selections_name,
+            bindings: null,
+        }
+    }
+    return [obj_visData, ECSelections];
+}
 
 
 function Templates() {

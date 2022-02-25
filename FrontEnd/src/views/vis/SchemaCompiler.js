@@ -190,7 +190,7 @@ EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, pro
 EncodingCompiler.GetSelections = function (metaData_obj) {
     /*
         {
-            xSelections:{
+            xSelect:{
                 selections:[],
                 bindings:{key:[sort]}
             }

@@ -10,22 +10,23 @@ export function VisDatabase() {
 }
 
 VisDatabase.prototype.SelectHandler = function (id) {
-    if (this.database[id].status == status.clear) {
-        this.SelectCanvas(id);
+    if (this.database.hasOwnProperty(id)) {
+        if (this.database[id].status == status.clear) {
+            this.SelectCanvas(id);
 
-        // todo: Bind vis data and id, then commit vegalite here
-        this.bus.$emit("select-canvas", id);
-    }
-    else if (this.database[id].status == status.select) {
-        this.CancelSelection(id);
-        // this.bus.$emit("close-tweakPanel");
-    }
+            // todo: Bind vis data and id, then commit vegalite here
+            this.bus.$emit("select-canvas", id);
+        }
+        else if (this.database[id].status == status.select) {
+            this.CancelSelection(id);
+        }
 
-    // close other selection
-    for (const key in this.database) {
-        if (Object.hasOwnProperty.call(this.database, key)) {
-            if (key != id) {
-                this.CancelSelection(key);
+        // close other selection
+        for (const key in this.database) {
+            if (Object.hasOwnProperty.call(this.database, key)) {
+                if (key != id) {
+                    this.CancelSelection(key);
+                }
             }
         }
     }
