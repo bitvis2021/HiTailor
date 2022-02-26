@@ -4,9 +4,9 @@ import vegaEmbed from "vega-embed";
 // 应该从这里获得selection
 
 
-export function VisDatabase() {
+export function VisDatabase(eventBus_obj) {
     this.database = {};
-    this.bus = {};
+    this.bus = eventBus_obj;
 }
 
 VisDatabase.prototype.SelectHandler = function (id) {
@@ -201,17 +201,19 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaTemplate) {
+function visMetaData(id, x, y, height, width, vegaTemplate, visData_arr, metaData_obj) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.height = height;
     this.width = width;
     this.vegaTemplate = vegaTemplate;
+    this.visData = visData_arr
+    this.metaData = metaData_obj
     this.status = status.clear;
 }
 
-
+// restore context
 
 VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
     // 之前在这里的时候赋值不成功
@@ -233,7 +235,7 @@ VisDatabase.prototype.GetTemplate = function (id) {
 // table id==table-view-svg
 // vis generator==gen-chart
 
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj) {
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj, visData_arr, metaData_obj) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
@@ -242,7 +244,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_arr, metaData_obj);
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);

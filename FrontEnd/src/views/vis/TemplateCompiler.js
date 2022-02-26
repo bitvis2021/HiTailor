@@ -21,7 +21,7 @@ export let supportedTemplate = {
     Q2_Horizon_Graph: "Horizon Graph",
 }
 
-export function GetTemplate(templateName_str, metaData_obj, visData_str, direction) {
+export function GetTemplate(templateName_str, metaData_obj, visData_arr, direction) {
     let vegaConfig;
     let selections;
     let picture;
@@ -35,17 +35,14 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
     // let selections_obj, visData_obj
 
     // vertical
-    let [visData_vertical, selections_vertical] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'vertical');
+    let [visData_vertical, selections_vertical] = GetObjSelections(visData_arr, metaData_obj, 'vertical');
     let vVisdefualtValX = selections_vertical.xSelect.selections[0];
     let vVisdefualtValY = selections_vertical.xSelect.selections[1];
 
     // horizon
-    let [visData_horizon, selections_horizon] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'horizon');
+    let [visData_horizon, selections_horizon] = GetObjSelections(visData_arr, metaData_obj, 'horizon');
     let hVisdefualtValX = selections_horizon.xSelect.selections[0];
     let hVisdefualtValY = selections_horizon.xSelect.selections[1];
-
-
-    visData_str = JSON.parse(visData_str);
 
     let is_X = false;
     if (direction == undefined || direction == 'x' || direction == 'horizontal') {
@@ -62,7 +59,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
             picture = './templates/simple bar chart.png'
             vegaConfig = {
                 mark: "bar",
-                data: { values: visData_str },
+                data: { values: visData_arr },
                 encoding: {
                     x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
                     color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
@@ -83,7 +80,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
             selections = selections_cell;
             vegaConfig = {
                 mark: "bar",
-                data: { values: visData_str },
+                data: { values: visData_arr },
                 encoding: {
                     x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
                     y: { aggregate: "sum", field: "value" }
@@ -122,18 +119,18 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
     }
 }
 
-export function GetTemplates(metaData_obj, visData_str) {
+export function GetTemplates(metaData_obj, visData_arr) {
     // two forms of visData
     let templates = new Templates;
 
     if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
         if (metaData_obj.y.range == 1) {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'x'), 'horizon')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
         }
         else {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'y'), 'vertical')
-            // templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_str, 'x'))
-            // templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_str, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+            // templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_arr, 'x'))
+            // templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Line_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
         }
     }
     if (metaData_obj.x.range >= 2 && metaData_obj.y.range >= 2) {
@@ -150,20 +147,20 @@ export function GetTemplates(metaData_obj, visData_str) {
         ]
         for (let i = 0; i < aggregateChart.length; i++) {
             const chartName = aggregateChart[i];
-            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_str, 'x'))
-            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_str, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'x'))
+            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'y'), 'vertical')
         }
 
         // @@N-N-Q grouped bar chart
         if (GetHeaders(metaData_obj.x).length > 1) {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_str, 'x'));
+            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'x'));
         }
         if (GetHeaders(metaData_obj.y).length > 1) {
             // Y direction
-            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_str, 'y'), 'vertical');
+            templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'y'), 'vertical');
         }
 
-        templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_str, 'x'), 'horizon');
+        templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_arr, 'x'), 'horizon');
 
     }
 
@@ -187,7 +184,7 @@ export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previ
 }
 
 // return [obj_visData, ECSelections]
-function GetObjSelections(visData_arr, metaData_obj, direction_str) {
+function GetObjSelections(visData_arr, metaData_arr, direction_str) {
     let objs = {}
     let is_vertical = true;
 
@@ -223,7 +220,7 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
             for (const selection in objs[key]) {
                 if (Object.hasOwnProperty.call(objs[key], selection)) {
                     const arr = objs[key][selection];
-                    if (arr.length != metaData_obj.y.range) {
+                    if (arr.length != metaData_arr.y.range) {
                         break;
                     }
                     selections[selection] = arr;
@@ -235,7 +232,7 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
             for (const selection in objs[key]) {
                 if (Object.hasOwnProperty.call(objs[key], selection)) {
                     const arr = objs[key][selection];
-                    if (arr.length != metaData_obj.x.range) {
+                    if (arr.length != metaData_arr.x.range) {
                         break;
                     }
                     selections[selection] = arr;
@@ -248,10 +245,10 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
     let obj_visData = []
     if (is_vertical) {
         // select the biggest header
-        let header = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
+        let header = metaData_arr.y.headers[metaData_arr.y.headers.length - 1];
         selections_name.push(header.name);
 
-        for (let i = 0; i < metaData_obj.y.range; i++) {
+        for (let i = 0; i < metaData_arr.y.range; i++) {
             let cell = {};
             for (const key in selections) {
                 let processed_key = key.split('.').pop()
@@ -262,10 +259,10 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
         }
     }
     else {
-        let header = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
+        let header = metaData_arr.x.headers[metaData_arr.x.headers.length - 1];
         selections_name.push(header.name);
 
-        for (let i = 0; i < metaData_obj.x.range; i++) {
+        for (let i = 0; i < metaData_arr.x.range; i++) {
             let cell = {};
             for (const key in selections) {
                 let processed_key = key.split('.').pop()
@@ -358,12 +355,12 @@ function GetHeaders(channel_obj) {
     return ans
 }
 
-function HorizonGraphTemplate(visData_str, selections_obj, previewPic_str) {
+function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str) {
     let ySelect_str = selections_obj.xSelect.selections[0];
     let xSelect_str = selections_obj.xSelect.selections.find(element => element.substring(0, 3) == 'row');
     this.name = supportedTemplate.Q2_Horizon_Graph,
         this.vegaConfig = {
-            data: { values: visData_str },
+            data: { values: visData_arr },
             layer: [
                 {
                     mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
