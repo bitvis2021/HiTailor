@@ -36,14 +36,17 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
 
     // vertical
     let [visData_vertical, selections_vertical] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'vertical');
+    let vVisdefualtValX = selections_vertical.xSelect.selections[0];
+    let vVisdefualtValY = selections_vertical.xSelect.selections[selections_vertical.xSelect.selections.length - 1];
 
-    
     // horizon
     let [visData_horizon, selections_horizon] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'horizon');
     let hVisdefualtValX = selections_horizon.xSelect.selections[0];
     let hVisdefualtValY = selections_horizon.xSelect.selections[selections_horizon.xSelect.selections.length - 1];
-    visData_str=JSON.parse(visData_str);
-    
+
+
+    visData_str = JSON.parse(visData_str);
+
     let is_X = false;
     if (direction == undefined || direction == 'x' || direction == 'horizontal') {
         is_X = true;
@@ -95,8 +98,10 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
             }
             break;
         case supportedTemplate.Q2_Horizon_Graph:
-            picture = './templates/horizon graph.png'
-            return new HorizonGraphTemplate(visData_horizon, selections_horizon, picture);
+            if (is_X) {
+                return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png', is_X);
+            }
+
         case supportedTemplate.NQ_Simple_Line_Chart:
             selections = selections_horizon;
             picture = './templates/line chart.png';
@@ -123,7 +128,7 @@ export function GetTemplates(metaData_obj, visData_str) {
 
     if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
         if (metaData_obj.y.range == 1) {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'x'))
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'x'), 'horizon')
         }
         else {
             templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_str, 'y'), 'vertical')
@@ -158,8 +163,7 @@ export function GetTemplates(metaData_obj, visData_str) {
             templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_str, 'y'), 'vertical');
         }
 
-        templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_str, 'x'));
-        templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_str, 'y'), 'vertical');
+        templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_str, 'x'), 'horizon');
 
     }
 
@@ -186,6 +190,8 @@ export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previ
 function GetObjSelections(visData_arr, metaData_obj, direction_str) {
     let objs = {}
     let is_vertical = true;
+
+    // direction means the direction of each strip
     if (direction_str == 'horizon' || direction_str == 'x') {
         is_vertical = false;
     }
@@ -241,21 +247,30 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
 
     let obj_visData = []
     if (is_vertical) {
+        // select the biggest header
+        let header = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
+        selections_name.push(header.name);
+
         for (let i = 0; i < metaData_obj.y.range; i++) {
             let cell = {};
             for (const key in selections) {
-                let processed_key=key.split('.').pop()
+                let processed_key = key.split('.').pop()
                 cell[processed_key] = selections[key][i];
+                cell[header.name] = header.sort[i];
             }
             obj_visData.push(cell);
         }
     }
     else {
+        let header = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
+        selections_name.push(header.name);
+
         for (let i = 0; i < metaData_obj.x.range; i++) {
             let cell = {};
             for (const key in selections) {
-                let processed_key=key.split('.').pop()
+                let processed_key = key.split('.').pop()
                 cell[processed_key] = selections[key][i];
+                cell[header.name] = header.sort[i];
             }
             obj_visData.push(cell);
         }
@@ -344,8 +359,8 @@ function GetHeaders(channel_obj) {
 }
 
 function HorizonGraphTemplate(visData_str, selections_obj, previewPic_str) {
-    let xSelect_str = selections_obj.xSelect.selections[0];
-    let ySelect_str = selections_obj.xSelect.selections[1];
+    let ySelect_str = selections_obj.xSelect.selections[0];
+    let xSelect_str = selections_obj.xSelect.selections.find(element => element.substring(0, 3) == 'row');
     this.name = supportedTemplate.Q2_Horizon_Graph,
         this.vegaConfig = {
             data: { values: visData_str },
@@ -353,16 +368,16 @@ function HorizonGraphTemplate(visData_str, selections_obj, previewPic_str) {
                 {
                     mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
                     encoding: {
-                        x: { field: xSelect_str, type: "quantitative", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
+                        x: { field: xSelect_str, type: "nominal", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
                         y: { field: ySelect_str, type: "quantitative", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
                     }
                 },
                 {
-                    transform: [{ calculate: "datum['" + ySelect_str + "'] - 50", as: "ny" }],
+                    transform: [{ calculate: "datum['" + ySelect_str + "'] - 100", as: "ny" }],
                     mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
                     encoding: {
-                        x: { field: xSelect_str, type: "quantitative", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
-                        y: { field: "ny", type: "quantitative", "scale": { "domain": [0, 50] }, axis: { labels: false, ticks: false, title: null } },
+                        x: { field: xSelect_str, type: "nominal", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
+                        y: { field: "ny", type: "quantitative", axis: { labels: false, ticks: false, title: null } },
                     }
                 }
             ]
@@ -385,10 +400,19 @@ HorizonGraphTemplate.prototype.GetVegaLite = function (heigh, width) {
 // Actually, after rewritting this function, it is a compiler.
 HorizonGraphTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
     this.vegaConfig.layer[0] = vegaConfig_obj;
+    this.vegaConfig.layer[0].mark.clip = true;
+
+    if (this.vegaConfig.layer[0].encoding.y.scale) {
+        this.vegaConfig.layer[0].encoding.y.scale.domain = [0, 100];
+    }
+    else {
+        this.vegaConfig.layer[0].encoding.y.scale = { domain: [0, 100] };
+    }
+
     this.vegaConfig.layer[1] = JSON.parse(JSON.stringify(vegaConfig_obj));
     let ySelect = this.vegaConfig.layer[0].encoding.y.field;
-    this.vegaConfig.layer[1].transform = [{ calculate: "datum['" + ySelect + "'] - 50", as: "ny" }]
-    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative", "scale": { "domain": [0, 50] }, axis: { labels: false, ticks: false, title: null } };
+    this.vegaConfig.layer[1].transform = [{ calculate: "datum['" + ySelect + "'] - 100", as: "ny" }]
+    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative", axis: { labels: false, ticks: false, title: null } };
 
     return this.vegaConfig;
 }

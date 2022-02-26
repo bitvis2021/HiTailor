@@ -301,7 +301,7 @@ export let markConf = {
     },
     area: function () {
         this.properties = {};
-        this.properties.opacity = new confTemplate.opacity(30);
+        this.properties.opacity = new confTemplate.opacity(0.6);
         this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], "monotone");
         this.properties.color = new confTemplate.color();
     },

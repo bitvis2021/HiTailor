@@ -79,7 +79,7 @@ export default {
 
       // 1. selectTemplate -> currentTemplate.GetVegaConfig -> PanelView (tweakedData) -> VisView -> currentTemplate.CompileTweakedConfig (vega-lite) -> visualize -> visDB
       // 2. recommand -> templateName+recommandArea(meataData+visData) -> template -> visualize -> visDB
-      currentTemplate: new VegaTemplate,
+      currentTemplate: new VegaTemplate(),
       templates: [],
 
       VisDB: new VisDatabase(),
@@ -186,9 +186,13 @@ export default {
 
     // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
-      let data = JSON.parse(JSON.stringify(this.currentTemplate.GetVegaLite()));
-      data.height = document.getElementById("vis-panel").clientHeight * 0.25;
-      data.width = document.body.clientWidth * 0.2;
+      let height = document.getElementById("vis-panel").clientHeight * 0.25;
+      let width = document.body.clientWidth * 0.2;
+      let data = JSON.parse(
+        JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
+      );
+      data.height = height;
+      data.width = width;
       console.log("preview data", data);
       vegaEmbed("#chart", data, {
         renderer: "svg",
