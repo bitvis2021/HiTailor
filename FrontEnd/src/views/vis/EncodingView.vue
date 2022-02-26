@@ -8,6 +8,7 @@
       >
         <!-- delete encoding -->
         <div class="close-box">
+          {{ eName }}
           <el-button
             size="mini"
             type="text"
@@ -16,7 +17,6 @@
             ><i class="el-icon-close"></i
           ></el-button>
         </div>
-        {{ eName }}
         <el-row
           type="flex"
           class="row-bg property-box"
@@ -217,15 +217,7 @@ export default {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   color: #606266;
 }
-.fieldGroupWrap_title {
-  margin: 0px !important;
-  line-height: 15px !important;
-  font-family: "Avenir", Helvetica, Arial, sans-serif !important;
-  font-size: 14px !important;
-}
-.genFormLabel {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-}
+
 .encoding-card {
   border-style: none !important;
   padding: 10px 10px 0px 10px;
@@ -240,8 +232,12 @@ export default {
   }
 }
 .close-box {
-  text-align: right;
-  margin-bottom: -15px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: -10px;
+  margin-top: 5px;
+  margin-left: 10px;
 
   .close-button {
     visibility: hidden;
