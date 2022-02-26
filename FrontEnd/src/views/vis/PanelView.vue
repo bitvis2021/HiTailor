@@ -106,9 +106,11 @@ export default {
   #layer {
     height: 100px;
     overflow: scroll;
-    height: 60vh;
+    height: 65vh;
+    padding: 5px;
     &::-webkit-scrollbar {
       width: 5px;
+      height: 5px;
       background: rgb(255, 255, 255);
       border-radius: 5px;
       // height: 8px;
@@ -117,10 +119,6 @@ export default {
       background-color: #dcdfe6;
       border-radius: 5px;
     }
-  }
-  #add-layer {
-    // position: absolute;
-    right: 10%;
   }
 
   .el-dropdown-link {

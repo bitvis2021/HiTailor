@@ -202,7 +202,7 @@ html {
   }
   #vis-panel {
     position: absolute;
-    right: 1%;
+    right: 0%;
     width: @side-panel-width;
     top: @menu-height;
     bottom: 0%;

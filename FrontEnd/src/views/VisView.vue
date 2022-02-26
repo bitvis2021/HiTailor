@@ -28,7 +28,7 @@
             Unit Panel
           </div>
 
-          <div v-else>
+          <div v-if="showPanelView">
             <div id="chart"></div>
             <panel-view
               :selections="this.ECSelections"
@@ -98,6 +98,7 @@ export default {
     OpenUnitView() {
       this.showUnitPanel = true;
       this.showTemplates = false;
+      this.showPanelView = false;
     },
 
     // Input data and metadata to VisTemplates. Then get the templates. Open the template view.
@@ -107,6 +108,7 @@ export default {
 
       this.showTemplates = true;
       this.showUnitPanel = false;
+      this.showPanelView = false;
 
       // which means restart the selected template
       this.figID = "";
@@ -122,6 +124,7 @@ export default {
     OpenPanelView() {
       this.showTemplates = false;
       this.showUnitPanel = false;
+      this.showPanelView = true;
       this.$bus.$emit("preview-config");
     },
 
@@ -165,18 +168,20 @@ export default {
 
     // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
-      let height = document.getElementById("vis-panel").clientHeight * 0.25;
-      let width = document.body.clientWidth * 0.2;
-      let data = JSON.parse(
-        JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
-      );
-      data.height = height;
-      data.width = width;
-      console.log("preview data", data);
-      vegaEmbed("#chart", data, {
-        renderer: "svg",
-        actions: false,
-      });
+      if (this.showPanelView) {
+        let height = document.getElementById("vis-panel").clientHeight * 0.25;
+        let width = document.body.clientWidth * 0.19;
+        let data = JSON.parse(
+          JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
+        );
+        data.height = height;
+        data.width = width;
+        console.log("preview data", data);
+        vegaEmbed("#chart", data, {
+          renderer: "svg",
+          actions: false,
+        });
+      }
     });
 
     // User select data
@@ -216,7 +221,25 @@ export default {
       console.log("restore data", this.visData, this.metaData);
       this.OpenPanelView();
     });
+
+    // resize function
+    let bus = this.$bus;
+    let resizeTimeout;
+    window.addEventListener(
+      "resize",
+      () => {
+        if (!resizeTimeout) {
+          resizeTimeout = setTimeout(function () {
+            resizeTimeout = null;
+            // The actualResizeHandler will execute at a rate of 15fps
+            bus.$emit("preview-config");
+          }, 66);
+        }
+      },
+      false
+    );
   },
+
   beforeDestroy() {
     this.$bus.$off("preview-config");
     this.$bus.$off("visualize-selectedData");
@@ -240,6 +263,7 @@ export default {
     left: 0%;
     right: 0%;
     background-color: white;
+    overflow: hidden;
     .el-form-item {
       margin-top: 2px !important;
       margin-bottom: 2px !important;
@@ -252,6 +276,8 @@ export default {
     right: 0%;
   }
 }
+
+
 .role-axis {
   display: none;
 }
