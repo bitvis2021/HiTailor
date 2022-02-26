@@ -1387,14 +1387,14 @@ export default {
         for (var k=0; k<ch.length; k++) {
           // column
           data[i][ch[k]] = prefix + data[i][ch[k]]
-          prefix = (data[i][ch[k]] + ".")
+          prefix = (data[i][ch[k]] + " > ")
         }
         
         prefix = ""
         for (var k=0; k<rh.length; k++) {
           // row
           data[i][rh[k]] = prefix + data[i][rh[k]]
-          prefix = (data[i][rh[k]] + ".")
+          prefix = (data[i][rh[k]] + " > ")
         }          
       }
       return data
@@ -1458,7 +1458,7 @@ export default {
               var nname = ""
               for (var q=0; q<totalPre.length; q++) {
                 if (j <= totalPre[q].end && j >= totalPre[q].start) {
-                  nname += xobj.headers[i-1].sort[q] + "."
+                  nname += xobj.headers[i-1].sort[q] + " > "
                   break
                 }
               }
@@ -1496,7 +1496,7 @@ export default {
               var nname = ""
               for (var q=0; q<totalPre.length; q++) {
                 if (j <= totalPre[q].end && j >= totalPre[q].start) {
-                  nname += yobj.headers[i-1].sort[q] + "."
+                  nname += yobj.headers[i-1].sort[q] + " > "
                   break
                 }
               }

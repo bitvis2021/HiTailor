@@ -130,7 +130,10 @@ export default {
   name: "EncodingView",
   props: ["config", "selections"],
   components: {},
-  created() {},
+  created() {
+    console.log("encoding get", this.config);
+    console.log("encoding get", this.selections);
+  },
   mounted() {
     // this.EC = new EncodingCompiler(this.config, this.selections);
     this.schema = this.EC.GetSchema();

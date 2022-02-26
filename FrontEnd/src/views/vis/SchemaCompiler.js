@@ -10,14 +10,16 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         xField: {
             name: 'field',
             type: 'select',
-            selections: this.ECSelections.xSelect.selections.concat(['value']),
+            // selections: this.ECSelections.xSelect.selections.concat(['value']),
+            selections: this.ECSelections.xSelect.selections,
             value: ''
         },
         yField: {
             name: 'field',
             type: 'select',
             value: '',
-            selections: this.ECSelections.ySelect.selections.concat(['value'])
+            selections: this.ECSelections.ySelect.selections
+            // selections: this.ECSelections.ySelect.selections.concat(['value'])
         },
         allField: {
             name: 'field',
@@ -297,11 +299,12 @@ export let markConf = {
         this.properties.innerRadius = new confTemplate.width('inner radius', 1, 100, df_innerRadius);
         this.properties.outerRadius = new confTemplate.width('outer radius', 1, 100, df_outerRadius);
     },
-    // area: function (df_color, df_opacity) {
-    //     this.properties = {};
-    //     this.properties.opacity = new confTemplate.opacity(df_opacity);
-    //     this.properties.color = new confTemplate.color(df_color);
-    // },
+    area: function () {
+        this.properties = {};
+        this.properties.opacity = new confTemplate.opacity(30);
+        this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], "monotone");
+        this.properties.color = new confTemplate.color();
+    },
     bar: function (direction_str) {
         // this.properties = {};
         // if (direction_str == 'vertical') {
