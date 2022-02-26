@@ -27,7 +27,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
     let picture;
 
     let defaultVal = {};
-    let selections_cell = selections_cell = EncodingCompiler.GetSelections(metaData_obj);
+    let selections_cell = selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
     selections_cell.ySelect.selections.push('value');
     selections_cell.xSelect.selections.push('value');
 
@@ -37,12 +37,12 @@ export function GetTemplate(templateName_str, metaData_obj, visData_str, directi
     // vertical
     let [visData_vertical, selections_vertical] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'vertical');
     let vVisdefualtValX = selections_vertical.xSelect.selections[0];
-    let vVisdefualtValY = selections_vertical.xSelect.selections[selections_vertical.xSelect.selections.length - 1];
+    let vVisdefualtValY = selections_vertical.xSelect.selections[1];
 
     // horizon
     let [visData_horizon, selections_horizon] = GetObjSelections(JSON.parse(visData_str), metaData_obj, 'horizon');
     let hVisdefualtValX = selections_horizon.xSelect.selections[0];
-    let hVisdefualtValY = selections_horizon.xSelect.selections[selections_horizon.xSelect.selections.length - 1];
+    let hVisdefualtValY = selections_horizon.xSelect.selections[1];
 
 
     visData_str = JSON.parse(visData_str);

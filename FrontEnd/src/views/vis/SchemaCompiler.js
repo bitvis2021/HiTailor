@@ -189,7 +189,19 @@ EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, pro
         }
     }
 }
-EncodingCompiler.GetSelections = function (metaData_obj) {
+
+export function FieldSelection() {
+    this.xSelect = {
+        selections: [],
+        bindings: {}
+    };
+    this.ySelect = {
+        selections: [],
+        bindings: {}
+    }
+}
+
+EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
     /*
         {
             xSelect:{
@@ -199,16 +211,7 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
         }
     */
 
-    let ans = {
-        xSelect: {
-            selections: [],
-            bindings: {}
-        },
-        ySelect: {
-            selections: [],
-            bindings: {}
-        }
-    }
+    let ans = new FieldSelection();
 
     metaData_obj.x.headers.forEach(element => {
         ans.xSelect.selections.push(element.name);

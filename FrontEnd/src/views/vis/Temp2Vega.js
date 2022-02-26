@@ -72,7 +72,7 @@ export function GetTemplates(regionMetaData, data) {
 
         let vegaEncodingX = {}
         let vegaEncodingY = {}
-        let selections = EncodingCompiler.GetSelections(regionMetaData);
+        let selections = EncodingCompiler.GetSelectionsFromMetaData(regionMetaData);
         let defaultX = regionMetaData.x.headers[regionMetaData.x.headers.length - 1];
         let defaultY = regionMetaData.y.headers[regionMetaData.y.headers.length - 1];
 
