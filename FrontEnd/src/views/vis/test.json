@@ -1,0 +1,138 @@
+{
+    "data": {
+        "values": [
+            {
+                "HUMANITIES > Humanities": "34",
+                "row 2": "FALL 2001 > FTE",
+                "HUMANITIES > Literature": "14",
+                "HUMANITIES > Philosophy": "12",
+                "PROFESS STUDIES >  ": "140",
+                "PROFESS STUDIES > Business Admin": "74"
+            },
+            {
+                "HUMANITIES > Humanities": "336",
+                "row 2": "FALL 2002 > SSH",
+                "HUMANITIES > Literature": "155",
+                "HUMANITIES > Philosophy": "87",
+                "PROFESS STUDIES >  ": "2128",
+                "PROFESS STUDIES > Business Admin": "1015"
+            },
+            {
+                "HUMANITIES > Humanities": "-33.3",
+                "row 2": "FALL 2002 > %Chg",
+                "HUMANITIES > Literature": "-24.8",
+                "HUMANITIES > Philosophy": "-50.3",
+                "PROFESS STUDIES >  ": "0.7",
+                "PROFESS STUDIES > Business Admin": "-9.1"
+            },
+            {
+                "HUMANITIES > Humanities": "22",
+                "row 2": "FALL 2002 > FTE",
+                "HUMANITIES > Literature": "10",
+                "HUMANITIES > Philosophy": "6",
+                "PROFESS STUDIES >  ": "142",
+                "PROFESS STUDIES > Business Admin": "68"
+            },
+            {
+                "HUMANITIES > Humanities": "408",
+                "row 2": "FALL 2003 > SSH",
+                "HUMANITIES > Literature": "86",
+                "HUMANITIES > Philosophy": "276",
+                "PROFESS STUDIES >  ": "2671",
+                "PROFESS STUDIES > Business Admin": "1374"
+            },
+            {
+                "HUMANITIES > Humanities": "21.4",
+                "row 2": "FALL 2003 > %Chg",
+                "HUMANITIES > Literature": "-44.5",
+                "HUMANITIES > Philosophy": "217.2",
+                "PROFESS STUDIES >  ": "25.5",
+                "PROFESS STUDIES > Business Admin": "35.4"
+            }
+        ]
+    },
+    "layer": [
+        {
+            "mark": {
+                "type": "area",
+                "opacity": 0.6,
+                "interpolate": "monotone",
+                "clip": true
+            },
+            "encoding": {
+                "x": {
+                    "field": "row 2",
+                    "type": "nominal",
+                    "scale": {
+                        "zero": false,
+                        "nice": false
+                    },
+                    "axis": {
+                        "labels": false,
+                        "ticks": false,
+                        "title": null
+                    }
+                },
+                "y": {
+                    "field": "HUMANITIES > Humanities",
+                    "type": "nominal",
+                    "scale": {
+                        "zero": false,
+                        "nice": false,
+                        "domain": [
+                            0,
+                            100
+                        ]
+                    },
+                    "axis": {
+                        "labels": false,
+                        "ticks": false,
+                        "title": null
+                    }
+                },
+                "tooltip": []
+            }
+        },
+        {
+            "mark": {
+                "type": "area",
+                "opacity": 0.6,
+                "interpolate": "monotone",
+                "clip": true
+            },
+            "encoding": {
+                "x": {
+                    "field": "row 2",
+                    "type": "nominal",
+                    "scale": {
+                        "zero": false,
+                        "nice": false
+                    },
+                    "axis": {
+                        "labels": false,
+                        "ticks": false,
+                        "title": null
+                    }
+                },
+                "y": {
+                    "field": "ny",
+                    "type": "quantitative",
+                    "axis": {
+                        "labels": false,
+                        "ticks": false,
+                        "title": null
+                    }
+                },
+                "tooltip": []
+            },
+            "transform": [
+                {
+                    "calculate": "datum['HUMANITIES > Humanities'] - 100",
+                    "as": "ny"
+                }
+            ]
+        }
+    ],
+    "height": 240.25,
+    "width": 243.58
+}
