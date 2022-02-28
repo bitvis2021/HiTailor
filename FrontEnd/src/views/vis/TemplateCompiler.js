@@ -22,12 +22,13 @@ export let supportedTemplate = {
 
 // factory model
 export function GetTemplate(templateName_str, metaData_obj, visData_arr, direction) {
-    let vegaConfig;
-    let picture;
 
     let defaultVal;
     let defaultValX;
     let defaultValY;
+
+    let picture = '';
+    let vegaConfig = {};
 
     let selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
 
@@ -241,6 +242,67 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 picture = './templates/multi line chart.png';
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
+
+        case supportedTemplate.NNQ_grouped_bar_chart:
+            // TODO: there is still some bug after tweaking the panel - need to rebind the sort
+            // resort the data
+            visData_arr.forEach(element => {
+                for (const key in element) {
+                    if (Object.hasOwnProperty.call(element, key)) {
+                        const value = element[key];
+                        // split string
+                        let find = value.indexOf(" > ")
+                        if (find > -1) {
+                            let newValue = value.substring(find);
+                            element[key] = newValue;
+                        }
+                    }
+                }
+            });
+            vegaConfig = {
+                data: { values: visData_arr },
+                mark: "bar",
+                encoding: {
+                }
+            }
+            if (is_X) {
+                let defaultX2 = metaData_obj.x.headers[0]
+                vegaConfig.encoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
+                vegaConfig.encoding.y = { aggregate: "sum", field: "value" };
+                vegaConfig.encoding.xOffset = { field: defaultValX.name, type: "nominal" };
+                vegaConfig.encoding.color = { field: defaultValX.name, type: "nominal" };
+                return new VegaTemplate(templateName_str, vegaConfig, selections_cell, './templates/group bar chart.png');
+            }
+            else {
+                let defaultY2 = metaData_obj.y.headers[0]
+                vegaConfig.encoding.x = { aggregate: "sum", field: "value" };
+                vegaConfig.encoding.y = { field: defaultValY.name, type: "nominal", sort: defaultY2.sort };
+                vegaConfig.encoding.yOffset = { field: defaultValY.name, type: "nominal" };
+                vegaConfig.encoding.color = { field: defaultValY.name, type: "nominal" };
+                return new VegaTemplate(templateName_str, vegaConfig, selections_cell, './templates/group bar chart y.png');
+            }
+
+        case supportedTemplate.NQ_Ranged_Dot_Plot:
+        // TODO: add point support
+            selections_cell.AddYSelection("value");
+            selections_cell.AddXSelection("value");
+            vegaConfig = {
+                data: { values: visData_arr },
+                mark: "line",
+                encoding: {
+                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    y: { field: "value", type: "quantitative" },
+                }
+            }
+            if (is_X) {
+                picture = './templates/ranged dot plot y.png';
+                vegaConfig.encoding.detail = { field: defaultValX.name, type: "nominal", sort: defaultValX.sort };
+            } else {
+                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                vegaConfig.encoding.detail = { field: defaultValY.name, type: "nominal", sort: defaultValY.sort };
+                picture = './templates/ranged dot plot.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
 
         case supportedTemplate.Q2_Horizon_Graph:
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
