@@ -25,13 +25,13 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
             name: 'field',
             type: 'group select',
             value: '',
-            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections, value: ['value'] },
+            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
         },
         aggregate: {
             name: 'aggregate',
             type: 'select',
             value: '',
-            selections: ['count', 'sum', 'mean', 'stdev', 'median', 'min', 'max'],
+            selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max'],
         }
     }
     this.encodings = {
@@ -128,7 +128,7 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
 
         }
     }
-    return EncodingCompiler.PreprocessEncoding(this.vegaEncoding);
+    return this.vegaEncoding;
 }
 
 EncodingCompiler.prototype.GetNewEncoding = function (encodingName) {
@@ -201,15 +201,36 @@ export function FieldSelection() {
     }
 }
 
+FieldSelection.prototype.SetXSelections = function (selection_arr, bindings_obj) {
+    this.xSelect.selections = selection_arr;
+    if (bindings_obj == undefined) {
+        this.xSelect.bindings = {};
+    }
+    else {
+        this.xSelect.bindings = bindings_obj;
+    }
+}
+
+FieldSelection.prototype.SetYSelections = function (selection_arr, bindings_obj) {
+    this.ySelect.selections = selection_arr;
+    if (bindings_obj == undefined) {
+        this.ySelect.bindings = {};
+    }
+    else {
+        this.ySelect.bindings = bindings_obj;
+    }
+}
+
+FieldSelection.prototype.GetXSelections = function () {
+    return this.xSelect.selections;
+}
+
+
+FieldSelection.prototype.GetYSelections = function () {
+    return this.ySelect.selections;
+}
+
 EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
-    /*
-        {
-            xSelect:{
-                selections:[],
-                bindings:{key:[sort]}
-            }
-        }
-    */
 
     let ans = new FieldSelection();
 
