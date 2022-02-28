@@ -225,6 +225,23 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             }
             return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
 
+        case supportedTemplate.ANQN_Multi_Series_Line_Chart:
+            if (is_X) {
+                selections_cell.AddYSelection("value");
+                selections_cell.AddXSelection("value");
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "line",
+                    encoding: {
+                        x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                        y: { field: "value", type: "quantitative" },
+                        color: { field: defaultValY.name, type: "nominal", sort: defaultValY.sort }
+                    }
+                }
+                picture = './templates/multi line chart.png';
+                return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+            }
+
         case supportedTemplate.Q2_Horizon_Graph:
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
 

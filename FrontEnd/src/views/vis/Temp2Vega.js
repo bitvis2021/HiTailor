@@ -137,12 +137,6 @@ export function GetTemplates(regionMetaData, data) {
             delete vegaEncodingX['detail'];
             delete vegaEncodingY['detail'];
 
-            // @N-Q-N Multi Series Line Chart
-            vegaEncodingX.y = { field: "value", type: "quantitative" }
-            templates.AddTemplate(new VegaTemplate("A-N-Q-N Multi Series Line Chart", 'line', vegaEncodingX, data, selections, './templates/multi line chart.png'));
-            vegaEncodingY.x = { field: "value", type: "quantitative" }
-            templates.AddTemplate(new VegaTemplate("A-N-Q-N Multi Series Line Chart", 'line', vegaEncodingY, data, selections, './templates/multi line chart y.png'), 'vertical');
-
             // @@N-N-Q grouped bar chart 
             if (GetHeaders(regionMetaData.x).length > 1) {
                 let defaultX2 = regionMetaData.x.headers[regionMetaData.x.headers.length - 2]
