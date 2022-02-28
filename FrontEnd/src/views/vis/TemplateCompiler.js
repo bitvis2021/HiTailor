@@ -23,14 +23,10 @@ export let supportedTemplate = {
 // factory model
 export function GetTemplate(templateName_str, metaData_obj, visData_arr, direction) {
     let vegaConfig;
-    let selections;
     let picture;
 
     let defaultVal = {};
-    let selections_cell = selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
-
-
-    // let selections_obj, visData_obj
+    let selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
 
     // vertical
     let [visData_vertical, selections_vertical] = GetObjSelections(visData_arr, metaData_obj, 'vertical');
@@ -61,8 +57,8 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
             let line_template;
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-                selections = selections_cell;
-                selections.SetYSelections(['value']);
+                selections_cell = selections_cell;
+                selections_cell.SetYSelections(['value']);
                 picture = './templates/line chart.png'
                 vegaConfig = {
                     mark: "line",
@@ -72,51 +68,46 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                         y: { field: "value", type: 'quantitative' },
                     }
                 }
-                line_template = new VegaTemplate(templateName_str, vegaConfig, selections, picture);
+                line_template = new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             else {
                 if (is_X) {
-                    [visData_arr, selections] = GetObjSelections(visData_arr, metaData_obj, 'x');
-                    selections.SetXSelections(selections.GetYSelections());
+                    [visData_arr, selections_cell] = GetObjSelections(visData_arr, metaData_obj, 'x');
+                    selections_cell.SetXSelections(selections_cell.GetYSelections());
                     picture = './templates/line chart.png'
                     vegaConfig = {
                         mark: "line",
                         data: { values: visData_arr },
                         encoding: {
-                            x: { field: selections.GetXSelections().at(0), type: "quantitative" },
-                            y: { field: selections.GetXSelections().at(1), type: 'quantitative' },
+                            x: { field: selections_cell.GetXSelections().at(0), type: "quantitative" },
+                            y: { field: selections_cell.GetXSelections().at(1), type: 'quantitative' },
                         }
                     }
                 }
                 else {
-                    [visData_arr, selections] = GetObjSelections(visData_arr, metaData_obj, 'y');
-                    selections.SetYSelections(selections.GetXSelections());
+                    [visData_arr, selections_cell] = GetObjSelections(visData_arr, metaData_obj, 'y');
+                    selections_cell.SetYSelections(selections_cell.GetXSelections());
                     picture = './templates/line chart.png'
                     vegaConfig = {
                         mark: "line",
                         data: { values: visData_arr },
                         encoding: {
-                            x: { field: selections.GetYSelections().at(0), type: "quantitative" },
-                            y: { field: selections.GetXSelections().at(1), type: 'quantitative' },
+                            x: { field: selections_cell.GetYSelections().at(0), type: "quantitative" },
+                            y: { field: selections_cell.GetXSelections().at(1), type: 'quantitative' },
                         }
                     }
                 }
 
-                line_template = new VegaTemplate(templateName_str, vegaConfig, selections, picture);
-                line_template.GetVegaLite = function () {
-                    this.vegaConfig.encoding.x.type = "quantitative";
-                    this.vegaConfig.encoding.y.type = "quantitative";
-                    return this.vegaConfig;
-                }
+                line_template = new Q2Template(templateName_str, vegaConfig, selections_cell, picture);
+
             }
             return line_template;
 
         case supportedTemplate.ANQorNQ_Bar_Chart:
             console.log("bar char range", metaData_obj.x.range);
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-                selections = selections_cell;
-                selections.AddYSelection("value");
-                selections.AddXSelection("value");
+                selections_cell.AddYSelection("value");
+                selections_cell.AddXSelection("value");
                 picture = './templates/simple bar chart.png'
                 vegaConfig = {
                     mark: "bar",
@@ -129,18 +120,17 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 }
                 if (!is_X) {
                     [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                    selections.xSelect.selections = [];
+                    selections_cell.xSelect.selections = [];
                     picture = './templates/simple bar chart y.png'
                 }
                 else {
-                    selections.ySelect.selections = [];
+                    selections_cell.ySelect.selections = [];
                 }
-                return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
+                return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             else {
-                selections = selections_cell;
-                selections.AddXSelection("value");
-                selections.AddYSelection("value");
+                selections_cell.AddXSelection("value");
+                selections_cell.AddYSelection("value");
                 vegaConfig = {
                     mark: "bar",
                     data: { values: visData_arr },
@@ -156,10 +146,39 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                     [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
                     picture = './templates/bar chart y.png'
                 }
-                return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
+                return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
+
+        case supportedTemplate.NQ_Strip_Plot:
+            selections_cell.AddYSelection("value");
+            selections_cell.AddXSelection("value");
+            if (is_X) {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "tick",
+                    encoding: {
+                        y: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                        x: { field: "value", type: "quantitative" }
+                    }
+                }
+                picture = './templates/strip plot.png';
+            }
+            else {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "tick",
+                    encoding: {
+                        x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                        y: { field: "value", type: "quantitative" }
+                    }
+                }
+                picture = './templates/strip plot y.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+
         case supportedTemplate.Q2_Horizon_Graph:
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
+
 
         default:
             break;
@@ -390,6 +409,18 @@ VegaTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
 
 VegaTemplate.prototype.GetSelections = function () {
     return this.selections;
+}
+
+// override get vegalite function
+function Q2Template(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
+    VegaTemplate.call(this, tempName_str, vegaConfig_obj, selections_obj, previewPic_str);
+
+}
+Q2Template.prototype = new VegaTemplate();
+Q2Template.prototype.GetVegaLite = function () {
+    this.vegaConfig.encoding.x.type = "quantitative";
+    this.vegaConfig.encoding.y.type = "quantitative";
+    return this.vegaConfig;
 }
 
 function GetHeaders(channel_obj) {

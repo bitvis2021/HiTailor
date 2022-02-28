@@ -126,11 +126,6 @@ export function GetTemplates(regionMetaData, data) {
                 x: { field: "value", type: "quantitative" },
                 y: { field: defaultY.name, type: "nominal", sort: defaultY.sort },
             }
-
-            // @NQ strip plot 
-            templates.AddTemplate(new VegaTemplate("N-Q Strip Plot", 'tick', vegaEncodingY, data, selections, './templates/strip plot.png'));
-            templates.AddTemplate(new VegaTemplate("N-Q Strip Plot", 'tick', vegaEncodingX, data, selections, './templates/strip plot y.png'), 'vertical');
-
             // @N-Q boxplot example 
             vegaEncodingX.color = { field: defaultX.name, type: "nominal" };
             templates.AddTemplate(new VegaTemplate("N-Q Box Plot", {

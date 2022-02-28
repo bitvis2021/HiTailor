@@ -109,9 +109,6 @@ export default {
       this.showTemplates = true;
       this.showUnitPanel = false;
       this.showPanelView = false;
-
-      // which means restart the selected template
-      this.figID = "";
     },
 
     // User select template from templateView, then update the vegaConfig
@@ -186,6 +183,8 @@ export default {
 
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
+      this.figID = "";
+
       this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
@@ -276,7 +275,6 @@ export default {
     right: 0%;
   }
 }
-
 
 .role-axis {
   display: none;
