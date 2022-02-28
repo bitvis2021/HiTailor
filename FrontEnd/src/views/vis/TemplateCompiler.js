@@ -246,19 +246,19 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
         case supportedTemplate.NNQ_grouped_bar_chart:
             // TODO: there is still some bug after tweaking the panel - need to rebind the sort
             // resort the data
-            visData_arr.forEach(element => {
-                for (const key in element) {
-                    if (Object.hasOwnProperty.call(element, key)) {
-                        const value = element[key];
-                        // split string
-                        let find = value.indexOf(" > ")
-                        if (find > -1) {
-                            let newValue = value.substring(find);
-                            element[key] = newValue;
-                        }
-                    }
-                }
-            });
+            // visData_arr.forEach(element => {
+            //     for (const key in element) {
+            //         if (Object.hasOwnProperty.call(element, key)) {
+            //             const value = element[key];
+            //             // split string
+            //             let find = value.indexOf(" > ")
+            //             if (find > -1) {
+            //                 let newValue = value.substring(find);
+            //                 element[key] = newValue;
+            //             }
+            //         }
+            //     }
+            // });
             vegaConfig = {
                 data: { values: visData_arr },
                 mark: "bar",
