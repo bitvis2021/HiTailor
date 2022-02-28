@@ -25,7 +25,10 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     let vegaConfig;
     let picture;
 
-    let defaultVal = {};
+    let defaultVal;
+    let defaultValX;
+    let defaultValY;
+
     let selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
 
     // vertical
@@ -42,6 +45,8 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     else {
         defaultVal = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
     }
+    defaultValX = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
+    defaultValY = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
 
     switch (templateName_str) {
 
@@ -176,9 +181,52 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             }
             return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
 
+        case supportedTemplate.NQ_Box_Plot:
+            selections_cell.AddYSelection("value");
+            selections_cell.AddXSelection("value");
+            vegaConfig = {
+                data: { values: visData_arr },
+                mark: {
+                    "type": "boxplot",
+                    "extent": "min-max"
+                },
+                encoding: {
+                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    y: { field: "value", type: "quantitative" },
+                    color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                }
+            }
+            if (is_X) {
+                picture = './templates/box plot y.png';
+            } else {
+                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                picture = './templates/box plot.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+
+        case supportedTemplate.ANQN_Stacked_Bar_Chart:
+            selections_cell.AddYSelection("value");
+            selections_cell.AddXSelection("value");
+            vegaConfig = {
+                data: { values: visData_arr },
+                mark: "bar",
+                encoding: {
+                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    y: { field: "value", aggregate: "sum" },
+                }
+            }
+            if (is_X) {
+                picture = './templates/stacked bar chart.png';
+                vegaConfig.encoding.color = { field: defaultValY.name, type: "nominal", sort: defaultValY.sort };
+            } else {
+                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                vegaConfig.encoding.color = { field: defaultValX.name, type: "nominal", sort: defaultValX.sort };
+                picture = './templates/stacked bar chart y.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+
         case supportedTemplate.Q2_Horizon_Graph:
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
-
 
         default:
             break;
