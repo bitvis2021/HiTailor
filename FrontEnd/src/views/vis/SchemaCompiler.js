@@ -211,6 +211,14 @@ FieldSelection.prototype.SetXSelections = function (selection_arr, bindings_obj)
     }
 }
 
+FieldSelection.prototype.AddXSelection=function (selectionName_str) {
+    this.xSelect.selections.push(selectionName_str);
+}
+
+FieldSelection.prototype.AddYSelection=function (selectionName_str) {
+    this.ySelect.selections.push(selectionName_str);
+}
+
 FieldSelection.prototype.SetYSelections = function (selection_arr, bindings_obj) {
     this.ySelect.selections = selection_arr;
     if (bindings_obj == undefined) {

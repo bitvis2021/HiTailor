@@ -8,12 +8,11 @@ import { EncodingCompiler, FieldSelection } from './SchemaCompiler'
 // tweakableConfig -> templateCompiler (+invisibleConfig) -> vega-lite JSON
 
 export let supportedTemplate = {
-    NQ_Simple_Bar_Chart: "Simple Bar Chart",
     NQor2Q_Simple_Line_Chart: "Line Chart",
     NQ_Strip_Plot: "Strip Plot",
     NQ_Box_Plot: "Box Plot",
     NQ_Ranged_Dot_Plot: "Ranged Dot Plot",
-    ANQ_Bar_Chart: "Bar Chart",
+    ANQorNQ_Bar_Chart: "Bar Chart",
     ANQN_Stacked_Bar_Chart: "Stacked Bar Chart",
     ANQN_Multi_Series_Line_Chart: "Multi Series Line Chart",
     NNQ_grouped_bar_chart: "Grouped Bar Chart",
@@ -29,8 +28,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
     let defaultVal = {};
     let selections_cell = selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
-    selections_cell.ySelect.selections.push('value');
-    selections_cell.xSelect.selections.push('value');
 
 
     // let selections_obj, visData_obj
@@ -52,27 +49,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
     switch (templateName_str) {
 
-        case supportedTemplate.NQ_Simple_Bar_Chart:
-            selections = selections_cell;
-            picture = './templates/simple bar chart.png'
-            vegaConfig = {
-                mark: "bar",
-                data: { values: visData_arr },
-                encoding: {
-                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
-                    y: { field: "value", type: 'quantitative' },
-                    color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
-                }
-            }
-            if (!is_X) {
-                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                selections.xSelect.selections = [];
-                picture = './templates/simple bar chart y.png'
-            }
-            else {
-                selections.ySelect.selections = [];
-            }
-            return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
         case supportedTemplate.Q2_Scatter_plot:
             // just reuse line chart            
             let point_template = GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, direction);
@@ -83,8 +59,10 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             return point_template;
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
+            let line_template;
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 selections = selections_cell;
+                selections.SetYSelections(['value']);
                 picture = './templates/line chart.png'
                 vegaConfig = {
                     mark: "line",
@@ -94,6 +72,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                         y: { field: "value", type: 'quantitative' },
                     }
                 }
+                line_template = new VegaTemplate(templateName_str, vegaConfig, selections, picture);
             }
             else {
                 if (is_X) {
@@ -122,35 +101,65 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                         }
                     }
                 }
-            }
-            let template = new VegaTemplate(templateName_str, vegaConfig, selections, picture);
-            template.GetVegaLite = function () {
-                this.vegaConfig.encoding.x.type = "quantitative";
-                this.vegaConfig.encoding.y.type = "quantitative";
-                return this.vegaConfig;
-            }
-            return template;
-        case supportedTemplate.ANQ_Bar_Chart:
-            selections = selections_cell;
-            vegaConfig = {
-                mark: "bar",
-                data: { values: visData_arr },
-                encoding: {
-                    x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
-                    y: { aggregate: "sum", field: "value" }
+
+                line_template = new VegaTemplate(templateName_str, vegaConfig, selections, picture);
+                line_template.GetVegaLite = function () {
+                    this.vegaConfig.encoding.x.type = "quantitative";
+                    this.vegaConfig.encoding.y.type = "quantitative";
+                    return this.vegaConfig;
                 }
             }
-            if (is_X) {
-                picture = './templates/bar chart.png'
+            return line_template;
+
+        case supportedTemplate.ANQorNQ_Bar_Chart:
+            console.log("bar char range", metaData_obj.x.range);
+            if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
+                selections = selections_cell;
+                selections.AddYSelection("value");
+                selections.AddXSelection("value");
+                picture = './templates/simple bar chart.png'
+                vegaConfig = {
+                    mark: "bar",
+                    data: { values: visData_arr },
+                    encoding: {
+                        x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                        y: { field: "value", type: 'quantitative' },
+                        color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                    }
+                }
+                if (!is_X) {
+                    [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                    selections.xSelect.selections = [];
+                    picture = './templates/simple bar chart y.png'
+                }
+                else {
+                    selections.ySelect.selections = [];
+                }
+                return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
             }
             else {
-                [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                picture = './templates/bar chart y.png'
+                selections = selections_cell;
+                selections.AddXSelection("value");
+                selections.AddYSelection("value");
+                vegaConfig = {
+                    mark: "bar",
+                    data: { values: visData_arr },
+                    encoding: {
+                        x: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
+                        y: { aggregate: "sum", field: "value" }
+                    }
+                }
+                if (is_X) {
+                    picture = './templates/bar chart.png'
+                }
+                else {
+                    [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                    picture = './templates/bar chart y.png'
+                }
+                return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
             }
-            return new VegaTemplate(templateName_str, vegaConfig, selections, picture);
         case supportedTemplate.Q2_Horizon_Graph:
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
-
 
         default:
             break;
@@ -163,12 +172,12 @@ export function GetTemplates(metaData_obj, visData_arr) {
 
     if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
         if (metaData_obj.y.range == 1) {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
+            templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_arr, 'x'), 'horizon')
         }
         else {
-            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Simple_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
         }
     }
     if (metaData_obj.x.range >= 2 && metaData_obj.y.range >= 2) {
@@ -177,7 +186,7 @@ export function GetTemplates(metaData_obj, visData_arr) {
             supportedTemplate.NQ_Box_Plot,
             supportedTemplate.NQ_Ranged_Dot_Plot,
             supportedTemplate.ANQN_Multi_Series_Line_Chart,
-            supportedTemplate.ANQ_Bar_Chart,
+            supportedTemplate.ANQorNQ_Bar_Chart,
             supportedTemplate.ANQN_Stacked_Bar_Chart,
             supportedTemplate.ANQN_Multi_Series_Line_Chart
         ]
