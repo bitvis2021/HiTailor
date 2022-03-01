@@ -77,6 +77,8 @@ export default {
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: start;
+  align-items: flex-start;
+  align-content: flex-start;
   height: 90vh;
   overflow: scroll;
 }
