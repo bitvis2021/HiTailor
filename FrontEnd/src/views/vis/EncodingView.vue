@@ -133,8 +133,6 @@ export default {
   props: ["config", "selections"],
   components: {},
   created() {
-    console.log("encoding get", this.config);
-    console.log("encoding get", this.selections);
   },
   mounted() {
     // this.EC = new EncodingCompiler(this.config, this.selections);

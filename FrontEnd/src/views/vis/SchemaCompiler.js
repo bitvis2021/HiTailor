@@ -31,7 +31,7 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
             name: 'aggregate',
             type: 'select',
             value: '',
-            selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max'],
+            selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
         }
     }
     this.encodings = {
@@ -54,6 +54,7 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         },
         color: {
             field: property.allField,
+            aggregate: property.aggregate
         },
         detail: {
             field: property.allField,
@@ -116,8 +117,10 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
                             this.vegaEncoding[encodingName].sort = undefined;
                         }
                         else {
-                            this.vegaEncoding[encodingName].type = "nominal";
-                            this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
+                            if (this.sortBindings != undefined && this.sortBindings.hasOwnProperty(property.value)) {
+                                this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
+                                this.vegaEncoding[encodingName].type = "nominal";
+                            }
                         }
                     }
                 }
@@ -350,4 +353,10 @@ export let markConf = {
         this.properties = {};
         this.properties.thickness = new confTemplate.width('thickness', 1, 100, 2);
     },
+    circle: function () {
+
+    },
+    rect: function () {
+
+    }
 }
