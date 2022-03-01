@@ -323,14 +323,9 @@ export let markConf = {
         this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], "monotone");
         this.properties.color = new confTemplate.color();
     },
-    bar: function (direction_str) {
-        // this.properties = {};
-        // if (direction_str == 'vertical') {
-        //     this.properties.width = new confTemplate.width('width', 1, 100, 30);
-        // }
-        // else {
-        //     this.properties.height = new confTemplate.width('height', 1, 100, 30);
-        // }
+    bar: function () {
+        this.properties = {};
+        this.properties.opacity = new confTemplate.opacity(0.6);
         // this.properties.baseline = new confTemplate.select_radius("base line", ["alphabetic", "top", "middle", "bottom"], "alphabetic");
         // this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
     },

@@ -18,7 +18,9 @@ export let supportedTemplate = {
     NNQ_grouped_bar_chart: "Grouped Bar Chart",
     Q2_Horizon_Graph: "Horizon Graph",
     Q2_Scatter_plot: "Scatterplot",
-    NQ_Parallel_Coordinate_Plot: "Parallel Coordinate Plot"
+    NQ_Parallel_Coordinate_Plot: "Parallel Coordinate Plot",
+    NQ_Histogram_Scatterplot: "2D Histogram Scatterplot",
+    NQ_Histogram_Heatmap: "2D Histogram Heatmap",
 }
 
 // factory model
@@ -315,6 +317,29 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             else {
                 return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
             }
+
+        // horizon 是y比较多
+        case supportedTemplate.NQ_Histogram_Heatmap:
+            let n_selections = new FieldSelection();
+            n_selections.SetXSelections(selections_horizon.GetYSelections())
+            n_selections.SetYSelections(selections_horizon.GetYSelections())
+            if (is_X) {
+                return new HistogramHeatmap(visData_horizon, n_selections, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+            }
+            else {
+                return new HistogramHeatmap(visData_vertical, n_selections, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+            }
+        case supportedTemplate.NQ_Histogram_Scatterplot:
+
+            n_selections = new FieldSelection();
+            n_selections.SetXSelections(selections_horizon.GetYSelections())
+            n_selections.SetYSelections(selections_horizon.GetYSelections())
+            if (is_X) {
+                return new HistogramScatterplot(visData_horizon, n_selections, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+            }
+            else {
+                return new HistogramScatterplot(visData_vertical, n_selections, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+            }
         default:
             break;
     }
@@ -343,7 +368,7 @@ export function GetTemplates(metaData_obj, visData_arr) {
             supportedTemplate.ANQorNQ_Bar_Chart,
             supportedTemplate.ANQN_Stacked_Bar_Chart,
             supportedTemplate.ANQN_Multi_Series_Line_Chart,
-            supportedTemplate.NQ_Parallel_Coordinate_Plot
+            supportedTemplate.NQ_Parallel_Coordinate_Plot,
         ]
         for (let i = 0; i < aggregateChart.length; i++) {
             const chartName = aggregateChart[i];
@@ -367,6 +392,12 @@ export function GetTemplates(metaData_obj, visData_arr) {
 
         templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Scatter_plot, metaData_obj, visData_arr, 'x'), 'using row data');
         templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Scatter_plot, metaData_obj, visData_arr, 'y'), 'using column data');
+
+        templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Histogram_Heatmap, metaData_obj, visData_arr, 'x'), 'using row data');
+        templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Histogram_Heatmap, metaData_obj, visData_arr, 'y'), 'using column data');
+
+        templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Histogram_Scatterplot, metaData_obj, visData_arr, 'x'), 'using row data');
+        templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Histogram_Scatterplot, metaData_obj, visData_arr, 'y'), 'using column data');
 
     }
 
@@ -687,6 +718,120 @@ function GetHeaders(channel_obj) {
     }
     return ans
 }
+
+function HistogramScatterplot(visData_arr, selections_obj, binsX_nu, binsY_nu, previewPic_str) {
+    this.selections = selections_obj;
+    let defaultVal1 = selections_obj.GetXSelections().at(0);
+    let defaultVal2 = selections_obj.GetXSelections().at(-1);
+    this.vegaConfig = {
+        "mark": "circle",
+        data: {
+            values: visData_arr
+        },
+        "transform": [
+            {
+                "filter": {
+                    "and": [
+                        { "field": defaultVal1, "valid": true },
+                        { "field": defaultVal2, "valid": true }
+                    ]
+                }
+            }
+        ],
+        "encoding": {
+            "x": {
+                "field": defaultVal1,
+                "bin": { "maxbins": binsX_nu },
+                "type": "quantitative"
+            },
+            "y": {
+                "field": defaultVal2,
+                "bin": { "maxbins": binsY_nu },
+                "type": "quantitative"
+            },
+            "size": {
+                "aggregate": "count",
+                "type": "quantitative"
+            }
+        },
+    }
+    VegaTemplate.call(this, supportedTemplate.NQ_Histogram_Scatterplot, this.vegaConfig, selections_obj, previewPic_str);
+}
+HistogramScatterplot.prototype.GetVegaConfig = function () {
+    return {
+        mark: 'circle',
+        encoding: {
+            x: this.vegaConfig.encoding.x,
+            y: this.vegaConfig.encoding.y
+        }
+    }
+}
+HistogramScatterplot.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
+    this.vegaConfig.encoding.x = vegaConfig_obj.encoding.x;
+    this.vegaConfig.encoding.y = vegaConfig_obj.encoding.y;
+    return this.vegaConfig;
+}
+
+HistogramHeatmap.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
+    this.vegaConfig.encoding.x = vegaConfig_obj.encoding.x;
+    this.vegaConfig.encoding.y = vegaConfig_obj.encoding.y;
+    return this.vegaConfig;
+}
+
+HistogramHeatmap.prototype.GetVegaConfig = function () {
+    return {
+        mark: 'rect',
+        encoding: {
+            x: this.vegaConfig.encoding.x,
+            y: this.vegaConfig.encoding.y
+        }
+    }
+}
+
+function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previewPic_str) {
+    let defaultVal1 = selections_obj.GetXSelections().at(0);
+    let defaultVal2 = selections_obj.GetXSelections().at(-1);
+    this.selections = selections_obj;
+    this.vegaConfig = {
+        "mark": "rect",
+        data: {
+            values: visData_arr
+        },
+        "transform": [
+            {
+                "filter": {
+                    "and": [
+                        { "field": defaultVal1, "valid": true },
+                        { "field": defaultVal2, "valid": true }
+                    ]
+                }
+            }
+        ],
+        "encoding": {
+            "x": {
+                "field": defaultVal1,
+                "bin": { "maxbins": binsX_nu },
+                "type": "quantitative"
+            },
+            "y": {
+                "field": defaultVal2,
+                "bin": { "maxbins": binsY_nu },
+                "type": "quantitative"
+            },
+            "color": {
+                "aggregate": "count",
+                "type": "quantitative"
+            }
+        },
+        "config": {
+            "view": {
+                "stroke": "transparent"
+            }
+        }
+    }
+    VegaTemplate.call(this, supportedTemplate.NQ_Histogram_Heatmap, this.vegaConfig, selections_obj, previewPic_str);
+}
+
 
 // no selection
 function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
