@@ -55,6 +55,12 @@
           @click="transform_merge()" > 
           Merge
         </button>
+        <button type="primary" plain size="small" 
+          class="button"
+          @click="cancel_recommend()" > 
+          Cancel
+        </button>
+        
       </div>
     </div>
 
@@ -442,7 +448,7 @@ export default {
       visRerenderPrePos: {x:0, y:0},
       visRerenderAfterPos: {x:0, y:0},
 
-      referenceData: null,
+      recommendData: null,
     }
   },
 
@@ -1349,7 +1355,6 @@ export default {
 
     },
     transmit_data_to_vis(top, bottom, left, right) {
-      console.log("111")
       var data = this.get_data_from_chosen(top, bottom, left, right)
       var metadata = this.gen_metadata_from_chosen(top, bottom, left, right)
       var chgdata = this.change_data_form(data)
@@ -1531,30 +1536,225 @@ export default {
       var js = JSON.stringify(res)
       return js
     },
+    cancel_recommend() {
+      d3.selectAll(".recommend-helper").remove()
+    },
     cal_recommendation_data(top, bottom, left, right) {
+      this.recommendData = new Array
+      this.recommendData.push({row:null, column:null})
+      this.recommendData.push({row:null, column:null})
+      console.log("setup", this.recommendData)
       var colRefer = this.get_reference_node(this.colHeader, left, right, false)
       var rowRefer = this.get_reference_node(this.rowHeader, top, bottom, true)
-
-      // priority 1
+      console.log("colRefer", colRefer)
+      console.log("rowRefer", rowRefer)
+      if (colRefer.length==0 && rowRefer.length==0) {
+        console.log("can't recommend!")
+        return
+      }
       
 
-      // priority 2
-
-
-      // priority 3
-
-
-      // priority 4
-
-
-      // priority 5
-
+      // only use colRefer(same row)
+      if (colRefer.length != 0) {
+        this.cal_recommendation_by_single_node(colRefer, top, bottom, left, right, this.colHeader, false)
+      }
       
+      // only use rowRefer(same column)
+      if (rowRefer.length != 0) {
+        this.cal_recommendation_by_single_node(rowRefer, top, bottom, left, right, this.rowHeader, true)
+      }
+
+      console.log("recommendData", this.recommendData)
+
+      // use colRefer & rowRefer
+      if (colRefer.length!=0 && rowRefer.length!=0) {
+        var res, priority
+        // priority 3 = 1 + 1
+        res = []
+        priority = 3
+        for (var i=0; i<this.recommendData[0].row.length; i++) {
+          for (var j=0; j<this.recommendData[0].column.length; j++) {
+            var pos = {top:null, bottom:null, right:null, left:null}
+            pos.top = this.recommendData[0].row[i].pos.top
+            pos.bottom = this.recommendData[0].row[i].pos.bottom
+            pos.left = this.recommendData[0].column[j].pos.left
+            pos.right = this.recommendData[0].column[j].pos.right
+
+            var tmp = {pos: pos, priority: priority}
+            res.push(tmp)
+            
+            // just for test!!!!!!!!!!!!!!!!!!
+            var tablesvg = d3.select(".table-view-svg")
+            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
+                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .style("stroke", "grey")
+                .style("fill", "green")
+          }
+        }
+        this.recommendData.push(res)
+
+        // priority 4 = 1 + 2 = 2 + 1
+        res = []
+        priority = 4
+        for (var i=0; i<this.recommendData[0].row.length; i++) {
+          for (var j=0; j<this.recommendData[1].column.length; j++) {
+            var pos = {top:null, bottom:null, right:null, left:null}
+            pos.top = this.recommendData[0].row[i].pos.top
+            pos.bottom = this.recommendData[0].row[i].pos.bottom
+            pos.left = this.recommendData[1].column[j].pos.left
+            pos.right = this.recommendData[1].column[j].pos.right
+
+            var tmp = {pos: pos, priority: priority}
+            res.push(tmp)
+            
+            // just for test!!!!!!!!!!!!!!!!!!
+            var tablesvg = d3.select(".table-view-svg")
+            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
+                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .style("stroke", "grey")
+                .style("fill", "blue")
+          }
+        }
+        for (var i=0; i<this.recommendData[1].row.length; i++) {
+          for (var j=0; j<this.recommendData[0].column.length; j++) {
+            var pos = {top:null, bottom:null, right:null, left:null}
+            pos.top = this.recommendData[1].row[i].pos.top
+            pos.bottom = this.recommendData[1].row[i].pos.bottom
+            pos.left = this.recommendData[0].column[j].pos.left
+            pos.right = this.recommendData[0].column[j].pos.right
+
+            var tmp = {pos: pos, priority: priority}
+            res.push(tmp)
+
+            // just for test!!!!!!!!!!!!!!!!!!
+            var tablesvg = d3.select(".table-view-svg")
+            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
+                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .style("stroke", "grey")
+                .style("fill", "blue")
+          }
+        }
+        this.recommendData.push(res)
+
+        // priority 5 = 2 + 2
+        res = []
+        priority = 5
+        for (var i=0; i<this.recommendData[1].row.length; i++) {
+          for (var j=0; j<this.recommendData[1].column.length; j++) {
+            var pos = {top:null, bottom:null, right:null, left:null}
+            pos.top = this.recommendData[1].row[i].pos.top
+            pos.bottom = this.recommendData[1].row[i].pos.bottom
+            pos.left = this.recommendData[1].column[j].pos.left
+            pos.right = this.recommendData[1].column[j].pos.right
+
+            var tmp = {pos: pos, priority: priority}
+            res.push(tmp)
+
+            // just for test!!!!!!!!!!!!!!!!!!
+            var tablesvg = d3.select(".table-view-svg")
+            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
+                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .style("stroke", "grey")
+                .style("fill", "purple")
+          }
+        }
+        this.recommendData.push(res)
+      }
+    },
+    cal_recommendation_by_single_node(refer, top, bottom, left, right, header, isRow) {
+      var layer = refer[0].layer
+      var hasLinear = refer[0].hasLinear
+      var isLinear = refer[0].isLinear
+      if (refer.length == 1) { // single reference
+        var refername = refer[0].name
+        var refertimes = refer[0].times
+        for (var [key, value] of header[layer]) {
+          var ranges = value.range
+          var priority = key==refername ? 1 : 2
+          for (var i=0; i<ranges.length; i++) {
+            if (key==refername && i == refertimes) continue // don't recommend itself
+            var pos = {top:null, bottom:null, right:null, left:null}
+            if (isRow) {
+              if (isLinear && !hasLinear) {
+                pos.top = ranges[i].start + 1
+              }
+              else {
+                pos.top = ranges[i].start
+              }
+              pos.bottom = ranges[i].end
+              pos.left = left
+              pos.right = right
+              var tmp = {pos: pos, priority: priority}
+              if (this.recommendData[priority-1].row == null) {
+                this.recommendData[priority-1].row = []
+              }
+              else {
+                this.recommendData[priority-1].row.push(tmp)
+              }
+              
+            }
+            else {
+              pos.top = top
+              pos.bottom = bottom
+              if (isLinear && !hasLinear) {
+                pos.left = ranges[i].start + 1
+              }
+              else {
+                pos.left = ranges[i].start
+              }
+              pos.right = ranges[i].end
+              var tmp = {pos: pos, priority: priority}
+              if (this.recommendData[priority-1].column == null) {
+                this.recommendData[priority-1].column = []
+              }
+              else {
+                this.recommendData[priority-1].column.push(tmp)
+              }
+            }
+            console.log("pos", pos)
+            // var tmp = {pos: pos, priority: priority}
+            // this.recommendData[priority-1].push(tmp)
+
+            // just for test!!!!!!!!!!!!!!!!!!
+            var tablesvg = d3.select(".table-view-svg")
+            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
+                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
+                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
+                .style("stroke", "grey")
+            if (priority == 1) {
+              helper.style("fill","red")
+            }
+            else if (priority == 2) {
+              helper.style("fill","yellow")
+            }
+          }
+        }
+      }
+      else { // multiple references
+        if (layer == 0) return  // don't recommend when first layer
+        // todo!!!!!!!!!!!!!!!!!
+      }
+
     },
     get_reference_node(header, start, end, isRow) {     
       var res = []
       var linearName = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
-      var findOne = false, findSome = false
+      var findFlag = false
+      // var findSome = false
       for (var i=0; i<header.length; i++) {
         for (var [key, value] of header[i]) {
           var goNextLayer = false
@@ -1562,14 +1762,20 @@ export default {
           for (var j=0; j<ranges.length; j++) {
             if (start == ranges[j].start && end == ranges[j].end) {   // choose a single node(including linear)
               var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
-              if (key == linearName) {
-                tmp.isLinear = true
-              }
               if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                tmp.hasLinear = true
+                tmp.hasLinear = true 
+                tmp.isLinear = true
+                // especially
+                if (children[j].length == 1) {
+                  tmp.name = children[j][0]
+                  tmp.times = 0
+                  tmp.layer = i+1
+                  tmp.hasLinear = false
+                  tmp.isLinear = false
+                }
               }
               res.push(tmp)
-              findOne = true
+              findFlag = true
               break
             }
             else {
@@ -1579,9 +1785,10 @@ export default {
                   break
                 }
                 else {
-                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
                   if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
                     tmp.hasLinear = true
+                    tmp.isLinear = true
                   }
                   res.push(tmp)
                   break
@@ -1590,11 +1797,13 @@ export default {
               else if (start < ranges[j].start) {
                 if (end == ranges[j].end) {
                   if (res.length != 0) {
-                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
                     if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
                       tmp.hasLinear = true
+                      tmp.isLinear = true
                     }
                     res.push(tmp)
+                    findFlag = true
                     break
                   }
                 }
@@ -1605,15 +1814,16 @@ export default {
                   else {
                     if (i != header.length-1) { // not last layer
                       res = []
-                      findOne = true
+                      findFlag = true
                       break
                     }
                   }
                 }
                 else {
-                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
                   if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
                     tmp.hasLinear = true
+                    tmp.isLinear = true
                   }
                   res.push(tmp)
                   break
@@ -1623,9 +1833,9 @@ export default {
                 if (end == ranges[j].end) {
                   if (children.length!=0 && children[j].indexOf(linearName)!=-1 
                   && start == ranges[j].start+1) {    // choose a single node(not including linear)
-                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:true}
                     res.push(tmp)
-                    findOne = true
+                    findFlag = true
                     break
                   }
                   else {
@@ -1644,7 +1854,7 @@ export default {
                   else {
                     if (i != header.length-1) { // not last layer
                       res = []
-                      findOne = true
+                      findFlag = true
                       break
                     }
                   }
@@ -1652,11 +1862,11 @@ export default {
               }
             }
           }
-          if (findOne) break
+          if (findFlag) break
           if (goNextLayer) break
         }
-        if (findOne) break
-        if (findSome) break
+        if (findFlag) break
+        // if (findSome) break
       }
 
       return res
@@ -1842,7 +2052,9 @@ export default {
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
-    this.referenceData = new Array(5).fill()
+    this.recommendData = new Array
+    this.recommendData.push({row:null, column:null})
+    this.recommendData.push({row:null, column:null})
 
     // set column width to be the same
     var row = this.tabularDatasetList[0]
