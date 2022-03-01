@@ -312,6 +312,9 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             if (is_X) {
                 return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png');
             }
+            else{
+                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png','y');
+            }
         default:
             break;
     }
@@ -594,52 +597,105 @@ function GetHeaders(channel_obj) {
 // no selection
 function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
     this.selections = selections_obj;
-    this.vegaConfig = {
-        "data": { "values": visData_arr },
-        "transform": [
-            { "window": [{ "op": "count", "as": "index" }] },
-            {
-                "fold": selections_obj.GetXSelections()
-            },
-            {
-                "joinaggregate": [
-                    { "op": "min", "field": "value", "as": "min" },
-                    { "op": "max", "field": "value", "as": "max" }
-                ],
-                "groupby": ["key"]
-            },
-            {
-                "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
-                "as": "norm_val"
-            },
-            { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
-        ],
-        "layer": [
-            {
-                "mark": { "type": "line", "opacity": 0.3 },
-                "encoding": {
-                    "color": { "type": "nominal", "field": selections_obj.GetYSelections().at(0), "legend": null },
-                    "detail": { "type": "nominal", "field": "index" },
-                    "x": {
-                        "type": "nominal",
-                        "field": "key",
-                        "sort": selections_obj.GetXSelections()
-                    },
-                    "y": { "type": "quantitative", "field": "norm_val", "axis": null }
-                }
-            },
-            {
-                "mark": { "type": "rule", "color": "#ccc" },
-                "encoding": {
-                    "detail": { "aggregate": "count" },
-                    "x": {
-                        "field": "key",
-                        "sort": selections_obj.GetXSelections()
+    this.is_X = true;
+    if (direction == 'y') {
+        this.is_X = false;
+        this.vegaConfig = {
+            "data": { "values": visData_arr },
+            "transform": [
+                { "window": [{ "op": "count", "as": "index" }] },
+                {
+                    "fold": selections_obj.GetYSelections()
+                },
+                {
+                    "joinaggregate": [
+                        { "op": "min", "field": "value", "as": "min" },
+                        { "op": "max", "field": "value", "as": "max" }
+                    ],
+                    "groupby": ["key"]
+                },
+                {
+                    "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
+                    "as": "norm_val"
+                },
+                { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
+            ],
+            "layer": [
+                {
+                    "mark": { "type": "line", "opacity": 0.3 },
+                    "encoding": {
+                        "color": { "type": "nominal", "field": selections_obj.GetXSelections().at(0), "legend": null },
+                        "detail": { "type": "nominal", "field": "index" },
+                        "y": {
+                            "type": "nominal",
+                            "field": "key",
+                            "sort": selections_obj.GetYSelections()
+                        },
+                        "x": { "type": "quantitative", "field": "norm_val", "axis": null }
+                    }
+                },
+                {
+                    "mark": { "type": "rule", "color": "#ccc" },
+                    "encoding": {
+                        "detail": { "aggregate": "count" },
+                        "y": {
+                            "field": "key",
+                            "sort": selections_obj.GetYSelections()
+                        }
                     }
                 }
-            }
-        ],
-        "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+            ],
+            "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+        }
+    }
+    else {
+        this.vegaConfig = {
+            "data": { "values": visData_arr },
+            "transform": [
+                { "window": [{ "op": "count", "as": "index" }] },
+                {
+                    "fold": selections_obj.GetXSelections()
+                },
+                {
+                    "joinaggregate": [
+                        { "op": "min", "field": "value", "as": "min" },
+                        { "op": "max", "field": "value", "as": "max" }
+                    ],
+                    "groupby": ["key"]
+                },
+                {
+                    "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
+                    "as": "norm_val"
+                },
+                { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
+            ],
+            "layer": [
+                {
+                    "mark": { "type": "line", "opacity": 0.3 },
+                    "encoding": {
+                        "color": { "type": "nominal", "field": selections_obj.GetYSelections().at(0), "legend": null },
+                        "detail": { "type": "nominal", "field": "index" },
+                        "x": {
+                            "type": "nominal",
+                            "field": "key",
+                            "sort": selections_obj.GetXSelections()
+                        },
+                        "y": { "type": "quantitative", "field": "norm_val", "axis": null }
+                    }
+                },
+                {
+                    "mark": { "type": "rule", "color": "#ccc" },
+                    "encoding": {
+                        "detail": { "aggregate": "count" },
+                        "x": {
+                            "field": "key",
+                            "sort": selections_obj.GetXSelections()
+                        }
+                    }
+                }
+            ],
+            "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+        }
     }
     TemplateInterface.call(this, supportedTemplate.NQ_Parallel_Coordinate_Plot, this.vegaConfig, previewPic_str);
 }
@@ -662,7 +718,12 @@ ParallelCoordinatePlot.prototype.CompileTweakedConfig = function (vegaConfig_obj
     return this.vegaConfig;
 }
 ParallelCoordinatePlot.prototype.GetSelections = function () {
-    this.selections.SetXSelections([])
+    if (this.is_X) {
+        this.selections.SetXSelections([])
+    }
+    else {
+        this.selections.SetYSelections([])
+    }
     return this.selections;
 }
 
