@@ -1,10 +1,10 @@
-export function get_column_header(headerIndex, colHeaderIndex, colHeader, columnHeaderRange, rowHeaderRange, 
+export function get_column_header(headerIndex, colHeaderIndex, colHeader, headerRange, 
     rowDistributionList, dataValueList,headerDistribution, header2num, num2header ) {
     headerIndex = colHeaderIndex
-    for (var i=0; i<=columnHeaderRange.bottom; i++) {
+    for (var i=0; i<=headerRange.bottom; i++) {
       var items = new Map
       // find the start index of column header in each row
-      var s=rowHeaderRange.right+1, sindex
+      var s=headerRange.right+1, sindex
       for (sindex=0; sindex<rowDistributionList[i].length; sindex++) {
         if (s <= rowDistributionList[i][sindex].end && s >= rowDistributionList[i][sindex].start) break
       }
@@ -13,7 +13,7 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
         // var name = (dataValueList[i][j] == 'None') ? ' ' : dataValueList[i][j]
         var name = dataValueList[i][j]
         if (name == 'None') {
-          if ((rowDistributionList[i][j].start==rowHeaderRange.right+1)) {
+          if ((rowDistributionList[i][j].start==headerRange.right+1)) {
             name = ""
           }
           else{
@@ -70,7 +70,11 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
 
         attributes.range.push({"start":start, "end":end})
         if (i>0) {  // first layer doesn't have parents
-          attributes.parent.push(find_header_parent(name, start, end, i, colHeader, true))
+          var parent = find_header_parent(name, start, end, i, colHeader, true)
+          // if (attributes.parent.indexOf(parent) == -1) {
+          //   attributes.parent.push(parent)
+          // }
+          attributes.parent.push({name:parent.name, ordinal:parent.ordinal})
         }
         items.set(name, attributes)
         headerIndex += 1
@@ -89,15 +93,15 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
     console.log("num2header",num2header)
   }
 
-  export function get_row_header(headerIndex, rowHeaderIndex, rowHeader, columnHeaderRange, rowHeaderRange, rowHeightList,
+  export function get_row_header(headerIndex, rowHeaderIndex, rowHeader, headerRange, rowHeightList,
     dataValueList,headerDistribution, header2num, num2header) {
     headerIndex = rowHeaderIndex
-    for (var j=0; j<=rowHeaderRange.right; j++) {
+    for (var j=0; j<=headerRange.right; j++) {
       var items = new Map
-      for (var i=columnHeaderRange.bottom+1; i<rowHeightList.length; i++) {
+      for (var i=headerRange.bottom+1; i<rowHeightList.length; i++) {
         var name = dataValueList[i][j]
         if (name == 'None') {
-          if ((i==columnHeaderRange.bottom+1)) {
+          if ((i==headerRange.bottom+1)) {
             name = " "
           }
           else{
@@ -154,7 +158,11 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
 
         attributes.range.push({"start":start, "end":end})
         if (j>0) {  // first layer doesn't have parents
-          attributes.parent.push(find_header_parent(name, start, end, j, rowHeader,true))
+          var parent = find_header_parent(name, start, end, j, rowHeader, true)
+          // if (attributes.parent.indexOf(parent) == -1) {
+          //   attributes.parent.push(parent)
+          // }
+          attributes.parent.push({name:parent.name, ordinal:parent.ordinal})
         }
         items.set(name, attributes)
         headerIndex += 1
@@ -174,19 +182,37 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
   }
 
   export function find_header_parent(name, cstart, cend, rindex, src, addflag) {
-    var parentLayer = src[rindex-1],parent
+    var parentLayer = src[rindex-1]
+    var parent = {name:null, ordinal:null}
+    var parentindex
     for (let [key, value] of parentLayer) {
       var ranges = value.range, findFlag = false
       for (var i=0, len=ranges.length; i<len; i++) {
         if (ranges[i].start <= cstart && ranges[i].end >= cend) {
-          parent = key
+          parent.name = key
+          parent.ordinal = i
+          parentindex = i
           findFlag = true
           break
         }
       }
       if (findFlag) break
     }
-    if(addflag) src[rindex-1].get(parent).children.push(name)
+    if(addflag) {
+      // if (src[rindex-1].get(parent).children.indexOf(name) == -1) {
+      //   src[rindex-1].get(parent).children.push(name)
+      // }
+      if (src[rindex-1].get(parent.name).children.length < parentindex+1) { // first child of this parent 
+        src[rindex-1].get(parent.name).children.push([name])
+      }
+      else if (src[rindex-1].get(parent.name).children.length == parentindex+1) {
+        src[rindex-1].get(parent.name).children[parentindex].push(name)
+      }
+      else {
+        console.log("find parent error!")
+      }
+
+    }
     return parent
   }
 
@@ -204,15 +230,17 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
   
   export function cal_cell_num(key, value, layer, distribution, headerList) {
     // “distribution” records all headers for each row in order
+    var countindex
     if(distribution[layer].length == 0) {
       headerList[layer].get(key).range.push({"start":0, "end":null})
+      countindex = 0
     }
     else {
       var lastHeaderName = distribution[layer][distribution[layer].length-1]
       var span = headerList[layer].get(lastHeaderName).cellNum
       var lastHeaderRange = headerList[layer].get(lastHeaderName).range
       var lastStart = lastHeaderRange[lastHeaderRange.length-1].start
-      
+      countindex = headerList[layer].get(key).range.length
       headerList[layer].get(key).range.push({"start": lastStart+span, "end": null}) // change header's start
     }
     distribution[layer].push(key)
@@ -225,8 +253,8 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
     }
     else {
       value.cellNum = 0
-      for (var i=0, len=value.children.length; i<len; i++) {
-        var name = value.children[i]
+      for (var i=0, len=value.children[countindex].length; i<len; i++) {
+        var name = value.children[countindex][i]
         value.cellNum += cal_cell_num(name, headerList[layer+1].get(name), layer+1, distribution,headerList)
       }
       value.range[value.range.length-1].end = value.range[value.range.length-1].start + value.cellNum - 1 // change header's end
@@ -235,12 +263,12 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
     }
   }
 
-  export function get_cell_sequence(columnHeaderRange, rowHeaderRange, rowHeightList, columnWidthList, dataValueList,
+  export function get_cell_sequence(headerRange, rowHeightList, columnWidthList, dataValueList,
     colHeader, rowHeader, num2seq, seq2num, valueIndex) {
-    for (var row=columnHeaderRange.bottom+1; row<rowHeightList.length; row++) {
-      for (var col=rowHeaderRange.right+1; col<columnWidthList.length; col++) {
+    for (var row=headerRange.bottom+1; row<rowHeightList.length; row++) {
+      for (var col=headerRange.right+1; col<columnWidthList.length; col++) {
         var value = dataValueList[row][col]
-        if (value == 'None') value = ''
+        // if (value == 'None') value = ''
         var seq = new Set
         //column header
         for (var i=0; i<colHeader.length; i++) { // find header in each row
@@ -249,7 +277,7 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
             var header = item[0]
             var range = item[1].range
             for (var r of range) {
-              if ((r.start + rowHeaderRange.right+1) <= col && (r.end + rowHeaderRange.right+1) >= col) {
+              if ((r.start + headerRange.right+1) <= col && (r.end + headerRange.right+1) >= col) {
                 seq.add(header)
                 find = true
                 break
@@ -266,7 +294,7 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, column
             var header = item[0]
             var range = item[1].range
             for (var r of range) {
-              if ((r.start + columnHeaderRange.bottom+1) <= row && (r.end + columnHeaderRange.bottom+1) >= row) {
+              if ((r.start + headerRange.bottom+1) <= row && (r.end + headerRange.bottom+1) >= row) {
                 seq.add(header)
                 find = true
                 break

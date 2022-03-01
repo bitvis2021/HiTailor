@@ -1,0 +1,321 @@
+<template>
+  <div id="visview-container">
+    <div class="vis-test">
+      {{ this.vegaConfig }}
+    </div>
+
+    <div id="gen-chart"></div>
+
+    <div id="vis-view">
+      <!-- return buttons -->
+      <el-row type="flex" justify="start" style="margin-left: 5px">
+        <el-button @click="ClickReturnButton" type="text" size="medium"
+          ><i class="el-icon-back"></i
+        ></el-button>
+      </el-row>
+
+      <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
+      <templates-view
+        v-if="showTemplates"
+        v-on:select-template="SelectTemplate"
+        :templates="this.templates"
+      ></templates-view>
+
+      <div v-else>
+        <div class="panel-view-container">
+          <div v-if="showUnitPanel">
+            <br />
+            Unit Panel
+          </div>
+
+          <div v-if="showPanelView">
+            <div id="chart"></div>
+            <panel-view
+              :selections="this.ECSelections"
+              :vegaConfig="this.vegaConfig"
+              v-on:apply-config="PreviewVegaConf"
+              v-on:apply-vis="ApplyVis2Table"
+            ></panel-view>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import vegaEmbed from "vega-embed";
+import PanelView from "./vis/PanelView.vue";
+import TemplatesView from "./vis/TemplatesView.vue";
+import { GetTemplates, VegaTemplate } from "./vis/TemplateCompiler";
+import { mapMutations } from "vuex";
+import { VisDatabase } from "./vis/VisDatabase";
+// visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
+// visualize-data -> visView (template) -> VisTemplates -> (vegaConfig) visView -> Panel -> (meataData+vegaConfig+data) VisDataBase -> visualization
+export default {
+  name: "VisView",
+  components: {
+    PanelView,
+    TemplatesView,
+  },
+  computed: {
+    VegaConfigNoData() {
+      return { mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding };
+    },
+  },
+  data() {
+    return {
+      showTemplates: true,
+      showUnitPanel: false,
+
+      visData: {}, // data from visualize selected data
+      metaData: {},
+      position: {},
+
+      // 1. selectTemplate -> currentTemplate.GetVegaConfig -> PanelView (tweakedData) -> VisView -> currentTemplate.CompileTweakedConfig (vega-lite) -> visualize -> visDB
+      // 2. recommand -> templateName+recommandArea(meataData+visData) -> template -> visualize -> visDB
+      currentTemplate: new VegaTemplate(),
+      templates: [],
+
+      VisDB: new VisDatabase(this.$bus),
+      figID: "",
+    };
+  },
+  computed: {
+    // user visible config
+    vegaConfig() {
+      return this.currentTemplate.GetVegaConfig();
+    },
+    ECSelections() {
+      return this.currentTemplate.GetSelections();
+    },
+  },
+  methods: {
+    ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
+
+    // User Operation events
+
+    OpenUnitView() {
+      this.showUnitPanel = true;
+      this.showTemplates = false;
+      this.showPanelView = false;
+    },
+
+    // Input data and metadata to VisTemplates. Then get the templates. Open the template view.
+    OpenTemplateView() {
+      console.log(this.metaData, this.visData);
+      this.templates = GetTemplates(this.metaData, this.visData);
+
+      this.showTemplates = true;
+      this.showUnitPanel = false;
+      this.showPanelView = false;
+    },
+
+    // User select template from templateView, then update the vegaConfig
+    SelectTemplate(template) {
+      this.currentTemplate = template;
+      this.OpenPanelView();
+    },
+
+    // Open panel view to tweak data
+    OpenPanelView() {
+      this.showTemplates = false;
+      this.showUnitPanel = false;
+      this.showPanelView = true;
+      this.$bus.$emit("preview-config");
+    },
+
+    ClickReturnButton() {
+      // 再写一个恢复，让点击return button后templateView自动读取metaData
+
+      if (this.showTemplates) {
+        // this.CLOSE_VIS_PANEL();
+        return;
+      }
+      this.OpenTemplateView();
+    },
+
+    // User modified panel to update preview figure on top of the panel
+    PreviewVegaConf(vegaConfig) {
+      this.currentTemplate.CompileTweakedConfig(vegaConfig); // 可能有拷贝的问题
+      this.$bus.$emit("preview-config"); // preview picture
+    },
+
+    // Initially apply vega-lite config to the table, then register the config in database
+    ApplyVis2Table() {
+      // There is no generated data. So generate a new one.
+      if (this.figID == "") {
+        this.figID = this.VisDB.GenFig(
+          this.position.height,
+          this.position.width,
+          this.position.x,
+          this.position.y,
+          this.currentTemplate,
+          this.visData,
+          this.metaData
+        );
+      } else {
+        this.VisDB.SetTemplate(this.figID, this.currentTemplate);
+        this.VisDB.RerenderCanvas(this.figID);
+      }
+    },
+  },
+  mounted() {
+    this.OPEN_VIS_PANEL();
+
+    // Render figure on top of the side panel
+    this.$bus.$on("preview-config", () => {
+      if (this.showPanelView) {
+        let height = document.getElementById("vis-panel").clientHeight * 0.25;
+        let width = document.body.clientWidth * 0.19;
+        let data = JSON.parse(
+          JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
+        );
+        data.height = height;
+        data.width = width;
+        console.log("preview data", data);
+        vegaEmbed("#chart", data, {
+          renderer: "svg",
+          actions: false,
+        });
+      }
+    });
+
+    // User select data
+    this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
+      this.figID = "";
+
+      this.OPEN_VIS_PANEL();
+      this.position = position; // for visDatabase to use
+
+      this.visData = JSON.parse(visData);
+      this.metaData = JSON.parse(metaData);
+
+      if (typeof metaData != Object) {
+        metaData = JSON.parse(metaData);
+      }
+      if (metaData.x.range == 1 && metaData.y.range == 1) {
+        this.OpenUnitView();
+      } else {
+        this.OpenTemplateView();
+      }
+    });
+
+    // User move table line and modify available space
+    this.$bus.$on("rerender-selectedData", (prePosition, afterPosition) => {
+      this.VisDB.ReconfigAllCanvas(
+        prePosition.x,
+        prePosition.y,
+        afterPosition.x,
+        afterPosition.y
+      );
+    });
+
+    // User click vis. Restore previous context.
+    this.$bus.$on("select-canvas", (id) => {
+      this.figID = id;
+      this.currentTemplate = this.VisDB.GetTemplate(id);
+      this.visData = this.VisDB.database[id].visData;
+      this.metaData = this.VisDB.database[id].metaData;
+      console.log("restore data", this.visData, this.metaData);
+      this.OpenPanelView();
+    });
+
+    // resize function
+    let bus = this.$bus;
+    let resizeTimeout;
+    window.addEventListener(
+      "resize",
+      () => {
+        if (!resizeTimeout) {
+          resizeTimeout = setTimeout(function () {
+            resizeTimeout = null;
+            // The actualResizeHandler will execute at a rate of 15fps
+            bus.$emit("preview-config");
+          }, 66);
+        }
+      },
+      false
+    );
+  },
+
+  beforeDestroy() {
+    this.$bus.$off("preview-config");
+    this.$bus.$off("visualize-selectedData");
+    this.$bus.$off("rerender-selectedData");
+    this.$bus.$off("select-canvas");
+  },
+};
+</script>
+
+<style lang="less">
+#visview-container {
+  position: absolute;
+  left: 0%;
+  width: 100%;
+  top: 0%;
+  height: 100%;
+  #vis-view {
+    position: absolute;
+    top: 0%;
+    bottom: 0%;
+    left: 0%;
+    right: 0%;
+    background-color: white;
+    overflow: hidden;
+    .el-form-item {
+      margin-top: 2px !important;
+      margin-bottom: 2px !important;
+    }
+  }
+  .panel-view-container {
+    top: 240px;
+    bottom: 0%;
+    left: 0%;
+    right: 0%;
+  }
+}
+
+.role-axis {
+  display: none;
+}
+.vis-test {
+  display: none;
+  background-color: white;
+  position: absolute;
+  left: -300px;
+  top: 0px;
+  width: 200px;
+}
+
+.vis-picture {
+  .vis-picture-hButton {
+    fill: rgb(90, 156, 248);
+    visibility: hidden;
+    cursor: pointer;
+    &:hover {
+      fill: rgb(153, 195, 250);
+    }
+  }
+  &:hover .vis-picture-hButton {
+    visibility: visible;
+  }
+
+  .vis-picture-mButton {
+    fill: rgb(90, 156, 248);
+    cursor: pointer;
+    visibility: visible;
+    &:hover {
+      fill: rgb(153, 195, 250);
+    }
+  }
+}
+
+.vis-picture-button {
+  cursor: pointer;
+  fill: rgb(90, 156, 248);
+  &:hover {
+    fill: rgb(153, 195, 250);
+  }
+}
+</style>
