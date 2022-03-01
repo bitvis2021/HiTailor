@@ -357,6 +357,7 @@ export let markConf = {
         this.properties = {};
         this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], df_interpolate);
         this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 100, df_strokeWidth);
+        this.properties.opacity = new confTemplate.opacity(0.6);
         this.properties.stroke = new confTemplate.color(df_color);
     },
     point: function (df_size, df_shape) {

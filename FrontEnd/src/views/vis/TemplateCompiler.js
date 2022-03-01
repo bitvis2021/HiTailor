@@ -18,6 +18,7 @@ export let supportedTemplate = {
     NNQ_grouped_bar_chart: "Grouped Bar Chart",
     Q2_Horizon_Graph: "Horizon Graph",
     Q2_Scatter_plot: "Scatterplot",
+    NQ_Parallel_Coordinate_Plot: "Parallel Coordinate Plot"
 }
 
 // factory model
@@ -283,7 +284,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             }
 
         case supportedTemplate.NQ_Ranged_Dot_Plot:
-        // TODO: add point support
+            // TODO: add point support
             selections_cell.AddYSelection("value");
             selections_cell.AddXSelection("value");
             vegaConfig = {
@@ -307,6 +308,10 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
         case supportedTemplate.Q2_Horizon_Graph:
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
 
+        case supportedTemplate.NQ_Parallel_Coordinate_Plot:
+            if (is_X) {
+                return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png');
+            }
         default:
             break;
     }
@@ -334,7 +339,8 @@ export function GetTemplates(metaData_obj, visData_arr) {
             supportedTemplate.ANQN_Multi_Series_Line_Chart,
             supportedTemplate.ANQorNQ_Bar_Chart,
             supportedTemplate.ANQN_Stacked_Bar_Chart,
-            supportedTemplate.ANQN_Multi_Series_Line_Chart
+            supportedTemplate.ANQN_Multi_Series_Line_Chart,
+            supportedTemplate.NQ_Parallel_Coordinate_Plot
         ]
         for (let i = 0; i < aggregateChart.length; i++) {
             const chartName = aggregateChart[i];
@@ -498,6 +504,31 @@ Templates.prototype.GetTemplates = function () {
     return ans;
 }
 
+export function TemplateInterface(tempName_str, vegaConfig_obj, previewPic_str) {
+    if (this.vegaConfig == undefined) {
+        this.vegaConfig = {};
+    }
+    this.name = tempName_str;
+    this.vegaConfig = vegaConfig_obj;
+    this.img = previewPic_str;
+}
+
+TemplateInterface.prototype.GetVegaConfig = function () {
+    return this.vegaConfig;
+}
+
+TemplateInterface.prototype.GetVegaLite = function () {
+    return this.vegaConfig;
+}
+
+VegaTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
+    return this.vegaConfig;
+}
+
+
+VegaTemplate.prototype.GetSelections = function () {
+    return {};
+}
 
 export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
     this.name = tempName_str;
@@ -558,6 +589,81 @@ function GetHeaders(channel_obj) {
         ans.push(field.name)
     }
     return ans
+}
+
+// no selection
+function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
+    this.selections = selections_obj;
+    this.vegaConfig = {
+        "data": { "values": visData_arr },
+        "transform": [
+            { "window": [{ "op": "count", "as": "index" }] },
+            {
+                "fold": selections_obj.GetXSelections()
+            },
+            {
+                "joinaggregate": [
+                    { "op": "min", "field": "value", "as": "min" },
+                    { "op": "max", "field": "value", "as": "max" }
+                ],
+                "groupby": ["key"]
+            },
+            {
+                "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
+                "as": "norm_val"
+            },
+            { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
+        ],
+        "layer": [
+            {
+                "mark": { "type": "line", "opacity": 0.3 },
+                "encoding": {
+                    "color": { "type": "nominal", "field": selections_obj.GetYSelections().at(0), "legend": null },
+                    "detail": { "type": "nominal", "field": "index" },
+                    "x": {
+                        "type": "nominal",
+                        "field": "key",
+                        "sort": selections_obj.GetXSelections()
+                    },
+                    "y": { "type": "quantitative", "field": "norm_val", "axis": null }
+                }
+            },
+            {
+                "mark": { "type": "rule", "color": "#ccc" },
+                "encoding": {
+                    "detail": { "aggregate": "count" },
+                    "x": {
+                        "field": "key",
+                        "sort": selections_obj.GetXSelections()
+                    }
+                }
+            }
+        ],
+        "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+    }
+    TemplateInterface.call(this, supportedTemplate.NQ_Parallel_Coordinate_Plot, this.vegaConfig, previewPic_str);
+}
+ParallelCoordinatePlot.prototype = new TemplateInterface();
+ParallelCoordinatePlot.prototype.GetVegaConfig = function () {
+    let layer1 = {
+        mark: this.vegaConfig.layer[0].mark,
+        encoding: {
+            color: this.vegaConfig.layer[0].encoding.color
+        }
+    }
+    return layer1;
+}
+ParallelCoordinatePlot.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
+    this.vegaConfig.layer[0].mark = vegaConfig_obj.mark;
+    if (vegaConfig_obj.encoding.color != undefined) {
+        this.vegaConfig.layer[0].encoding.color = vegaConfig_obj.encoding.color;
+        // alert("You did an unsupported config!");
+    }
+    return this.vegaConfig;
+}
+ParallelCoordinatePlot.prototype.GetSelections = function () {
+    this.selections.SetXSelections([])
+    return this.selections;
 }
 
 function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str) {
