@@ -108,17 +108,9 @@ export default {
     overflow: scroll;
     height: 65vh;
     padding: 5px;
-    &::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-      background: rgb(255, 255, 255);
-      border-radius: 5px;
-      // height: 8px;
-    }
-    &:hover::-webkit-scrollbar-thumb {
-      background-color: #dcdfe6;
-      border-radius: 5px;
-    }
+    // &:hover::-webkit-scrollbar-thumb {
+    //   visibility: visible;
+    // }
   }
 
   .el-dropdown-link {

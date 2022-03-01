@@ -211,11 +211,11 @@ FieldSelection.prototype.SetXSelections = function (selection_arr, bindings_obj)
     }
 }
 
-FieldSelection.prototype.AddXSelection=function (selectionName_str) {
+FieldSelection.prototype.AddXSelection = function (selectionName_str) {
     this.xSelect.selections.push(selectionName_str);
 }
 
-FieldSelection.prototype.AddYSelection=function (selectionName_str) {
+FieldSelection.prototype.AddYSelection = function (selectionName_str) {
     this.ySelect.selections.push(selectionName_str);
 }
 
@@ -253,24 +253,10 @@ EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
     return ans;
 }
 
-EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
-    let encoding = encoding_obj // 可能有坑
-    // encoding.x.scale = { zero: false };
-    encoding.x.axis = { labels: false, ticks: false, title: null };
-    // encoding.y.scale = { zero: false };
-    encoding.y.axis = { labels: false, ticks: false, title: null };
-    encoding.tooltip = [];
-    if (encoding.color != undefined) {
-        encoding.color.legend = false;
-        encoding.tooltip.push(encoding.color);
-    }
-    return encoding
-}
-
 export { EncodingCompiler };
 
 // mark
-export let markType = ['area', 'arc', 'bar', 'boxplot', 'line', 'point', 'rule'];
+export let markType = ['area', 'bar', 'boxplot', 'line', 'point', 'rule'];
 
 export let confTemplate = {
     color: function (df_color) {

@@ -312,8 +312,8 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             if (is_X) {
                 return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png');
             }
-            else{
-                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png','y');
+            else {
+                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
             }
         default:
             break;
@@ -373,8 +373,101 @@ export function GetTemplates(metaData_obj, visData_arr) {
     return templates.GetTemplates();
 }
 
+// TODO: 目前row是乱序的，只能用hashmap了，所以应该想 “如果有相等的atom” 应该怎么做
+function betterGetObjSelections(visData_arr, metaData_obj, direction_str) {
+    // atom col: column header sort == x range
+    let atom_col_key, atom_row_key;
+    metaData_obj.x.headers.forEach(element => {
+        if (element.sort.length == metaData_obj.x.range) {
+            atom_row_key = element.name;
+        }
+    });
+    metaData_obj.y.headers.forEach(element => {
+        if (element.sort.length == metaData_obj.y.range) {
+            atom_col_key = element.name;
+        }
+    });
+
+    if (atom_col_key == undefined || atom_row_key == undefined) {
+        console.log("atom key undefine", atom_row_key, atom_col_key);
+        return null;
+    }
+
+    let ECSelections = new FieldSelection();
+
+    let visDataObj_arr = []
+    let current_atom_value = '';
+    let obj;
+
+    let is_vertical = true;
+    let atom_key = atom_col_key;
+    let another_atom_key = atom_row_key;
+    if (direction_str == 'horizon' || direction_str == 'x') {
+        is_vertical = false;
+        atom_key = atom_row_key;
+        another_atom_key = atom_col_key;
+    }
+
+    // until atom key change change, use another_atom_key's value as key
+    for (let i = 0; i < visData_arr.length; i++) {
+        const element = visData_arr[i];
+
+        if (current_atom_value != element[atom_key]) {
+            if (obj != undefined) {
+                visDataObj_arr.push(obj);
+            }
+            // new object
+            obj = {};
+
+            // add column attribute
+            for (const key in element) {
+                if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
+                    obj[key] = element[key];
+                }
+            }
+            current_atom_value = element[atom_key];
+        }
+        obj[element[another_atom_key]] = element['value'];
+    }
+    visDataObj_arr.push(obj);
+
+
+    console.log('new visData', visDataObj_arr);
+    let XSelection = []
+    let YSelection = []
+    // vertical: Y is atom key (col)
+    if (is_vertical) {
+        for (const key in visData_arr[0]) {
+            if (Object.hasOwnProperty.call(visData_arr[0], key)) {
+                if (key.substring[0, 3] == atom_key.substring(0, 3)) {
+                    YSelection.push(key);
+                }
+                else {
+                    XSelection.push(key);
+                }
+            }
+        }
+    }
+    else {
+        for (const key in visDataObj_arr[0]) {
+            if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
+                if (key.substring(0, 3) == atom_key.substring(0, 3)) {
+                    XSelection.push(key);
+                }
+                else {
+                    YSelection.push(key);
+                }
+            }
+        }
+    }
+    ECSelections.SetXSelections(XSelection);
+    ECSelections.SetYSelections(YSelection);
+    return [visDataObj_arr, ECSelections];
+}
+
 // return [obj_visData, ECSelections]
 function GetObjSelections(visData_arr, metaData_obj, direction_str) {
+    // return betterGetObjSelections(visData_arr, metaData_obj, direction_str);
     let objs = {}
     let is_vertical = true;
 
@@ -551,13 +644,13 @@ export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previ
 
 // User visible config
 VegaTemplate.prototype.GetVegaConfig = function () {
-    this.vegaConfig.encoding = EncodingCompiler.PreprocessEncoding(this.vegaConfig.encoding);
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
     return this.vegaConfig;
 }
 
 // Real vega-lite data
 VegaTemplate.prototype.GetVegaLite = function () {
-    this.vegaConfig.encoding = EncodingCompiler.PreprocessEncoding(this.vegaConfig.encoding);
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
     return this.vegaConfig;
 }
 
@@ -575,12 +668,13 @@ VegaTemplate.prototype.GetSelections = function () {
 // override get vegalite function
 function Q2Template(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
     VegaTemplate.call(this, tempName_str, vegaConfig_obj, selections_obj, previewPic_str);
-
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
 }
 Q2Template.prototype = new VegaTemplate();
 Q2Template.prototype.GetVegaLite = function () {
     this.vegaConfig.encoding.x.type = "quantitative";
     this.vegaConfig.encoding.y.type = "quantitative";
+
     return this.vegaConfig;
 }
 
@@ -729,7 +823,7 @@ ParallelCoordinatePlot.prototype.GetSelections = function () {
 
 function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str) {
     let ySelect_str = selections_obj.GetYSelections().at(0);
-    let xSelect_str = selections_obj.GetXSelections().at(0);
+    let xSelect_str = selections_obj.GetXSelections().at(-1);
 
     this.name = supportedTemplate.Q2_Horizon_Graph;
 
