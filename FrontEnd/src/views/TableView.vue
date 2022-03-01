@@ -437,8 +437,10 @@ export default {
 
       hasTransposed: false,
 
-      visRerenderPrePos:{x:0, y:0},
-      visRerenderAfterPos:{x:0, y:0}
+      visRerenderPrePos: {x:0, y:0},
+      visRerenderAfterPos: {x:0, y:0},
+
+      referenceData: null,
     }
   },
 
@@ -1524,7 +1526,20 @@ export default {
       var rowRefer = this.get_reference_node(this.rowHeader, top, bottom, true)
 
       // priority 1
+      
 
+      // priority 2
+
+
+      // priority 3
+
+
+      // priority 4
+
+
+      // priority 5
+
+      
     },
     get_reference_node(header, start, end, isRow) {     
       var res = []
@@ -1633,7 +1648,6 @@ export default {
         if (findOne) break
         if (findSome) break
       }
-      console.log("refer", res)
 
       return res
     },
@@ -1818,7 +1832,7 @@ export default {
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
-
+    this.referenceData = new Array(5).fill()
 
     // set column width to be the same
     var row = this.tabularDatasetList[0]
