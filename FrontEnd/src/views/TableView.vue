@@ -290,7 +290,7 @@
         </g>
         
         <!-- row mark highlight line -->
-        <line class="highlight-line" v-if="selectedArea!=null"
+        <line class="highlight-line" v-if="selectedArea.top!=null"
           :x1="markWidth"
           :x2="markWidth"
           :y1="heightRangeList[selectedArea.top] + markHeight"
@@ -298,7 +298,7 @@
         </line>
 
         <!-- column mark highlight line -->
-        <line class="highlight-line" v-if="selectedArea!=null"
+        <line class="highlight-line" v-if="selectedArea.top!=null"
           :x1="widthRangeList[selectedArea.left] + markWidth"
           :x2="widthRangeList[selectedArea.right+1] + markWidth"
           :y1="markHeight"
@@ -306,7 +306,7 @@
         </line>
 
         <!-- selected area -->
-        <rect v-if="isCurrFlat || !isCurrFlat && selectedArea!=null"
+        <rect v-if="selectedArea.top!=null"
           class="selected-area"
           :x="markWidth + widthRangeList[selectedArea.left]" 
           :y="markHeight + heightRangeList[selectedArea.top]" 
@@ -397,7 +397,9 @@ export default {
       markHeightChangeSignal: true,
 
       selectedCell: {cstart:null, cend:null, rstart:null, rend:null},
-      selectedArea: null,
+      // selectedCell: null,
+      // selectedArea: null,
+      selectedArea: {top:null, left:null, bottom:null, right:null},
       selectedMark: {index:null, type:null},
 
       mouseOverCell: {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null},
@@ -758,7 +760,7 @@ export default {
     // }, 
     clear_selected() {
       this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
-      this.selectedArea = {top:0, left:0, bottom:0, right:0}
+      this.selectedArea = {top:null, left:null, bottom:null, right:null}
       this.selectedMark = {index:null, type:null}
       this.selectByMark = {row:false, column:false}
     },
@@ -781,6 +783,7 @@ export default {
       }
     },
     transform_fold() {
+      this.clear_selected()
       this.isCurrFlat = true
       if (this.flatData == null) {
         this.flatData = this.get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1)
@@ -803,6 +806,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_unfold() {
+      this.clear_selected()
       this.isCurrFlat = false
       if (!this.isHeaderFixed) {
         // todo: flat识别header结构!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -815,13 +819,14 @@ export default {
 
       var lastRowLayer = JSON.parse(JSON.stringify(Array.from(this.rowHeader[this.rowHeader.length-1])))
       var lastRowRange = JSON.parse(JSON.stringify(lastRowLayer[lastRowLayer.length-1][1].range))
-      var row = this.headerRange.right+1 + lastRowRange[lastRowRange.length-1].end+1
+      var row = this.headerRange.bottom+1 + lastRowRange[lastRowRange.length-1].end+1
       this.markRowHeightList = this.set_list_length(this.markRowHeightList, row, this.cellHeight)
 
       this.send_change_height_signal()
       this.send_change_width_signal()
     },
     transform_transpose() {
+      this.clear_selected()
       this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
         for (var item of this.colHeader[i]) {
@@ -863,6 +868,7 @@ export default {
       }
     },
     transform_swap(name, header, isSwapUp, isRow) {
+      this.clear_selected()
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
       var upLayerNum, downLayerNum
@@ -1066,6 +1072,7 @@ export default {
       }
     },
     transform_2stacked(name, header, times, isRow) {
+      this.clear_selected()
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
@@ -1169,6 +1176,7 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow) {
+      this.clear_selected()
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
@@ -1331,9 +1339,11 @@ export default {
       }
     },
     transform_derive() {
+      this.clear_selected()
 
     },
     transform_merge() {
+      this.clear_selected()
 
     },
     transmit_data_to_vis() {
@@ -1792,7 +1802,7 @@ export default {
       ]),
     isMarkSelected() { 
       return (index, type) => { 
-        if (this.selectedArea == null)  return false
+        if (this.selectedArea.top == null)  return false
         if (type == "row") {
           if (index >= this.selectedArea.top && index <= this.selectedArea.bottom) {
             return true
