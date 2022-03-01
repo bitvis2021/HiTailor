@@ -268,7 +268,7 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, header
     for (var row=headerRange.bottom+1; row<rowHeightList.length; row++) {
       for (var col=headerRange.right+1; col<columnWidthList.length; col++) {
         var value = dataValueList[row][col]
-        // if (value == 'None') value = ''
+        if (value == 'None') value = ''
         var seq = new Set
         //column header
         for (var i=0; i<colHeader.length; i++) { // find header in each row
