@@ -654,7 +654,9 @@ VegaTemplate.prototype.GetVegaConfig = function () {
 }
 
 // Real vega-lite data
-VegaTemplate.prototype.GetVegaLite = function () {
+VegaTemplate.prototype.GetVegaLite = function (height, width) {
+    this.vegaConfig.height = height;
+    this.vegaConfig.width = width;
     this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
     return this.vegaConfig;
 }
@@ -673,12 +675,14 @@ VegaTemplate.prototype.GetSelections = function () {
 // override get vegalite function
 function Q2Template(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
     VegaTemplate.call(this, tempName_str, vegaConfig_obj, selections_obj, previewPic_str);
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
 }
 Q2Template.prototype = new VegaTemplate();
-Q2Template.prototype.GetVegaLite = function () {
+Q2Template.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.encoding.x.type = "quantitative";
     this.vegaConfig.encoding.y.type = "quantitative";
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -15 } };
+    this.vegaConfig.height = height;
+    this.vegaConfig.width = width;
 
     return this.vegaConfig;
 }
@@ -726,7 +730,7 @@ function HistogramScatterplot(visData_arr, selections_obj, binsX_nu, binsY_nu, p
             "size": {
                 "aggregate": "count",
                 "type": "quantitative",
-                legend:false
+                legend: false
             }
         },
     }
@@ -742,11 +746,18 @@ HistogramScatterplot.prototype.GetVegaConfig = function () {
         }
     }
 }
+HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -15 } };
+    this.vegaConfig.height = height;
+    this.vegaConfig.width = width;
+    return this.vegaConfig;
+}
 HistogramScatterplot.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
     this.vegaConfig.encoding.x = vegaConfig_obj.encoding.x;
     this.vegaConfig.encoding.y = vegaConfig_obj.encoding.y;
     return this.vegaConfig;
 }
+HistogramHeatmap.prototype = new VegaTemplate();
 
 HistogramHeatmap.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
     this.vegaConfig.encoding.x = vegaConfig_obj.encoding.x;
@@ -763,7 +774,15 @@ HistogramHeatmap.prototype.GetVegaConfig = function () {
         }
     }
 }
-HistogramHeatmap.prototype = new VegaTemplate();
+
+HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
+    console.log("heat map");
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -15 } };
+    this.vegaConfig.height = height;
+    this.vegaConfig.width = width;
+    return this.vegaConfig;
+}
+
 function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previewPic_str) {
     let defaultVal1 = selections_obj.GetXSelections().at(0);
     let defaultVal2 = selections_obj.GetXSelections().at(-1);
@@ -797,7 +816,7 @@ function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previ
             "color": {
                 "aggregate": "count",
                 "type": "quantitative",
-                legend:false
+                legend: false
             }
         },
         "config": {
@@ -1001,7 +1020,10 @@ HorizonGraphTemplate.prototype.GetVegaConfig = function () {
 }
 
 // Real vega-lite data
-HorizonGraphTemplate.prototype.GetVegaLite = function (heigh, width) {
+HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -15 } };
+    this.vegaConfig.height = height;
+    this.vegaConfig.width = width;
     return this.vegaConfig;
 }
 
