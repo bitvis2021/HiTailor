@@ -171,8 +171,6 @@ export default {
         let data = JSON.parse(
           JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
         );
-        data.height = height;
-        data.width = width;
         console.log("preview data", data);
         vegaEmbed("#chart", data, {
           renderer: "svg",
@@ -276,9 +274,17 @@ export default {
   }
 }
 
-.role-axis {
+#gen-chart{
   display: none;
 }
+
+.role-axis-grid {
+  display: none;
+}
+.role-axis-domain{
+  display: none;
+}
+
 .vis-test {
   display: none;
   background-color: white;

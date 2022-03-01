@@ -220,8 +220,8 @@ VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
     this.database[id].vegaTemplate.CompileTweakedConfig(vegaConfig);
 }
 
-VisDatabase.prototype.GetVegaLite = function (id) {
-    return this.database[id].vegaTemplate.GetVegaLite();
+VisDatabase.prototype.GetVegaLite = function (id, height, width) {
+    return this.database[id].vegaTemplate.GetVegaLite(height, width);
 }
 
 VisDatabase.prototype.SetTemplate = function (id, template) {
@@ -271,9 +271,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = this.GetVegaLite(id);
-    chartJson.height = height - 0.3;
-    chartJson.width = width - 0.3;
+    let chartJson = this.GetVegaLite(id, height - 0.3, width - 0.3);
 
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
