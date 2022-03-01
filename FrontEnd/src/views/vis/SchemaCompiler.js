@@ -10,26 +10,28 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         xField: {
             name: 'field',
             type: 'select',
-            selections: this.ECSelections.xSelect.selections.concat(['value']),
+            // selections: this.ECSelections.xSelect.selections.concat(['value']),
+            selections: this.ECSelections.xSelect.selections,
             value: ''
         },
         yField: {
             name: 'field',
             type: 'select',
             value: '',
-            selections: this.ECSelections.ySelect.selections.concat(['value'])
+            selections: this.ECSelections.ySelect.selections
+            // selections: this.ECSelections.ySelect.selections.concat(['value'])
         },
         allField: {
             name: 'field',
             type: 'group select',
             value: '',
-            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections, value: ['value'] },
+            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
         },
         aggregate: {
             name: 'aggregate',
             type: 'select',
             value: '',
-            selections: ['count', 'sum', 'mean', 'stdev', 'median', 'min', 'max'],
+            selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
         }
     }
     this.encodings = {
@@ -52,6 +54,7 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         },
         color: {
             field: property.allField,
+            aggregate: property.aggregate
         },
         detail: {
             field: property.allField,
@@ -114,8 +117,10 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
                             this.vegaEncoding[encodingName].sort = undefined;
                         }
                         else {
-                            this.vegaEncoding[encodingName].type = "nominal";
-                            this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
+                            if (this.sortBindings != undefined && this.sortBindings.hasOwnProperty(property.value)) {
+                                this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
+                                this.vegaEncoding[encodingName].type = "nominal";
+                            }
                         }
                     }
                 }
@@ -126,7 +131,7 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
 
         }
     }
-    return EncodingCompiler.PreprocessEncoding(this.vegaEncoding);
+    return this.vegaEncoding;
 }
 
 EncodingCompiler.prototype.GetNewEncoding = function (encodingName) {
@@ -187,26 +192,58 @@ EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, pro
         }
     }
 }
-EncodingCompiler.GetSelections = function (metaData_obj) {
-    /*
-        {
-            xSelections:{
-                selections:[],
-                bindings:{key:[sort]}
-            }
-        }
-    */
 
-    let ans = {
-        xSelect: {
-            selections: [],
-            bindings: {}
-        },
-        ySelect: {
-            selections: [],
-            bindings: {}
-        }
+export function FieldSelection() {
+    this.xSelect = {
+        selections: [],
+        bindings: {}
+    };
+    this.ySelect = {
+        selections: [],
+        bindings: {}
     }
+}
+
+FieldSelection.prototype.SetXSelections = function (selection_arr, bindings_obj) {
+    this.xSelect.selections = selection_arr;
+    if (bindings_obj == undefined) {
+        this.xSelect.bindings = {};
+    }
+    else {
+        this.xSelect.bindings = bindings_obj;
+    }
+}
+
+FieldSelection.prototype.AddXSelection = function (selectionName_str) {
+    this.xSelect.selections.push(selectionName_str);
+}
+
+FieldSelection.prototype.AddYSelection = function (selectionName_str) {
+    this.ySelect.selections.push(selectionName_str);
+}
+
+FieldSelection.prototype.SetYSelections = function (selection_arr, bindings_obj) {
+    this.ySelect.selections = selection_arr;
+    if (bindings_obj == undefined) {
+        this.ySelect.bindings = {};
+    }
+    else {
+        this.ySelect.bindings = bindings_obj;
+    }
+}
+
+FieldSelection.prototype.GetXSelections = function () {
+    return this.xSelect.selections;
+}
+
+
+FieldSelection.prototype.GetYSelections = function () {
+    return this.ySelect.selections;
+}
+
+EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
+
+    let ans = new FieldSelection();
 
     metaData_obj.x.headers.forEach(element => {
         ans.xSelect.selections.push(element.name);
@@ -219,24 +256,10 @@ EncodingCompiler.GetSelections = function (metaData_obj) {
     return ans;
 }
 
-EncodingCompiler.PreprocessEncoding = function (encoding_obj) {
-    let encoding = encoding_obj // 可能有坑
-    // encoding.x.scale = { zero: false };
-    encoding.x.axis = { labels: false, ticks: false, title: null };
-    // encoding.y.scale = { zero: false };
-    encoding.y.axis = { labels: false, ticks: false, title: null };
-    encoding.tooltip = [];
-    if (encoding.color != undefined) {
-        encoding.color.legend = false;
-        encoding.tooltip.push(encoding.color);
-    }
-    return encoding
-}
-
 export { EncodingCompiler };
 
 // mark
-export let markType = ['area', 'arc', 'bar', 'boxplot', 'line', 'point', 'rule'];
+export let markType = ['area', 'bar', 'boxplot', 'line', 'point', 'rule'];
 
 export let confTemplate = {
     color: function (df_color) {
@@ -297,19 +320,15 @@ export let markConf = {
         this.properties.innerRadius = new confTemplate.width('inner radius', 1, 100, df_innerRadius);
         this.properties.outerRadius = new confTemplate.width('outer radius', 1, 100, df_outerRadius);
     },
-    // area: function (df_color, df_opacity) {
-    //     this.properties = {};
-    //     this.properties.opacity = new confTemplate.opacity(df_opacity);
-    //     this.properties.color = new confTemplate.color(df_color);
-    // },
-    bar: function (direction_str) {
-        // this.properties = {};
-        // if (direction_str == 'vertical') {
-        //     this.properties.width = new confTemplate.width('width', 1, 100, 30);
-        // }
-        // else {
-        //     this.properties.height = new confTemplate.width('height', 1, 100, 30);
-        // }
+    area: function () {
+        this.properties = {};
+        this.properties.opacity = new confTemplate.opacity(0.6);
+        this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], "monotone");
+        this.properties.color = new confTemplate.color();
+    },
+    bar: function () {
+        this.properties = {};
+        this.properties.opacity = new confTemplate.opacity(0.6);
         // this.properties.baseline = new confTemplate.select_radius("base line", ["alphabetic", "top", "middle", "bottom"], "alphabetic");
         // this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
     },
@@ -322,6 +341,7 @@ export let markConf = {
         this.properties = {};
         this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], df_interpolate);
         this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 100, df_strokeWidth);
+        this.properties.opacity = new confTemplate.opacity(0.6);
         this.properties.stroke = new confTemplate.color(df_color);
     },
     point: function (df_size, df_shape) {
@@ -333,4 +353,10 @@ export let markConf = {
         this.properties = {};
         this.properties.thickness = new confTemplate.width('thickness', 1, 100, 2);
     },
+    circle: function () {
+
+    },
+    rect: function () {
+
+    }
 }

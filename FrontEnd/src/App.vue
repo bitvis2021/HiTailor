@@ -25,19 +25,21 @@
           {{ operation }}
         </el-menu-item>
       </el-tooltip> -->
-      <el-menu-item v-for="operation in operationArray" :key="operation"
+      <el-menu-item
+        v-for="operation in operationArray"
+        :key="operation"
         @click="changeDialogVisible(operation)"
       >
         {{ operation }}
       </el-menu-item>
     </el-menu>
-        
+
     <!-- <div class="content-container">
       <TableView :isHeaderFixed="isHeaderFixed" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
     </div> -->
 
     <div class="content-container">
-      <TableView></TableView> 
+      <TableView></TableView>
     </div>
 
     <div id="vis-panel">
@@ -144,7 +146,7 @@ export default {
 
 <style lang="less">
 @side-panel-width: 20%;
-@padding:0.7rem;
+@padding: 0.7rem;
 @menu-height: 2.5rem;
 // @change-view-button-container-height: 3.5rem;
 html {
@@ -195,19 +197,34 @@ html {
     left: 0;
     bottom: @padding;
     right: @side-panel-width;
-    margin-right:@padding;
+    margin-right: @padding;
   }
   svg:not(:root) {
     overflow: visible;
   }
   #vis-panel {
     position: absolute;
-    right: 1%;
+    right: 0%;
     width: @side-panel-width;
     top: @menu-height;
     bottom: 0%;
     border-left: solid #efefef 1px;
     background-color: white;
+  }
+
+  // scroll bar
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #dcdfe6;
+    border-radius: 5px;
+    // visibility: hidden;
+    &:hover{
+      visibility: visible;
+    }
   }
 }
 </style>

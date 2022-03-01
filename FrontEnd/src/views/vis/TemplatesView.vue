@@ -34,7 +34,11 @@
             </div>
           </div>
           <div slot="reference">
-            <el-image :src="template[0].img" :fit="'cover'" class="template-img">
+            <el-image
+              :src="template[0].img"
+              :fit="'cover'"
+              class="template-img"
+            >
             </el-image>
             <div class="demonstration">{{ template[0].name }}</div>
           </div>
@@ -45,6 +49,8 @@
           <div class="demonstration">{{ template[0].name }}</div>
         </div>
       </div>
+      <el-divider></el-divider>
+      <br />
     </div>
   </div>
 </template>
@@ -71,6 +77,10 @@ export default {
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: start;
+  align-items: flex-start;
+  align-content: flex-start;
+  height: 90vh;
+  overflow: scroll;
 }
 .template-pop {
   display: flex;
@@ -83,7 +93,7 @@ export default {
   margin: 2%;
 }
 .template-img {
-  width: 140px;
+  width: 95%;
   height: 80px;
   border-style: solid;
   border-width: 2px;

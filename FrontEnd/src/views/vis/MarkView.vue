@@ -25,7 +25,8 @@
       </div>
       <el-button v-else type="text" @click="AddProperty" size="small"
         ><div class="el-icon-circle-plus"></div>
-        Adjust Mark Property</el-button>
+        Adjust Mark Property</el-button
+      >
     </div>
   </div>
 </template>
@@ -74,6 +75,9 @@ export default {
       this.isMultipleProperty = true;
       this.ChangeForm(this.type);
     },
+    toSingle() {
+      this.isMultipleProperty = false;
+    },
   },
   computed: {},
   mounted() {
@@ -93,10 +97,17 @@ export default {
 .el-form-item__label-wrap {
   margin-left: 0px !important;
 }
+.fieldGroupWrap_box {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin-top: 10px !important;
+}
 .mark-container {
   margin-top: 20px;
+  // text-align: left;
   .mark-card {
-    padding: 10px;
+    padding: 15px;
+    margin-top: 5px;
   }
 }
 </style>

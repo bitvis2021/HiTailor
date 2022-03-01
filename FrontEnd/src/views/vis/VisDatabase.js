@@ -4,28 +4,29 @@ import vegaEmbed from "vega-embed";
 // 应该从这里获得selection
 
 
-export function VisDatabase() {
+export function VisDatabase(eventBus_obj) {
     this.database = {};
-    this.bus = {};
+    this.bus = eventBus_obj;
 }
 
 VisDatabase.prototype.SelectHandler = function (id) {
-    if (this.database[id].status == status.clear) {
-        this.SelectCanvas(id);
+    if (this.database.hasOwnProperty(id)) {
+        if (this.database[id].status == status.clear) {
+            this.SelectCanvas(id);
 
-        // todo: Bind vis data and id, then commit vegalite here
-        this.bus.$emit("select-canvas", id);
-    }
-    else if (this.database[id].status == status.select) {
-        this.CancelSelection(id);
-        // this.bus.$emit("close-tweakPanel");
-    }
+            // todo: Bind vis data and id, then commit vegalite here
+            this.bus.$emit("select-canvas", id);
+        }
+        else if (this.database[id].status == status.select) {
+            this.CancelSelection(id);
+        }
 
-    // close other selection
-    for (const key in this.database) {
-        if (Object.hasOwnProperty.call(this.database, key)) {
-            if (key != id) {
-                this.CancelSelection(key);
+        // close other selection
+        for (const key in this.database) {
+            if (Object.hasOwnProperty.call(this.database, key)) {
+                if (key != id) {
+                    this.CancelSelection(key);
+                }
             }
         }
     }
@@ -200,25 +201,27 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaTemplate) {
+function visMetaData(id, x, y, height, width, vegaTemplate, visData_arr, metaData_obj) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.height = height;
     this.width = width;
     this.vegaTemplate = vegaTemplate;
+    this.visData = visData_arr
+    this.metaData = metaData_obj
     this.status = status.clear;
 }
 
-
+// restore context
 
 VisDatabase.prototype.SetVegaConfig = function (id, vegaConfig) {
     // 之前在这里的时候赋值不成功
     this.database[id].vegaTemplate.CompileTweakedConfig(vegaConfig);
 }
 
-VisDatabase.prototype.GetVegaLite = function (id) {
-    return this.database[id].vegaTemplate.GetVegaLite();
+VisDatabase.prototype.GetVegaLite = function (id, height, width) {
+    return this.database[id].vegaTemplate.GetVegaLite(height, width);
 }
 
 VisDatabase.prototype.SetTemplate = function (id, template) {
@@ -232,7 +235,7 @@ VisDatabase.prototype.GetTemplate = function (id) {
 // table id==table-view-svg
 // vis generator==gen-chart
 
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj) {
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj, visData_arr, metaData_obj) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
@@ -241,7 +244,7 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_arr, metaData_obj);
     this.database[canvas_id] = metaData;
 
     this.RenderCanvas(canvas_id);
@@ -268,9 +271,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = this.GetVegaLite(id);
-    chartJson.height = height - 0.3;
-    chartJson.width = width - 0.3;
+    let chartJson = this.GetVegaLite(id, height - 0.3, width - 0.3);
 
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");

@@ -4,10 +4,11 @@
     <div class="encoding-card">
       <div
         v-for="(encoding, eName) in this.schema"
-        :key="eName + encoding.name"
+        :key="eName + encoding.name + GenID()"
       >
         <!-- delete encoding -->
         <div class="close-box">
+          {{ eName }}
           <el-button
             size="mini"
             type="text"
@@ -16,14 +17,13 @@
             ><i class="el-icon-close"></i
           ></el-button>
         </div>
-        {{ eName }}
         <el-row
           type="flex"
           class="row-bg property-box"
           justify="start"
           v-for="(property, key) in encoding"
           :gutter="20"
-          :key="key + property.name"
+          :key="GenID() + key"
         >
           <!-- delete property -->
           <div class="close-button">
@@ -50,7 +50,7 @@
             >
               <el-option
                 v-for="item in property.selections"
-                :key="eName + item"
+                :key="eName + item + GenID()"
                 :label="item"
                 :value="item"
               >
@@ -64,12 +64,12 @@
             >
               <el-option-group
                 v-for="(group, key) in property.selections"
-                :key="group + key"
+                :key="GenID() + key"
                 :label="key"
               >
                 <el-option
                   v-for="item in group"
-                  :key="eName + item"
+                  :key="GenID() + item"
                   :label="item"
                   :value="item"
                 >
@@ -88,7 +88,7 @@
               <el-dropdown-item
                 v-for="(value, index) in EC.GetProperties(schema, eName)"
                 :command="value"
-                :key="index + value"
+                :key="GenID() + index"
                 >{{ value }}</el-dropdown-item
               >
               <el-dropdown-item
@@ -113,7 +113,7 @@
           <el-dropdown-item
             v-for="(value, index) in EC.GetEncodings(schema)"
             :command="value"
-            :key="index + value"
+            :key="GenID() + index"
             >{{ value }}</el-dropdown-item
           >
           <el-dropdown-item disabled v-if="EC.GetEncodings(schema).length == 0"
@@ -122,6 +122,8 @@
         </el-dropdown-menu>
       </el-dropdown>
     </el-row>
+    <br />
+    <br />
   </div>
 </template>
 <script>
@@ -130,7 +132,8 @@ export default {
   name: "EncodingView",
   props: ["config", "selections"],
   components: {},
-  created() {},
+  created() {
+  },
   mounted() {
     // this.EC = new EncodingCompiler(this.config, this.selections);
     this.schema = this.EC.GetSchema();
@@ -180,6 +183,25 @@ export default {
       this.EC.DeletPropertyOnVega(encodingName, propertyName);
       this.ApplyConfig();
     },
+    GenID() {
+      function S4() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+      }
+      return (
+        S4() +
+        S4() +
+        "-" +
+        S4() +
+        "-" +
+        S4() +
+        "-" +
+        S4() +
+        "-" +
+        S4() +
+        S4() +
+        S4()
+      );
+    },
   },
   computed: {},
 };
@@ -195,15 +217,7 @@ export default {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   color: #606266;
 }
-.fieldGroupWrap_title {
-  margin: 0px !important;
-  line-height: 15px !important;
-  font-family: "Avenir", Helvetica, Arial, sans-serif !important;
-  font-size: 14px !important;
-}
-.genFormLabel {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-}
+
 .encoding-card {
   border-style: none !important;
   padding: 10px 10px 0px 10px;
@@ -218,8 +232,12 @@ export default {
   }
 }
 .close-box {
-  text-align: right;
-  margin-bottom: -15px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: -10px;
+  margin-top: 5px;
+  margin-left: 10px;
 
   .close-button {
     visibility: hidden;

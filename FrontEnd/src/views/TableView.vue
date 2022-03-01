@@ -78,9 +78,7 @@
     </div> -->
 
     <div class="table-view-svg-container">
-      <svg class="table-view-svg" :height="markHeight + heightRangeList[heightRangeList.length-1]" :width="markWidth + widthRangeList[widthRangeList.length-1]"
-        @mouseup="handle_mouse_up()"
-        @mousemove="handle_mouse_move($event)">
+      <svg class="table-view-svg" :height="markHeight + heightRangeList[heightRangeList.length-1]" :width="markWidth + widthRangeList[widthRangeList.length-1]"        @mousemove="handle_mouse_move($event)">
         <rect x="0" y="0" :width=markWidth :height=markHeight class="table-mark" />
 
         <g v-if="isCurrFlat">
@@ -697,7 +695,9 @@ export default {
       this.selectedMark = {index:null, type:null}
       if (this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
-          this.transmit_data_to_vis()
+          console.log("this.selectedArea", this.selectedArea)
+          this.transmit_data_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+          this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
         }
       }
     },
@@ -1346,16 +1346,17 @@ export default {
       this.clear_selected()
 
     },
-    transmit_data_to_vis() {
-      var data = this.get_data_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
-      var metadata = this.gen_metadata_from_chosen(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+    transmit_data_to_vis(top, bottom, left, right) {
+      console.log("111")
+      var data = this.get_data_from_chosen(top, bottom, left, right)
+      var metadata = this.gen_metadata_from_chosen(top, bottom, left, right)
       var chgdata = this.change_data_form(data)
       var jsdata = this.gen_json_from_data(data, chgdata)
 
-      var x = this.markWidth + this.widthRangeList[this.selectedArea.left]
-      var y = this.markHeight + this.heightRangeList[this.selectedArea.top]
-      var width = this.widthRangeList[this.selectedArea.right+1] - this.widthRangeList[this.selectedArea.left]
-      var height= this.heightRangeList[this.selectedArea.bottom+1] - this.heightRangeList[this.selectedArea.top]
+      var x = this.markWidth + this.widthRangeList[left]
+      var y = this.markHeight + this.heightRangeList[top]
+      var width = this.widthRangeList[right+1] - this.widthRangeList[left]
+      var height= this.heightRangeList[bottom+1] - this.heightRangeList[top]
       var pos = {"x":x, "y":y, "width":width, "height":height}
       
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
@@ -1397,14 +1398,14 @@ export default {
         for (var k=0; k<ch.length; k++) {
           // column
           data[i][ch[k]] = prefix + data[i][ch[k]]
-          prefix = (data[i][ch[k]] + ".")
+          prefix = (data[i][ch[k]] + " > ")
         }
         
         prefix = ""
         for (var k=0; k<rh.length; k++) {
           // row
           data[i][rh[k]] = prefix + data[i][rh[k]]
-          prefix = (data[i][rh[k]] + ".")
+          prefix = (data[i][rh[k]] + " > ")
         }          
       }
       return data
@@ -1468,7 +1469,7 @@ export default {
               var nname = ""
               for (var q=0; q<totalPre.length; q++) {
                 if (j <= totalPre[q].end && j >= totalPre[q].start) {
-                  nname += xobj.headers[i-1].sort[q] + "."
+                  nname += xobj.headers[i-1].sort[q] + " > "
                   break
                 }
               }
@@ -1506,7 +1507,7 @@ export default {
               var nname = ""
               for (var q=0; q<totalPre.length; q++) {
                 if (j <= totalPre[q].end && j >= totalPre[q].start) {
-                  nname += yobj.headers[i-1].sort[q] + "."
+                  nname += yobj.headers[i-1].sort[q] + " > "
                   break
                 }
               }
@@ -1528,7 +1529,124 @@ export default {
       var js = JSON.stringify(res)
       return js
     },
+    cal_recommendation_data(top, bottom, left, right) {
+      var colRefer = this.get_reference_node(this.colHeader, left, right, false)
+      var rowRefer = this.get_reference_node(this.rowHeader, top, bottom, true)
 
+      // priority 1
+
+    },
+    get_reference_node(header, start, end, isRow) {     
+      var res = []
+      var linearName = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
+      var findOne = false, findSome = false
+      for (var i=0; i<header.length; i++) {
+        for (var [key, value] of header[i]) {
+          var goNextLayer = false
+          var ranges = value.range, children = value.children
+          for (var j=0; j<ranges.length; j++) {
+            if (start == ranges[j].start && end == ranges[j].end) {   // choose a single node(including linear)
+              var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+              if (key == linearName) {
+                tmp.isLinear = true
+              }
+              if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
+                tmp.hasLinear = true
+              }
+              res.push(tmp)
+              findOne = true
+              break
+            }
+            else {
+              if (start == ranges[j].start) {
+                if (end < ranges[j].end) {
+                  goNextLayer = true
+                  break
+                }
+                else {
+                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                  if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
+                    tmp.hasLinear = true
+                  }
+                  res.push(tmp)
+                  break
+                }
+              }
+              else if (start < ranges[j].start) {
+                if (end == ranges[j].end) {
+                  if (res.length != 0) {
+                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                    if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
+                      tmp.hasLinear = true
+                    }
+                    res.push(tmp)
+                    break
+                  }
+                }
+                else if (end < ranges[j].end){
+                  if (end < ranges[j].start) {
+                    continue
+                  }
+                  else {
+                    if (i != header.length-1) { // not last layer
+                      res = []
+                      findOne = true
+                      break
+                    }
+                  }
+                }
+                else {
+                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                  if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
+                    tmp.hasLinear = true
+                  }
+                  res.push(tmp)
+                  break
+                }
+              }
+              else if (start > ranges[j].start) {
+                if (end == ranges[j].end) {
+                  if (children.length!=0 && children[j].indexOf(linearName)!=-1 
+                  && start == ranges[j].start+1) {    // choose a single node(not including linear)
+                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                    res.push(tmp)
+                    findOne = true
+                    break
+                  }
+                  else {
+                    goNextLayer = true
+                    break
+                  }
+                }
+                else if (end < ranges[j].end){
+                  goNextLayer = true
+                  break
+                }
+                else {
+                  if (start > ranges[j].end) {
+                    continue
+                  }
+                  else {
+                    if (i != header.length-1) { // not last layer
+                      res = []
+                      findOne = true
+                      break
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if (findOne) break
+          if (goNextLayer) break
+        }
+        if (findOne) break
+        if (findSome) break
+      }
+      console.log("refer", res)
+
+      return res
+    },
     before_header_interaction(id, isRowHeader, name, times, layer) {
       let self = this
       // delete other helpers

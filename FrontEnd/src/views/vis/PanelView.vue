@@ -9,26 +9,32 @@
         </el-col>
       </el-row>
     </div>
-    <div id="panel">
-      <layer-view
+    <div id="layer">
+      <mark-view
+        :config="this.markJson"
+        v-on:apply-config="ApplyMark"
+      ></mark-view>
+      <encoding-view
+        :config="this.encodingJson"
         :selections="this.selections"
-        :vegaConfig="this.vegaConfig"
-        v-on:apply-config="this.ApplyConfig"
-      ></layer-view>
+        v-on:apply-config="ApplyEncoding"
+      ></encoding-view>
     </div>
   </div>
 </template>
 <script>
-import LayerView from "./LayerView.vue";
+import MarkView from "./MarkView.vue";
+import EncodingView from "./EncodingView.vue";
 
 export default {
-  components: { LayerView },
   name: "PanelView",
+  components: { MarkView, EncodingView },
   props: ["vegaConfig", "selections"],
   data() {
     return {
-      editableTabs: [],
-      editableTabsValue: "",
+      visData: this.vegaConfig.data,
+      markJson: this.vegaConfig.mark,
+      encodingJson: this.vegaConfig.encoding,
     };
   },
   methods: {
@@ -36,12 +42,23 @@ export default {
     Apply2Vis() {
       this.$emit("apply-vis");
     },
-    ApplyConfig(data) {
-      this.$emit("apply-config", data);
-    }
+    ApplyMark(data) {
+      this.markJson = data;
+      this.EmitVegaConfig();
+    },
+    ApplyEncoding(data) {
+      this.encodingJson = data;
+      this.EmitVegaConfig();
+    },
+    EmitVegaConfig() {
+      this.$emit("apply-config", {
+        data: this.visData,
+        mark: this.markJson,
+        encoding: this.encodingJson,
+      });
+    },
   },
-  mounted() {
-  },
+  mounted() {},
 };
 </script>
 <style lang="less">
@@ -61,8 +78,6 @@ export default {
 .el-form-item__content {
   line-height: @input-height !important;
 }
-</style>
-<style scoped lang="less">
 .panel-view {
   // position: absolute;
   left: 0%;
@@ -86,23 +101,16 @@ export default {
     border-radius: 10px;
     text-align: left;
     top: 5%;
-    height: 60vh;
-    overflow: scroll;
     margin-top: 5px;
-    &::-webkit-scrollbar {
-      width: 5px;
-      background: rgb(255, 255, 255);
-      border-radius: 5px;
-      // height: 8px;
-    }
-    &:hover::-webkit-scrollbar-thumb {
-      background-color: #dcdfe6;
-      border-radius: 5px;
-    }
   }
-  #add-layer {
-    // position: absolute;
-    right: 10%;
+  #layer {
+    height: 100px;
+    overflow: scroll;
+    height: 65vh;
+    padding: 5px;
+    // &:hover::-webkit-scrollbar-thumb {
+    //   visibility: visible;
+    // }
   }
 
   .el-dropdown-link {
@@ -111,19 +119,6 @@ export default {
   }
   .el-icon-arrow-down {
     font-size: 12px;
-  }
-  .el-tabs__item {
-    padding: 0 10px !important;
-    height: 20px !important;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-    line-height: 15px !important;
-    display: inline-block;
-    list-style: none;
-    font-size: 8px !important;
-    font-weight: 500;
-    color: #303133;
-    position: relative;
   }
 }
 </style>
