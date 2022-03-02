@@ -321,11 +321,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
             }
 
-        // horizon 是y比较多
         case supportedTemplate.NQ_Histogram_Heatmap:
-            let n_selections = selections_horizon;
-            n_selections.SetXSelections(selections_horizon.GetYSelections())
-            n_selections.SetYSelections(selections_horizon.GetYSelections())
             if (is_X) {
                 return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
             }
@@ -333,10 +329,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
             }
         case supportedTemplate.NQ_Histogram_Scatterplot:
-
-            n_selections = selections_horizon;
-            n_selections.SetXSelections(selections_horizon.GetYSelections())
-            n_selections.SetYSelections(selections_horizon.GetYSelections())
             if (is_X) {
                 return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
             }
@@ -411,8 +403,7 @@ export function GetTemplates(metaData_obj, visData_arr) {
     return templates.GetTemplates();
 }
 
-// TODO: 目前row是乱序的，只能用hashmap了，所以应该想 “如果有相等的atom” 应该怎么做
-function betterGetObjSelections(visData_arr, metaData_obj, direction_str) {
+function GetObjSelections(visData_arr, metaData_obj, direction_str) {
     // atom col: column header sort == x range
     let atom_col_key, atom_row_key;
     metaData_obj.x.headers.forEach(element => {
@@ -430,183 +421,64 @@ function betterGetObjSelections(visData_arr, metaData_obj, direction_str) {
         console.log("atom key undefine", atom_row_key, atom_col_key);
         return null;
     }
-
+    
+    let visDataObj_arr = []
     let ECSelections = new FieldSelection();
 
-    let visDataObj_arr = []
-    let current_atom_value = '';
-    let obj;
-
-    let is_vertical = true;
     let atom_key = atom_col_key;
     let another_atom_key = atom_row_key;
     if (direction_str == 'horizon' || direction_str == 'x') {
-        is_vertical = false;
         atom_key = atom_row_key;
         another_atom_key = atom_col_key;
     }
 
-
-    let backet = {};
+    let bracket = {};
+    let sequence = [];
 
     // atom_key as a key. if atom_key is the first key, update the sequence number. and then push the number
-
-    // until atom key change change, use another_atom_key's value as key.
     for (let i = 0; i < visData_arr.length; i++) {
         const element = visData_arr[i];
 
-        if (current_atom_value != element[atom_key]) {
-            if (obj != undefined) {
-                visDataObj_arr.push(obj);
-            }
-            // new object
-            obj = {};
-
-            // add column attribute
-            for (const key in element) {
-                if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
-                    obj[key] = element[key];
-                }
-            }
-            current_atom_value = element[atom_key];
+        let row_data_key = element[atom_key];
+        if (bracket[row_data_key] == undefined) {
+            sequence.push(row_data_key);
+            bracket[row_data_key] = {};
         }
-        obj[element[another_atom_key]] = element['value'];
-    }
-    visDataObj_arr.push(obj);
 
+        bracket[row_data_key][element[another_atom_key]] = element['value'];
 
-    console.log('new visData', visDataObj_arr);
-    let XSelection = []
-    let YSelection = []
-    // vertical: Y is atom key (col)
-    if (is_vertical) {
-        for (const key in visData_arr[0]) {
-            if (Object.hasOwnProperty.call(visData_arr[0], key)) {
-                if (key.substring[0, 3] == atom_key.substring(0, 3)) {
-                    YSelection.push(key);
-                }
-                else {
-                    XSelection.push(key);
-                }
+        for (const key in element) {
+            if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
+                bracket[row_data_key][key] = element[key];
             }
         }
     }
-    else {
-        for (const key in visDataObj_arr[0]) {
-            if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
-                if (key.substring(0, 3) == atom_key.substring(0, 3)) {
-                    XSelection.push(key);
-                }
-                else {
-                    YSelection.push(key);
-                }
+    for (let i = 0; i < sequence.length; i++) {
+        const rowName = sequence[i];
+        visDataObj_arr.push(bracket[rowName]);
+    }
+
+    let selections = [];
+    let unImportantSelection = [];
+
+    for (const key in visDataObj_arr[0]) {
+        if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
+            if (key.substring[0, 3] == atom_key.substring(0, 3)) {
+                unImportantSelection.push(key);
+            }
+            else {
+                selections.push(key);
             }
         }
     }
-    ECSelections.SetXSelections(XSelection);
-    ECSelections.SetYSelections(YSelection);
+
+    selections.concat(unImportantSelection);
+
+    ECSelections.SetXSelections(selections);
+    ECSelections.SetYSelections(selections);
+    console.log('new ECSelections', ECSelections);
     return [visDataObj_arr, ECSelections];
 }
-
-// return [obj_visData, ECSelections]
-function GetObjSelections(visData_arr, metaData_obj, direction_str) {
-    // return betterGetObjSelections(visData_arr, metaData_obj, direction_str);
-    let objs = {}
-    let is_vertical = true;
-
-    // direction means the direction of each strip
-    if (direction_str == 'horizon' || direction_str == 'x') {
-        is_vertical = false;
-    }
-    for (const key in visData_arr[0]) {
-        if (Object.hasOwnProperty.call(visData_arr[0], key)) {
-            objs[key] = {};
-        }
-    }
-
-    for (let i = 0; i < visData_arr.length; i++) {
-        const cell = visData_arr[i];
-        for (const key in cell) {
-            if (Object.hasOwnProperty.call(cell, key)) {
-                const rowName = cell[key];
-                if (objs[key][rowName] != undefined) {
-                    objs[key][rowName].push(Number(cell['value']));
-                }
-                else {
-                    objs[key][rowName] = [];
-                    objs[key][rowName].push(Number(cell['value']));
-                }
-            }
-        }
-    }
-    let selections = {};
-    let selections_name = [];
-    for (const key in objs) {
-        if (is_vertical && key.substring(0, 3) == 'row') {
-            for (const selection in objs[key]) {
-                if (Object.hasOwnProperty.call(objs[key], selection)) {
-                    const arr = objs[key][selection];
-                    if (arr.length != metaData_obj.y.range) {
-                        break;
-                    }
-                    selections[selection] = arr;
-                    selections_name.push(selection.split('.').pop());
-                }
-            }
-        }
-        else if (!is_vertical && key.substring(0, 3) == 'col') {
-            for (const selection in objs[key]) {
-                if (Object.hasOwnProperty.call(objs[key], selection)) {
-                    const arr = objs[key][selection];
-                    if (arr.length != metaData_obj.x.range) {
-                        break;
-                    }
-                    selections[selection] = arr;
-                    selections_name.push(selection.split('.').pop());
-                }
-            }
-        }
-    }
-
-    let obj_visData = []
-    let ECSelections = new FieldSelection();
-
-    if (is_vertical) {
-        // select the biggest header
-        let header = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
-        ECSelections.SetXSelections(selections_name);
-        ECSelections.SetYSelections([header.name]);
-
-        for (let i = 0; i < metaData_obj.y.range; i++) {
-            let cell = {};
-            for (const key in selections) {
-                let processed_key = key.split('.').pop()
-                cell[processed_key] = selections[key][i];
-                cell[header.name] = header.sort[i];
-            }
-            obj_visData.push(cell);
-        }
-    }
-    else {
-        let header = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
-        ECSelections.SetYSelections(selections_name);
-        ECSelections.SetXSelections([header.name]);
-
-        for (let i = 0; i < metaData_obj.x.range; i++) {
-            let cell = {};
-            for (const key in selections) {
-                let processed_key = key.split('.').pop()
-                cell[processed_key] = selections[key][i];
-                cell[header.name] = header.sort[i];
-            }
-            obj_visData.push(cell);
-        }
-    }
-
-
-    return [obj_visData, ECSelections];
-}
-
 
 function Templates() {
     this.templates = {}

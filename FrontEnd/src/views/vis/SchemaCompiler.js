@@ -82,15 +82,12 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
             for (const property in this.encodings[channel]) {
                 if (Object.hasOwnProperty.call(this.encodings[channel], property)) {
                     let propertyName = this.encodings[channel][property];
-                    console.log("channel,property", channel, property, this.encodings[channel][property]);
                     this.encodings[channel][property] = propertyConfig(propertyName);
 
                 }
             }
         }
     }
-
-    console.log("encoding config", this.encodings);
 
     this.addProperties = {};
     for (const key in this.encodings) {
