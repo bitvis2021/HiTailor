@@ -439,7 +439,12 @@ function betterGetObjSelections(visData_arr, metaData_obj, direction_str) {
         another_atom_key = atom_col_key;
     }
 
-    // until atom key change change, use another_atom_key's value as key
+
+    let backet = {};
+
+    // atom_key as a key. if atom_key is the first key, update the sequence number. and then push the number
+
+    // until atom key change change, use another_atom_key's value as key.
     for (let i = 0; i < visData_arr.length; i++) {
         const element = visData_arr[i];
 
@@ -996,16 +1001,16 @@ function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str) {
                 transform: [{ calculate: "datum['" + ySelect_str + "'] - " + Offset1.toString(), as: ySelect_str }],
                 mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
                 encoding: {
-                    y: { field: ySelect_str, type: "quantitative", scale: { zero: false, nice: false, domain: [0, Offset2] }, axis: { labels: false, ticks: false, title: null } },
-                    x: { field: xSelect_str, type: "nominal", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
+                    y: { field: ySelect_str, type: "quantitative" },
+                    x: { field: xSelect_str, type: "nominal" },
                 }
             },
             {
                 transform: [{ calculate: "datum['" + ySelect_str + "'] - " + Offset2, as: "ny" }],
                 mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
                 encoding: {
-                    y: { field: "ny", type: "quantitative", scale: { zero: false, nice: false, domain: [0, Offset2] } },
-                    x: { field: xSelect_str, type: "nominal", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
+                    y: { field: "ny", type: "quantitative" },
+                    x: { field: xSelect_str, type: "nominal" },
                 }
             }
         ]
@@ -1021,7 +1026,9 @@ HorizonGraphTemplate.prototype.GetVegaConfig = function () {
 
 // Real vega-lite data
 HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -15 } };
+    this.vegaConfig.layer[0].mark.clip = true;
+    this.vegaConfig.layer[1].mark.clip = true;
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
     return this.vegaConfig;
@@ -1048,7 +1055,7 @@ HorizonGraphTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) 
 
     this.vegaConfig.layer[1] = JSON.parse(JSON.stringify(vegaConfig_obj));
     this.vegaConfig.layer[1].transform = [{ calculate: "datum['" + ySelect + "'] - " + Offset2, as: "ny" }]
-    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative", axis: { labels: false, ticks: false, title: null } };
+    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative" };
 
     return this.vegaConfig;
 }
