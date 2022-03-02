@@ -321,20 +321,20 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
             }
 
-        case supportedTemplate.NQ_Histogram_Heatmap:
-            if (is_X) {
-                return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-            }
-            else {
-                return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-            }
-        case supportedTemplate.NQ_Histogram_Scatterplot:
-            if (is_X) {
-                return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-            }
-            else {
-                return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-            }
+        // case supportedTemplate.NQ_Histogram_Heatmap:
+        //     if (is_X) {
+        //         return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+        //     }
+        //     else {
+        //         return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+        //     }
+        // case supportedTemplate.NQ_Histogram_Scatterplot:
+        //     if (is_X) {
+        //         return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+        //     }
+        //     else {
+        //         return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+        //     }
         default:
             break;
     }
@@ -421,7 +421,6 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
         console.log("atom key undefine", atom_row_key, atom_col_key);
         return null;
     }
-    
     let visDataObj_arr = []
     let ECSelections = new FieldSelection();
 
@@ -463,8 +462,9 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
 
     for (const key in visDataObj_arr[0]) {
         if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
-            if (key.substring[0, 3] == atom_key.substring(0, 3)) {
+            if (key.substring(0, 3) == atom_key.substring(0, 3)) {
                 unImportantSelection.push(key);
+                console.log("atom key", key)
             }
             else {
                 selections.push(key);
@@ -472,7 +472,7 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
         }
     }
 
-    selections.concat(unImportantSelection);
+    selections = selections.concat(unImportantSelection);
 
     ECSelections.SetXSelections(selections);
     ECSelections.SetYSelections(selections);
@@ -543,9 +543,11 @@ VegaTemplate.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.width = width;
     this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
 
-    if (!!this.vegaConfig.encoding.y && !!this.vegaConfig.encoding.x) {
-        this.vegaConfig.encoding.y.title = null;
-        this.vegaConfig.encoding.x.title = null;
+    if (!!this.vegaConfig.encoding) {
+        if (!!this.vegaConfig.encoding.y && !!this.vegaConfig.encoding.x) {
+            this.vegaConfig.encoding.y.title = null;
+            this.vegaConfig.encoding.x.title = null;
+        }
     }
     return this.vegaConfig;
 }
@@ -722,14 +724,26 @@ function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previ
 function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
     this.selections = selections_obj;
     this.is_X = true;
-    if (direction == 'y') {
+    this.col_row_selection = [];
+    this.obj_selection = [];
+
+    selections_obj.GetYSelections().forEach(element => {
+        if (element.substring(0, 3) == 'row' || element.substring(0, 3) == 'col') {
+            this.col_row_selection.push(element);
+        }
+        else {
+            this.obj_selection.push(element);
+        }
+    });
+
+    if (direction == 'y' || 'vertical') {
         this.is_X = false;
         this.vegaConfig = {
             "data": { "values": visData_arr },
             "transform": [
                 { "window": [{ "op": "count", "as": "index" }] },
                 {
-                    "fold": selections_obj.GetYSelections()
+                    "fold": this.obj_selection
                 },
                 {
                     "joinaggregate": [
@@ -748,12 +762,12 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                 {
                     "mark": { "type": "line", "opacity": 0.3 },
                     "encoding": {
-                        "color": { "type": "nominal", "field": selections_obj.GetXSelections().at(0), "legend": null },
+                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
                         "detail": { "type": "nominal", "field": "index" },
                         "y": {
                             "type": "nominal",
                             "field": "key",
-                            "sort": selections_obj.GetYSelections()
+                            "sort": this.obj_selection
                         },
                         "x": { "type": "quantitative", "field": "norm_val", "axis": null }
                     }
@@ -764,7 +778,7 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                         "detail": { "aggregate": "count" },
                         "y": {
                             "field": "key",
-                            "sort": selections_obj.GetYSelections()
+                            "sort": this.obj_selection
                         }
                     }
                 }
@@ -778,7 +792,7 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
             "transform": [
                 { "window": [{ "op": "count", "as": "index" }] },
                 {
-                    "fold": selections_obj.GetXSelections()
+                    "fold": this.obj_selection
                 },
                 {
                     "joinaggregate": [
@@ -797,12 +811,12 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                 {
                     "mark": { "type": "line", "opacity": 0.3 },
                     "encoding": {
-                        "color": { "type": "nominal", "field": selections_obj.GetYSelections().at(0), "legend": null },
+                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
                         "detail": { "type": "nominal", "field": "index" },
                         "x": {
                             "type": "nominal",
                             "field": "key",
-                            "sort": selections_obj.GetXSelections()
+                            "sort": this.obj_selection
                         },
                         "y": { "type": "quantitative", "field": "norm_val", "axis": null }
                     }
@@ -813,7 +827,7 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                         "detail": { "aggregate": "count" },
                         "x": {
                             "field": "key",
-                            "sort": selections_obj.GetXSelections()
+                            "sort": this.obj_selection
                         }
                     }
                 }
@@ -844,9 +858,11 @@ ParallelCoordinatePlot.prototype.CompileTweakedConfig = function (vegaConfig_obj
 ParallelCoordinatePlot.prototype.GetSelections = function () {
     if (this.is_X) {
         this.selections.SetXSelections([])
+        this.selections.SetYSelections(this.col_row_selection);
     }
     else {
         this.selections.SetYSelections([])
+        this.selections.SetXSelections(this.col_row_selection);
     }
     return this.selections;
 }

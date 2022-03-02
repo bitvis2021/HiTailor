@@ -275,7 +275,8 @@ export default {
 }
 
 #gen-chart{
-  display: none;
+  // display: none;
+  overflow: hidden;
 }
 
 .role-axis-grid {
