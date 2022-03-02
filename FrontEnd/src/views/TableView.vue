@@ -11,57 +11,63 @@
       </button>
     </div>
 
-    <div class="tranform-button-container" v-if="isHeaderFixed">
-      <button v-if="isCurrFlat"
-        type="primary" plain size="small" 
-        class="button"
-        @click="transform_unfold()" > 
-        Unfold
-      </button>
+    <div class="toolbar" v-if="isHeaderFixed">
+      
 
-      <div v-if="!isCurrFlat">
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_fold()" > 
-          Fold
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_transpose()" > 
-          Transpose
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="handle_transform_swap('FALL 2001', false)" > 
-          Swap
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="handle_transform_2stacked('HUMANITIES')" > 
-          ToStacked
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="handle_transform_2linear('HUMANITIES', 0)" > 
-          ToLinear
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_derive()" > 
-          Derive
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_merge()" > 
-          Merge
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="cancel_recommend()" > 
-          Cancel
-        </button>
-        
-      </div>
+      <el-row>
+        <el-col :span="14">
+          <span class="toolbar-label">Transformation</span>
+          <button v-if="isCurrFlat"
+            type="primary" plain size="small" 
+            class="button"
+            @click="transform_unfold()" > 
+            Unfold
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_fold()" > 
+            Fold
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_transpose()" > 
+            Transpose
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="handle_transform_swap('FALL 2001', false)" > 
+            Swap
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="handle_transform_2stacked('HUMANITIES')" > 
+            ToStacked
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="handle_transform_2linear('HUMANITIES', 0)" > 
+            ToLinear
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_derive()" > 
+            Derive
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_merge()" > 
+            Merge
+          </button>
+          <span class="toolbar-vertical-separator" />
+          <span class="toolbar-label">Recommendation  Priority</span>
+        </el-col> 
+
+        <el-col :span="8">
+          <div class="priority-slider"> 
+            <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
+          </div>
+        </el-col>
+      </el-row> 
     </div>
 
     <!-- <div v-if="(headerFixedFlag.row && headerFixedFlag.column) ">
@@ -77,7 +83,7 @@
       <!-- <div v-if="!isTransformView">
         <button type="primary" plain size="small" 
           class="button"
-          @click="transmit_data_to_vis()" > 
+          @click="transmit_chosen_to_vis()" > 
           transmit data
         </button> 
       </div> 
@@ -208,15 +214,6 @@
               </text>
             </g>
           </g>
-          <!-- transparent mask for choosing -->
-          <rect v-if="isHeaderFixed"
-            id="transparent-mask-for-choosing"
-            :x="markWidth + widthRangeList[headerRange.right+1]" 
-            :y="markHeight + heightRangeList[headerRange.bottom+1]"
-            :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
-            :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
-            @mousedown="handle_mouse_down_mask($event)">
-          </rect>
         </g>
         
         <!-- row mark -->
@@ -309,17 +306,6 @@
           :y2="markHeight">
         </line>
 
-        <!-- selected area -->
-        <rect v-if="selectedArea.top!=null"
-          class="selected-area"
-          :x="markWidth + widthRangeList[selectedArea.left]" 
-          :y="markHeight + heightRangeList[selectedArea.top]" 
-          :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
-          :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
-          @mousedown="handle_mouse_down_selected($event)"
-        >
-        </rect>
-
         <g class="table-mark-long-line">
           <!-- column mark long line -->
           <line v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'column'"
@@ -354,6 +340,31 @@
           </line>
         </g>
         
+        <g id="recommendation-area-container" />
+        
+        <!-- transparent mask for choosing -->
+        <rect v-if="!isCurrFlat && isHeaderFixed"
+          id="transparent-mask-for-choosing"
+          :x="markWidth + widthRangeList[headerRange.right+1]" 
+          :y="markHeight + heightRangeList[headerRange.bottom+1]"
+          :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
+          :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
+          @mousedown="handle_mouse_down_mask($event)">
+        </rect>
+
+        <g id="vis-container"/>
+
+        <!-- selected area -->
+        <rect v-if="selectedArea.top!=null"
+          class="selected-area"
+          :x="markWidth + widthRangeList[selectedArea.left]" 
+          :y="markHeight + heightRangeList[selectedArea.top]" 
+          :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
+          :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
+          @mousedown="handle_mouse_down_selected($event)"
+        >
+        </rect>
+        
       </svg>
     </div>
   </div>
@@ -362,6 +373,7 @@
 <script>
     import { mapState, mapMutations } from 'vuex';
     import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from '@/transformation/CreateModel.js'
+import { reduce } from 'vega-lite/build/src/encoding';
 
 export default {
   name: 'TableView',
@@ -411,6 +423,7 @@ export default {
       mouseDownMarkLine: {index:null, type:null},
 
       mouseDownState: false,
+      mouseDownMaskState: false,
       mouseDownMarkState: false,
       mouseDownMarkLineState: false,
 
@@ -449,6 +462,9 @@ export default {
       visRerenderAfterPos: {x:0, y:0},
 
       recommendData: null,
+      isPriorityToSend: null,
+      // prioritySliderMark: null,
+      prioritySliderValue:[0, 5]
     }
   },
 
@@ -687,26 +703,26 @@ export default {
           this.visRerenderAfterPos.x = 0
           this.visRerenderAfterPos.y = this.markHeight + this.markHeightRangeList[this.mouseDownMarkLine.index+1]
         }
-        this.mouseDownMarkLineState = false
 
-        // if (!this.isTransformView) {
-          if (this.mouseDownMarkLine.type=="column" && this.visRerenderAfterPos.x!=this.visRerenderPrePos.x || 
-            this.mouseDownMarkLine.type=="row" && this.visRerenderAfterPos.y!=this.visRerenderPrePos.y) {
-              this.$bus.$emit('rerender-selectedData', this.visRerenderPrePos, this.visRerenderAfterPos)
-              console.log("rerender", this.visRerenderPrePos, this.visRerenderAfterPos)
-            }
-        // }
-        
+        if (this.mouseDownMarkLine.type=="column" && this.visRerenderAfterPos.x!=this.visRerenderPrePos.x || 
+          this.mouseDownMarkLine.type=="row" && this.visRerenderAfterPos.y!=this.visRerenderPrePos.y) {
+            this.$bus.$emit('rerender-selectedData', this.visRerenderPrePos, this.visRerenderAfterPos)
+            console.log("rerender", this.visRerenderPrePos, this.visRerenderAfterPos)
+          }
+
+        this.mouseDownMarkLineState = false
       }
       this.mouseOverCell =  {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null}
       this.mouseDownMarkLine = {index:null, type:null}
       this.selectedMark = {index:null, type:null}
-      if (this.isHeaderFixed) {
+      
+      if (this.mouseDownMaskState && this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
           console.log("this.selectedArea", this.selectedArea)
-          this.transmit_data_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+          this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
           this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
         }
+        this.mouseDownMaskState = false
       }
     },
 
@@ -727,6 +743,9 @@ export default {
       this.selectedArea.right = this.mouseOverCell.cend
 
       this.mouseDownState = true
+      this.mouseDownMaskState = true
+      this.cancel_recommend()
+      this.$bus.$emit('select-cell')
     },
 
 
@@ -792,6 +811,7 @@ export default {
     },
     transform_fold() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
         this.flatData = this.get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1)
@@ -815,6 +835,7 @@ export default {
     },
     transform_unfold() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       this.isCurrFlat = false
       if (!this.isHeaderFixed) {
         // todo: flat识别header结构!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -835,6 +856,7 @@ export default {
     },
     transform_transpose() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
         for (var item of this.colHeader[i]) {
@@ -877,6 +899,7 @@ export default {
     },
     transform_swap(name, header, isSwapUp, isRow) {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
       var upLayerNum, downLayerNum
@@ -1081,6 +1104,7 @@ export default {
     },
     transform_2stacked(name, header, times, isRow) {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
@@ -1185,6 +1209,7 @@ export default {
     },
     transform_2linear(name, header, times, isRow) {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
@@ -1348,25 +1373,41 @@ export default {
     },
     transform_derive() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
 
     },
     transform_merge() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
 
     },
-    transmit_data_to_vis(top, bottom, left, right) {
+
+    get_data_for_transmission(top, bottom, left, right) {
       var data = this.get_data_from_chosen(top, bottom, left, right)
       var metadata = this.gen_metadata_from_chosen(top, bottom, left, right)
       var chgdata = this.change_data_form(data)
       var jsdata = this.gen_json_from_data(data, chgdata)
 
+      return [jsdata, metadata]
+    },
+    get_pos_for_transmission(top, bottom, left, right) {
       var x = this.markWidth + this.widthRangeList[left]
       var y = this.markHeight + this.heightRangeList[top]
       var width = this.widthRangeList[right+1] - this.widthRangeList[left]
       var height= this.heightRangeList[bottom+1] - this.heightRangeList[top]
       var pos = {"x":x, "y":y, "width":width, "height":height}
-      
+
+      return pos
+    },
+    transmit_chosen_to_vis(top, bottom, left, right) {
+      var [jsdata, metadata] = this.get_data_for_transmission(top, bottom, left, right)
+      var pos = this.get_pos_for_transmission(top, bottom, left, right)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
+    },
+    transmit_recommendation_to_vis() {
+      var dataArray = []
+
+      this.$bus.$emit('visualize-recommendData', dataArray)
     },
     get_data_from_chosen(top, bottom, left, right) {
       var res=[]
@@ -1540,10 +1581,7 @@ export default {
       d3.selectAll(".recommend-helper").remove()
     },
     cal_recommendation_data(top, bottom, left, right) {
-      this.recommendData = new Array
-      this.recommendData.push({row:null, column:null})
-      this.recommendData.push({row:null, column:null})
-      console.log("setup", this.recommendData)
+      this.recommendData = [[], [], [], [], []]
       var colRefer = this.get_reference_node(this.colHeader, left, right, false)
       var rowRefer = this.get_reference_node(this.rowHeader, top, bottom, true)
       console.log("colRefer", colRefer)
@@ -1552,128 +1590,91 @@ export default {
         console.log("can't recommend!")
         return
       }
-      
 
+      var pri = [{row:[], column:[]}, {row:[], column:[]}]
       // only use colRefer(same row)
       if (colRefer.length != 0) {
-        this.cal_recommendation_by_single_node(colRefer, top, bottom, left, right, this.colHeader, false)
+        this.cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri)
       }
       
       // only use rowRefer(same column)
       if (rowRefer.length != 0) {
-        this.cal_recommendation_by_single_node(rowRefer, top, bottom, left, right, this.rowHeader, true)
+        this.cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri)
       }
-
-      console.log("recommendData", this.recommendData)
 
       // use colRefer & rowRefer
       if (colRefer.length!=0 && rowRefer.length!=0) {
-        var res, priority
         // priority 3 = 1 + 1
-        res = []
-        priority = 3
-        for (var i=0; i<this.recommendData[0].row.length; i++) {
-          for (var j=0; j<this.recommendData[0].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[0].row[i].pos.top
-            pos.bottom = this.recommendData[0].row[i].pos.bottom
-            pos.left = this.recommendData[0].column[j].pos.left
-            pos.right = this.recommendData[0].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-            
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "green")
-          }
-        }
-        this.recommendData.push(res)
+        var pri3 = this.cal_recommendation_by_two_references(pri, 0, 0, 3) 
+        this.recommendData.push(pri3)
 
         // priority 4 = 1 + 2 = 2 + 1
-        res = []
-        priority = 4
-        for (var i=0; i<this.recommendData[0].row.length; i++) {
-          for (var j=0; j<this.recommendData[1].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[0].row[i].pos.top
-            pos.bottom = this.recommendData[0].row[i].pos.bottom
-            pos.left = this.recommendData[1].column[j].pos.left
-            pos.right = this.recommendData[1].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-            
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "blue")
-          }
-        }
-        for (var i=0; i<this.recommendData[1].row.length; i++) {
-          for (var j=0; j<this.recommendData[0].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[1].row[i].pos.top
-            pos.bottom = this.recommendData[1].row[i].pos.bottom
-            pos.left = this.recommendData[0].column[j].pos.left
-            pos.right = this.recommendData[0].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "blue")
-          }
-        }
-        this.recommendData.push(res)
+        var prii = this.cal_recommendation_by_two_references(pri, 0, 1, 4) 
+        var pri4 = prii.concat(this.cal_recommendation_by_two_references(pri, 1, 0, 4) )
+        this.recommendData.push(pri4)
 
         // priority 5 = 2 + 2
-        res = []
-        priority = 5
-        for (var i=0; i<this.recommendData[1].row.length; i++) {
-          for (var j=0; j<this.recommendData[1].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[1].row[i].pos.top
-            pos.bottom = this.recommendData[1].row[i].pos.bottom
-            pos.left = this.recommendData[1].column[j].pos.left
-            pos.right = this.recommendData[1].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "purple")
-          }
-        }
-        this.recommendData.push(res)
+        var pri5 = this.cal_recommendation_by_two_references(pri, 1, 1, 5) 
+        this.recommendData.push(pri5)
       }
     },
-    cal_recommendation_by_single_node(refer, top, bottom, left, right, header, isRow) {
+    draw_recommendation_area(top, bottom, left, right, priority) {
+      var color
+      switch(priority) {  // choose color by priority
+        case 1:
+          color = "red"
+          break
+        case 2:
+          color = "orange"
+          break
+        case 3:
+          color = "yellow"
+          break
+        case 4:
+          color = "green"
+          break
+        case 5:
+          color = "blue"
+          break
+      }
+      let self = this
+      var area = d3.select("#recommendation-area-container")
+      area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority).datum(priority)
+          .attr("x", this.markWidth + this.widthRangeList[left+this.headerRange.right+1])
+          .attr("y", this.markHeight + this.heightRangeList[top+this.headerRange.bottom+1])
+          .attr("width", this.widthRangeList[right+1+this.headerRange.right+1] - this.widthRangeList[left+this.headerRange.right+1])
+          .attr("height", this.heightRangeList[bottom+1+this.headerRange.bottom+1] - this.heightRangeList[top+this.headerRange.bottom+1])
+          .style("stroke", "grey")
+          .style("fill", color)
+          .style("fill-opacity", "20%")
+          .style("visibility", function(d) { 
+            console.log("dataaaaa", d)
+            console.log("slider", self.prioritySliderValue)
+            if (d >= self.prioritySliderValue[0] && d <= self.prioritySliderValue[1])       
+              return "visible"
+            else {
+              return "hidden" 
+            }
+          });
+    },
+    cal_recommendation_by_two_references(prilist, rpri, cpri, priority) {
+      var res = []
+      for (var i=0; i<prilist[rpri].row.length; i++) {
+        for (var j=0; j<prilist[cpri].column.length; j++) {
+          var pos = {top:null, bottom:null, right:null, left:null}
+          pos.top = prilist[rpri].row[i].pos.top
+          pos.bottom = prilist[rpri].row[i].pos.bottom
+          pos.left = prilist[cpri].column[j].pos.left
+          pos.right = prilist[cpri].column[j].pos.right
+
+          var tmp = {pos: pos, priority: priority}
+          res.push(tmp)
+          this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
+        }
+      }
+      return res
+    },
+    cal_recommendation_by_one_reference(refer, top, bottom, left, right, header, isRow, res) {
       var layer = refer[0].layer
       var hasLinear = refer[0].hasLinear
       var isLinear = refer[0].isLinear
@@ -1696,14 +1697,11 @@ export default {
               pos.bottom = ranges[i].end
               pos.left = left
               pos.right = right
+
               var tmp = {pos: pos, priority: priority}
-              if (this.recommendData[priority-1].row == null) {
-                this.recommendData[priority-1].row = []
-              }
-              else {
-                this.recommendData[priority-1].row.push(tmp)
-              }
-              
+              res[priority-1].row.push(tmp)
+              this.recommendData[priority-1].push(tmp)
+              this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
             }
             else {
               pos.top = top
@@ -1716,30 +1714,9 @@ export default {
               }
               pos.right = ranges[i].end
               var tmp = {pos: pos, priority: priority}
-              if (this.recommendData[priority-1].column == null) {
-                this.recommendData[priority-1].column = []
-              }
-              else {
-                this.recommendData[priority-1].column.push(tmp)
-              }
-            }
-            console.log("pos", pos)
-            // var tmp = {pos: pos, priority: priority}
-            // this.recommendData[priority-1].push(tmp)
-
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-            if (priority == 1) {
-              helper.style("fill","red")
-            }
-            else if (priority == 2) {
-              helper.style("fill","yellow")
+              res[priority-1].column.push(tmp)
+              this.recommendData[priority-1].push(tmp)
+              this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
             }
           }
         }
@@ -1748,7 +1725,6 @@ export default {
         if (layer == 0) return  // don't recommend when first layer
         // todo!!!!!!!!!!!!!!!!!
       }
-
     },
     get_reference_node(header, start, end, isRow) {     
       var res = []
@@ -2034,6 +2010,28 @@ export default {
       //   this.selectedMark = {index:null, type:null}
       //   this.selectByMark = {row:false, column:false}
       // }, 
+      prioritySliderValue: {
+        deep: true,
+        handler: function(data) {
+          var prefix = "#recommend-helper-", name = ""
+          var min=data[0], max=data[1]
+
+          for (var i=0; i<min; i++) {
+            name = prefix + i
+            d3.selectAll(name).style("visibility", "hidden")
+          }
+
+          for (var i=min; i<=max; i++) {
+            name = prefix + i
+            d3.selectAll(name).style("visibility", "visible")
+          }
+
+          for (var i=max+1; i<=5; i++) {
+            name = prefix + i
+            d3.selectAll(name).style("visibility", "hidden")
+          }
+        }
+      }
       
   },
   beforeMount: function() {
@@ -2052,9 +2050,13 @@ export default {
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
-    this.recommendData = new Array
-    this.recommendData.push({row:null, column:null})
-    this.recommendData.push({row:null, column:null})
+    this.recommendData = [[], [], [], [], []]
+    this.isPriorityToSend = new Array(5).fill(true)
+
+    // this.prioritySliderMark = new Object
+    // for (var i=1; i<6; i++) {
+    //   this.prioritySliderMark[i] = i
+    // }
 
     // set column width to be the same
     var row = this.tabularDatasetList[0]
@@ -2138,7 +2140,21 @@ export default {
     console.log("this.widthRangeList", this.widthRangeList)
     console.log("this.heightRangeList", this.heightRangeList)
     console.log("this.dataValueList", this.dataValueList)
-    // this.transmit_data_to_vis()
+    
+    this.$bus.$on("apply-config", () => {
+      console.log("send recommendation data")
+      this.transmit_recommendation_to_vis()
+      this.clear_selected()
+    })
+
+    this.$bus.$on("select-canvas", () => {
+      console.log("remove selections of tableview")
+      this.clear_selected()
+    })
+
+    this.$bus.$on("change-header", () => {
+      console.log("change-header!")
+    })
   },
   computed: {
     ...mapState([
@@ -2269,7 +2285,7 @@ export default {
     // margin-top: 5px;
     text-align: center;
   }
-  .tranform-button-container {
+  .toolbar {
     // margin-top: 5px;
     height:@transform-button-container-height;
     // margin-bottom: @padding;
@@ -2279,16 +2295,33 @@ export default {
     // border-bottom:1px solid #c8c6c4;
     // height:@transform-button-container-height;
     width:100%;
-    display: -webkit-flex;
-    display: flex;
-    flex-direction: row;
+    // display: -webkit-flex;
+    // display: flex;
+    // flex-direction: row;
     // padding-top: 4px;
     padding-left: @padding;
     // padding-right: 10px;
     // padding-bottom: 4px;
     background: white;
     align-items: center;
-    border-bottom: 1px solid #c8c6c4;
+    border-bottom: 1px solid #cecece;
+    // overflow: hidden;
+    .el-row {
+      height:100%;
+    }
+    .el-col {
+      text-align:left;
+      height:100%;
+      // white-space: nowrap;
+      // overflow: hidden;
+    }
+    .toolbar-label {
+      font-size: 100%;
+      user-select: none;
+      color: #8a8785;
+      margin-right: @padding;
+      height: @transform-button-height;
+    }
     .button {
       font-size: 100%;
       background-color: transparent;
@@ -2299,6 +2332,7 @@ export default {
       user-select: none;
       margin-right:@padding;
       height: @transform-button-height;
+      margin-top:4.5px;
     }
     .button:hover {
       background-color: #e4e9eeb6;
@@ -2306,16 +2340,31 @@ export default {
       border: none;
       cursor: pointer;
       user-select: none;
-      margin-right:@padding;
+      // margin-right: @padding;
       height: @transform-button-height;
     }
+    .toolbar-vertical-separator {
+      border-left: 1px solid #cecece;
+      height: @transform-button-height;
+      margin-right: 2*@padding;
+      margin-left: @padding;
+      width: 4px;
+      user-select: none;
+    }
+    .priority-slider{
+      margin-left: @padding;
+      position:relative;
+      width:60%;
+      height:100%;
+    }    
   }
+  
   .table-view-svg-container {
     position: absolute;
     // height:100%;
     left: @padding;
     right:0%;
-    top:@transform-button-container-height +  @padding;
+    top:@transform-button-container-height +  1rem;
     bottom:0%;
     overflow:auto;
     // margin-top:1%;
