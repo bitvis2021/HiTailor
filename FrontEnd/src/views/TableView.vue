@@ -309,17 +309,6 @@
           :y2="markHeight">
         </line>
 
-        <!-- selected area -->
-        <rect v-if="selectedArea.top!=null"
-          class="selected-area"
-          :x="markWidth + widthRangeList[selectedArea.left]" 
-          :y="markHeight + heightRangeList[selectedArea.top]" 
-          :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
-          :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
-          @mousedown="handle_mouse_down_selected($event)"
-        >
-        </rect>
-
         <g class="table-mark-long-line">
           <!-- column mark long line -->
           <line v-if="mouseDownMarkLineState && mouseDownMarkLine.type == 'column'"
@@ -354,6 +343,21 @@
           </line>
         </g>
         
+        <g id="recommendation-area-container" />
+
+        <g id="vis-container"/>
+
+        <!-- selected area -->
+        <rect v-if="selectedArea.top!=null"
+          class="selected-area"
+          :x="markWidth + widthRangeList[selectedArea.left]" 
+          :y="markHeight + heightRangeList[selectedArea.top]" 
+          :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
+          :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
+          @mousedown="handle_mouse_down_selected($event)"
+        >
+        </rect>
+        
       </svg>
     </div>
   </div>
@@ -362,6 +366,7 @@
 <script>
     import { mapState, mapMutations } from 'vuex';
     import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from '@/transformation/CreateModel.js'
+import { reduce } from 'vega-lite/build/src/encoding';
 
 export default {
   name: 'TableView',
@@ -1540,10 +1545,7 @@ export default {
       d3.selectAll(".recommend-helper").remove()
     },
     cal_recommendation_data(top, bottom, left, right) {
-      this.recommendData = new Array
-      this.recommendData.push({row:null, column:null})
-      this.recommendData.push({row:null, column:null})
-      console.log("setup", this.recommendData)
+      this.recommendData = [[], [], [], [], []]
       var colRefer = this.get_reference_node(this.colHeader, left, right, false)
       var rowRefer = this.get_reference_node(this.rowHeader, top, bottom, true)
       console.log("colRefer", colRefer)
@@ -1552,128 +1554,82 @@ export default {
         console.log("can't recommend!")
         return
       }
-      
 
+      var pri = [{row:[], column:[]}, {row:[], column:[]}]
       // only use colRefer(same row)
       if (colRefer.length != 0) {
-        this.cal_recommendation_by_single_node(colRefer, top, bottom, left, right, this.colHeader, false)
+        this.cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri)
       }
       
       // only use rowRefer(same column)
       if (rowRefer.length != 0) {
-        this.cal_recommendation_by_single_node(rowRefer, top, bottom, left, right, this.rowHeader, true)
+        this.cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri)
       }
-
-      console.log("recommendData", this.recommendData)
 
       // use colRefer & rowRefer
       if (colRefer.length!=0 && rowRefer.length!=0) {
-        var res, priority
         // priority 3 = 1 + 1
-        res = []
-        priority = 3
-        for (var i=0; i<this.recommendData[0].row.length; i++) {
-          for (var j=0; j<this.recommendData[0].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[0].row[i].pos.top
-            pos.bottom = this.recommendData[0].row[i].pos.bottom
-            pos.left = this.recommendData[0].column[j].pos.left
-            pos.right = this.recommendData[0].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-            
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "green")
-          }
-        }
-        this.recommendData.push(res)
+        var pri3 = this.cal_recommendation_by_two_references(pri, 0, 0, 3) 
+        this.recommendData.push(pri3)
 
         // priority 4 = 1 + 2 = 2 + 1
-        res = []
-        priority = 4
-        for (var i=0; i<this.recommendData[0].row.length; i++) {
-          for (var j=0; j<this.recommendData[1].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[0].row[i].pos.top
-            pos.bottom = this.recommendData[0].row[i].pos.bottom
-            pos.left = this.recommendData[1].column[j].pos.left
-            pos.right = this.recommendData[1].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-            
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "blue")
-          }
-        }
-        for (var i=0; i<this.recommendData[1].row.length; i++) {
-          for (var j=0; j<this.recommendData[0].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[1].row[i].pos.top
-            pos.bottom = this.recommendData[1].row[i].pos.bottom
-            pos.left = this.recommendData[0].column[j].pos.left
-            pos.right = this.recommendData[0].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "blue")
-          }
-        }
-        this.recommendData.push(res)
+        var prii = this.cal_recommendation_by_two_references(pri, 0, 1, 4) 
+        var pri4 = prii.concat(this.cal_recommendation_by_two_references(pri, 1, 0, 4) )
+        this.recommendData.push(pri4)
 
         // priority 5 = 2 + 2
-        res = []
-        priority = 5
-        for (var i=0; i<this.recommendData[1].row.length; i++) {
-          for (var j=0; j<this.recommendData[1].column.length; j++) {
-            var pos = {top:null, bottom:null, right:null, left:null}
-            pos.top = this.recommendData[1].row[i].pos.top
-            pos.bottom = this.recommendData[1].row[i].pos.bottom
-            pos.left = this.recommendData[1].column[j].pos.left
-            pos.right = this.recommendData[1].column[j].pos.right
-
-            var tmp = {pos: pos, priority: priority}
-            res.push(tmp)
-
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-                .style("fill", "purple")
-          }
-        }
-        this.recommendData.push(res)
+        var pri5 = this.cal_recommendation_by_two_references(pri, 1, 1, 5) 
+        this.recommendData.push(pri5)
       }
     },
-    cal_recommendation_by_single_node(refer, top, bottom, left, right, header, isRow) {
+    draw_recommendation_area(top, bottom, left, right, priority) {
+      var color
+      switch(priority) {  // choose color by priority
+        case 1:
+          color = "red"
+          break
+        case 2:
+          color = "orange"
+          break
+        case 3:
+          color = "yellow"
+          break
+        case 4:
+          color = "green"
+          break
+        case 5:
+          color = "blue"
+          break
+      }
+
+      var area = d3.select("#recommendation-area-container")
+      area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority)
+          .attr("x", this.markWidth + this.widthRangeList[left+this.headerRange.right+1])
+          .attr("y", this.markHeight + this.heightRangeList[top+this.headerRange.bottom+1])
+          .attr("width", this.widthRangeList[right+1+this.headerRange.right+1] - this.widthRangeList[left+this.headerRange.right+1])
+          .attr("height", this.heightRangeList[bottom+1+this.headerRange.bottom+1] - this.heightRangeList[top+this.headerRange.bottom+1])
+          .style("stroke", "grey")
+          .style("fill", color)
+          .style("fill-opacity", "20%")
+    },
+    cal_recommendation_by_two_references(prilist, rpri, cpri, priority) {
+      var res = []
+      for (var i=0; i<prilist[rpri].row.length; i++) {
+        for (var j=0; j<prilist[cpri].column.length; j++) {
+          var pos = {top:null, bottom:null, right:null, left:null}
+          pos.top = prilist[rpri].row[i].pos.top
+          pos.bottom = prilist[rpri].row[i].pos.bottom
+          pos.left = prilist[cpri].column[j].pos.left
+          pos.right = prilist[cpri].column[j].pos.right
+
+          var tmp = {pos: pos, priority: priority}
+          res.push(tmp)
+          this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
+        }
+      }
+      return res
+    },
+    cal_recommendation_by_one_reference(refer, top, bottom, left, right, header, isRow, res) {
       var layer = refer[0].layer
       var hasLinear = refer[0].hasLinear
       var isLinear = refer[0].isLinear
@@ -1696,14 +1652,11 @@ export default {
               pos.bottom = ranges[i].end
               pos.left = left
               pos.right = right
+
               var tmp = {pos: pos, priority: priority}
-              if (this.recommendData[priority-1].row == null) {
-                this.recommendData[priority-1].row = []
-              }
-              else {
-                this.recommendData[priority-1].row.push(tmp)
-              }
-              
+              res[priority-1].row.push(tmp)
+              this.recommendData[priority-1].push(tmp)
+              this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
             }
             else {
               pos.top = top
@@ -1716,30 +1669,9 @@ export default {
               }
               pos.right = ranges[i].end
               var tmp = {pos: pos, priority: priority}
-              if (this.recommendData[priority-1].column == null) {
-                this.recommendData[priority-1].column = []
-              }
-              else {
-                this.recommendData[priority-1].column.push(tmp)
-              }
-            }
-            console.log("pos", pos)
-            // var tmp = {pos: pos, priority: priority}
-            // this.recommendData[priority-1].push(tmp)
-
-            // just for test!!!!!!!!!!!!!!!!!!
-            var tablesvg = d3.select(".table-view-svg")
-            var helper = tablesvg.append("rect").attr("class", "recommend-helper")
-                .attr("x", this.markWidth + this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("y", this.markHeight + this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .attr("width", this.widthRangeList[pos.right+1+this.headerRange.right+1] - this.widthRangeList[pos.left+this.headerRange.right+1])
-                .attr("height", this.heightRangeList[pos.bottom+1+this.headerRange.bottom+1] - this.heightRangeList[pos.top+this.headerRange.bottom+1])
-                .style("stroke", "grey")
-            if (priority == 1) {
-              helper.style("fill","red")
-            }
-            else if (priority == 2) {
-              helper.style("fill","yellow")
+              res[priority-1].column.push(tmp)
+              this.recommendData[priority-1].push(tmp)
+              this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
             }
           }
         }
@@ -1748,7 +1680,6 @@ export default {
         if (layer == 0) return  // don't recommend when first layer
         // todo!!!!!!!!!!!!!!!!!
       }
-
     },
     get_reference_node(header, start, end, isRow) {     
       var res = []
@@ -2052,9 +1983,7 @@ export default {
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
-    this.recommendData = new Array
-    this.recommendData.push({row:null, column:null})
-    this.recommendData.push({row:null, column:null})
+    this.recommendData = [[], [], [], [], []]
 
     // set column width to be the same
     var row = this.tabularDatasetList[0]
