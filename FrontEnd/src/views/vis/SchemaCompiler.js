@@ -6,68 +6,91 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
     this.vegaEncoding = VegaEncoding_obj;
     this.ECSelections = ECSelections_obj;
     this.sortBindings = Object.assign(this.ECSelections.xSelect.bindings, this.ECSelections.ySelect.bindings)
-    let property = function () {
-        this.xField = {
+    function propertyConfig(selection_str) {
+        if (selection_str == 'xField') return {
             name: 'field',
             type: 'select',
             // selections: this.ECSelections.xSelect.selections.concat(['value']),
             selections: this.ECSelections.xSelect.selections,
             value: ''
         }
-        this.yField = {
+        else if (selection_str == 'yField') return {
             name: 'field',
             type: 'select',
             value: '',
             selections: this.ECSelections.ySelect.selections
             // selections: this.ECSelections.ySelect.selections.concat(['value'])
         }
-            this.allField = {
-                name: 'field',
-                type: 'group select',
-                value: '',
-                selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
-            },
-            this.aggregate = {
-                name: 'aggregate',
-                type: 'select',
-                value: '',
-                selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
-            }
+        else if (selection_str == 'allField') return {
+            name: 'field',
+            type: 'group select',
+            value: '',
+            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
+        };
+        else if (selection_str == 'aggregate') return {
+            name: 'aggregate',
+            type: 'select',
+            value: '',
+            selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
+        }
     }
+    // make it can use this.ECSelections
+    propertyConfig = propertyConfig.bind(this);
+
     this.encodings = {
         // select / group select
         x: {
-            field: property.xField,
-            aggregate: property.aggregate,
+            field: 'xField',
+            aggregate: 'aggregate',
         },
         xOffset: {
-            field: property.xField,
-            aggregate: property.aggregate
+            field: 'xField',
+            aggregate: 'aggregate'
         },
         y: {
-            field: property.yField,
-            aggregate: property.aggregate
+            field: 'yField',
+            aggregate: 'aggregate'
         },
         yOffset: {
-            field: property.yField,
-            aggregate: property.aggregate
+            field: 'yField',
+            aggregate: 'aggregate'
         },
         color: {
-            field: property.allField,
-            aggregate: property.aggregate
+            field: 'allField',
+            aggregate: 'aggregate'
         },
         detail: {
-            field: property.allField,
+            field: 'allField',
         },
         size: {
-            field: property.allField,
-            aggregate: property.aggregate
+            field: 'allField',
+            aggregate: 'aggregate'
         },
         opacity: {
-            field: property.allField,
-            aggregate: property.aggregate
+            field: 'allField',
+            aggregate: 'aggregate'
+        },
+        shape: {
+            field: 'allField',
+            aggregate: 'aggregate'
         }
     }
+
+    for (const channel in this.encodings) {
+        if (Object.hasOwnProperty.call(this.encodings, channel)) {
+            this.encodings[channel] = this.encodings[channel];
+            for (const property in this.encodings[channel]) {
+                if (Object.hasOwnProperty.call(this.encodings[channel], property)) {
+                    let propertyName = this.encodings[channel][property];
+                    console.log("channel,property", channel, property, this.encodings[channel][property]);
+                    this.encodings[channel][property] = propertyConfig(propertyName);
+
+                }
+            }
+        }
+    }
+
+    console.log("encoding config", this.encodings);
 
     this.addProperties = {};
     for (const key in this.encodings) {
