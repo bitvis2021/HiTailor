@@ -6,33 +6,33 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
     this.vegaEncoding = VegaEncoding_obj;
     this.ECSelections = ECSelections_obj;
     this.sortBindings = Object.assign(this.ECSelections.xSelect.bindings, this.ECSelections.ySelect.bindings)
-    let property = {
-        xField: {
+    let property = function () {
+        this.xField = {
             name: 'field',
             type: 'select',
             // selections: this.ECSelections.xSelect.selections.concat(['value']),
             selections: this.ECSelections.xSelect.selections,
             value: ''
-        },
-        yField: {
+        }
+        this.yField = {
             name: 'field',
             type: 'select',
             value: '',
             selections: this.ECSelections.ySelect.selections
             // selections: this.ECSelections.ySelect.selections.concat(['value'])
-        },
-        allField: {
-            name: 'field',
-            type: 'group select',
-            value: '',
-            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
-        },
-        aggregate: {
-            name: 'aggregate',
-            type: 'select',
-            value: '',
-            selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
         }
+            this.allField = {
+                name: 'field',
+                type: 'group select',
+                value: '',
+                selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
+            },
+            this.aggregate = {
+                name: 'aggregate',
+                type: 'select',
+                value: '',
+                selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
+            }
     }
     this.encodings = {
         // select / group select
@@ -59,6 +59,14 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         detail: {
             field: property.allField,
         },
+        size: {
+            field: property.allField,
+            aggregate: property.aggregate
+        },
+        opacity: {
+            field: property.allField,
+            aggregate: property.aggregate
+        }
     }
 
     this.addProperties = {};
