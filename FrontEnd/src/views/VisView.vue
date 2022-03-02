@@ -158,10 +158,15 @@ export default {
         this.VisDB.SetTemplate(this.figID, this.currentTemplate);
         this.VisDB.RerenderCanvas(this.figID);
       }
+
+      this.$bus.$emit("apply-config");
     },
   },
   mounted() {
     this.OPEN_VIS_PANEL();
+
+    this.$bus.$on("select-cell", () => this.VisDB.CancelAllSelections());
+    this.$bus.$on("change-header", () => this.VisDB.RemoveAllCanvas());
 
     // Render figure on top of the side panel
     this.$bus.$on("preview-config", () => {
@@ -274,7 +279,7 @@ export default {
   }
 }
 
-#gen-chart{
+#gen-chart {
   // display: none;
   overflow: hidden;
 }
@@ -282,7 +287,7 @@ export default {
 .role-axis-grid {
   display: none;
 }
-.role-axis-domain{
+.role-axis-domain {
   display: none;
 }
 
@@ -316,6 +321,12 @@ export default {
       fill: rgb(153, 195, 250);
     }
   }
+}
+
+#chart {
+  width: 100%;
+  height: 25vh;
+  overflow: hidden;
 }
 
 .vis-picture-button {

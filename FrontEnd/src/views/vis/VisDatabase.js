@@ -185,6 +185,18 @@ VisDatabase.prototype.CancelSelection = function (id) {
     }
 }
 
+VisDatabase.prototype.CancelAllSelections = function () {
+    for (const id in this.database) {
+        if (Object.hasOwnProperty.call(this.database, id)) {
+            this.database[id].status = status.clear;
+            if (document.getElementById(id + '.select') != undefined) {
+                document.getElementById(id + '.select').remove();
+                document.getElementById(id + '.button').remove();
+            }
+        }
+    }
+}
+
 VisDatabase.prototype.GetCanvas = function (id) {
     return document.getElementById(id);
 }
