@@ -265,7 +265,8 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     // 3. gen chart
     // 4. append
 
-    let table = document.getElementsByClassName("table-view-svg")[0];
+    // let table = document.getElementsByClassName("table-view-svg")[0];
+    let table = document.getElementById("vis-container")
     let height = this.database[id].height - 1.1;
     let width = this.database[id].width - 1.1;
     let x = this.database[id].x + 0.5;
