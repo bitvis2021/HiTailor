@@ -271,8 +271,8 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = this.GetVegaLite(id, height - 0.3, width - 0.3);
-
+    let chartJson = JSON.parse(JSON.stringify(this.GetVegaLite(id, height - 0.3, width - 0.3)));
+    console.log("rendering", chartJson);
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -320,6 +320,9 @@ VisDatabase.prototype.RenderCanvas = function (id) {
             canvas.append(background);
             // then add vis picture
             canvas.append(pic);
+
+            let defs = document.getElementById(tempSvgFragament_Id).childNodes[0].childNodes[0];
+            canvas.append(defs);
 
 
             // hidden button
