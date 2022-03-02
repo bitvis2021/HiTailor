@@ -77,7 +77,7 @@
       <!-- <div v-if="!isTransformView">
         <button type="primary" plain size="small" 
           class="button"
-          @click="transmit_data_to_vis()" > 
+          @click="transmit_chosen_to_vis()" > 
           transmit data
         </button> 
       </div> 
@@ -208,15 +208,6 @@
               </text>
             </g>
           </g>
-          <!-- transparent mask for choosing -->
-          <rect v-if="isHeaderFixed"
-            id="transparent-mask-for-choosing"
-            :x="markWidth + widthRangeList[headerRange.right+1]" 
-            :y="markHeight + heightRangeList[headerRange.bottom+1]"
-            :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
-            :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
-            @mousedown="handle_mouse_down_mask($event)">
-          </rect>
         </g>
         
         <!-- row mark -->
@@ -344,6 +335,16 @@
         </g>
         
         <g id="recommendation-area-container" />
+        
+        <!-- transparent mask for choosing -->
+        <rect v-if="!isCurrFlat && isHeaderFixed"
+          id="transparent-mask-for-choosing"
+          :x="markWidth + widthRangeList[headerRange.right+1]" 
+          :y="markHeight + heightRangeList[headerRange.bottom+1]"
+          :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
+          :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
+          @mousedown="handle_mouse_down_mask($event)">
+        </rect>
 
         <g id="vis-container"/>
 
@@ -416,6 +417,7 @@ export default {
       mouseDownMarkLine: {index:null, type:null},
 
       mouseDownState: false,
+      mouseDownMaskState: false,
       mouseDownMarkState: false,
       mouseDownMarkLineState: false,
 
@@ -692,26 +694,26 @@ export default {
           this.visRerenderAfterPos.x = 0
           this.visRerenderAfterPos.y = this.markHeight + this.markHeightRangeList[this.mouseDownMarkLine.index+1]
         }
-        this.mouseDownMarkLineState = false
 
-        // if (!this.isTransformView) {
-          if (this.mouseDownMarkLine.type=="column" && this.visRerenderAfterPos.x!=this.visRerenderPrePos.x || 
-            this.mouseDownMarkLine.type=="row" && this.visRerenderAfterPos.y!=this.visRerenderPrePos.y) {
-              this.$bus.$emit('rerender-selectedData', this.visRerenderPrePos, this.visRerenderAfterPos)
-              console.log("rerender", this.visRerenderPrePos, this.visRerenderAfterPos)
-            }
-        // }
-        
+        if (this.mouseDownMarkLine.type=="column" && this.visRerenderAfterPos.x!=this.visRerenderPrePos.x || 
+          this.mouseDownMarkLine.type=="row" && this.visRerenderAfterPos.y!=this.visRerenderPrePos.y) {
+            this.$bus.$emit('rerender-selectedData', this.visRerenderPrePos, this.visRerenderAfterPos)
+            console.log("rerender", this.visRerenderPrePos, this.visRerenderAfterPos)
+          }
+
+        this.mouseDownMarkLineState = false
       }
       this.mouseOverCell =  {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null}
       this.mouseDownMarkLine = {index:null, type:null}
       this.selectedMark = {index:null, type:null}
-      if (this.isHeaderFixed) {
+      
+      if (this.mouseDownMaskState && this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
           console.log("this.selectedArea", this.selectedArea)
-          this.transmit_data_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+          this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
           this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
         }
+        this.mouseDownMaskState = false
       }
     },
 
@@ -732,6 +734,8 @@ export default {
       this.selectedArea.right = this.mouseOverCell.cend
 
       this.mouseDownState = true
+      this.mouseDownMaskState = true
+      this.$bus.$emit('select-cell')
     },
 
 
@@ -797,6 +801,7 @@ export default {
     },
     transform_fold() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
         this.flatData = this.get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1)
@@ -820,6 +825,7 @@ export default {
     },
     transform_unfold() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       this.isCurrFlat = false
       if (!this.isHeaderFixed) {
         // todo: flat识别header结构!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -840,6 +846,7 @@ export default {
     },
     transform_transpose() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
         for (var item of this.colHeader[i]) {
@@ -882,6 +889,7 @@ export default {
     },
     transform_swap(name, header, isSwapUp, isRow) {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
       var upLayerNum, downLayerNum
@@ -1086,6 +1094,7 @@ export default {
     },
     transform_2stacked(name, header, times, isRow) {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
@@ -1190,6 +1199,7 @@ export default {
     },
     transform_2linear(name, header, times, isRow) {
       this.clear_selected()
+      this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
@@ -1353,25 +1363,41 @@ export default {
     },
     transform_derive() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
 
     },
     transform_merge() {
       this.clear_selected()
+      this.$bus.$emit("change-header")
 
     },
-    transmit_data_to_vis(top, bottom, left, right) {
+
+    get_data_for_transmission(top, bottom, left, right) {
       var data = this.get_data_from_chosen(top, bottom, left, right)
       var metadata = this.gen_metadata_from_chosen(top, bottom, left, right)
       var chgdata = this.change_data_form(data)
       var jsdata = this.gen_json_from_data(data, chgdata)
 
+      return [jsdata, metadata]
+    },
+    get_pos_for_transmission(top, bottom, left, right) {
       var x = this.markWidth + this.widthRangeList[left]
       var y = this.markHeight + this.heightRangeList[top]
       var width = this.widthRangeList[right+1] - this.widthRangeList[left]
       var height= this.heightRangeList[bottom+1] - this.heightRangeList[top]
       var pos = {"x":x, "y":y, "width":width, "height":height}
-      
+
+      return pos
+    },
+    transmit_chosen_to_vis(top, bottom, left, right) {
+      var [jsdata, metadata] = this.get_data_for_transmission(top, bottom, left, right)
+      var pos = this.get_pos_for_transmission(top, bottom, left, right)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
+    },
+    transmit_recommendation_to_vis() {
+      var dataArray = []
+      
+      this.$bus.$emit('visualize-recommendData', dataArray)
     },
     get_data_from_chosen(top, bottom, left, right) {
       var res=[]
@@ -2067,7 +2093,21 @@ export default {
     console.log("this.widthRangeList", this.widthRangeList)
     console.log("this.heightRangeList", this.heightRangeList)
     console.log("this.dataValueList", this.dataValueList)
-    // this.transmit_data_to_vis()
+    
+    this.$bus.$on("apply-config", () => {
+      console.log("send recommendation data")
+      this.transmit_recommendation_to_vis()
+      this.clear_selected()
+    })
+
+    this.$bus.$on("select-canvas", () => {
+      console.log("remove selections of tableview")
+      this.clear_selected()
+    })
+
+    this.$bus.$on("change-header", () => {
+      console.log("change-header!")
+    })
   },
   computed: {
     ...mapState([
