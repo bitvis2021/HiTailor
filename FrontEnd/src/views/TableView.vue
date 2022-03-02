@@ -11,57 +11,63 @@
       </button>
     </div>
 
-    <div class="tranform-button-container" v-if="isHeaderFixed">
-      <button v-if="isCurrFlat"
-        type="primary" plain size="small" 
-        class="button"
-        @click="transform_unfold()" > 
-        Unfold
-      </button>
+    <div class="toolbar" v-if="isHeaderFixed">
+      
 
-      <div v-if="!isCurrFlat">
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_fold()" > 
-          Fold
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_transpose()" > 
-          Transpose
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="handle_transform_swap('FALL 2001', false)" > 
-          Swap
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="handle_transform_2stacked('HUMANITIES')" > 
-          ToStacked
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="handle_transform_2linear('HUMANITIES', 0)" > 
-          ToLinear
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_derive()" > 
-          Derive
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transform_merge()" > 
-          Merge
-        </button>
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="cancel_recommend()" > 
-          Cancel
-        </button>
-        
-      </div>
+      <el-row>
+        <el-col :span="14">
+          <span class="toolbar-label">Transformation</span>
+          <button v-if="isCurrFlat"
+            type="primary" plain size="small" 
+            class="button"
+            @click="transform_unfold()" > 
+            Unfold
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_fold()" > 
+            Fold
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_transpose()" > 
+            Transpose
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="handle_transform_swap('FALL 2001', false)" > 
+            Swap
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="handle_transform_2stacked('HUMANITIES')" > 
+            ToStacked
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="handle_transform_2linear('HUMANITIES', 0)" > 
+            ToLinear
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_derive()" > 
+            Derive
+          </button>
+          <button type="primary" plain size="small" 
+            class="button"
+            @click="transform_merge()" > 
+            Merge
+          </button>
+          <span class="toolbar-vertical-separator" />
+          <span class="toolbar-label">Recommendation  Priority</span>
+        </el-col> 
+
+        <el-col :span="8">
+          <div class="priority-slider"> 
+            <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
+          </div>
+        </el-col>
+      </el-row> 
     </div>
 
     <!-- <div v-if="(headerFixedFlag.row && headerFixedFlag.column) ">
@@ -456,6 +462,9 @@ export default {
       visRerenderAfterPos: {x:0, y:0},
 
       recommendData: null,
+      isPriorityToSend: null,
+      // prioritySliderMark: null,
+      prioritySliderValue:[0, 5]
     }
   },
 
@@ -735,6 +744,7 @@ export default {
 
       this.mouseDownState = true
       this.mouseDownMaskState = true
+      this.cancel_recommend()
       this.$bus.$emit('select-cell')
     },
 
@@ -1396,7 +1406,7 @@ export default {
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
-      
+
       this.$bus.$emit('visualize-recommendData', dataArray)
     },
     get_data_from_chosen(top, bottom, left, right) {
@@ -1627,9 +1637,9 @@ export default {
           color = "blue"
           break
       }
-
+      let self = this
       var area = d3.select("#recommendation-area-container")
-      area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority)
+      area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority).datum(priority)
           .attr("x", this.markWidth + this.widthRangeList[left+this.headerRange.right+1])
           .attr("y", this.markHeight + this.heightRangeList[top+this.headerRange.bottom+1])
           .attr("width", this.widthRangeList[right+1+this.headerRange.right+1] - this.widthRangeList[left+this.headerRange.right+1])
@@ -1637,6 +1647,15 @@ export default {
           .style("stroke", "grey")
           .style("fill", color)
           .style("fill-opacity", "20%")
+          .style("visibility", function(d) { 
+            console.log("dataaaaa", d)
+            console.log("slider", self.prioritySliderValue)
+            if (d >= self.prioritySliderValue[0] && d <= self.prioritySliderValue[1])       
+              return "visible"
+            else {
+              return "hidden" 
+            }
+          });
     },
     cal_recommendation_by_two_references(prilist, rpri, cpri, priority) {
       var res = []
@@ -1991,6 +2010,28 @@ export default {
       //   this.selectedMark = {index:null, type:null}
       //   this.selectByMark = {row:false, column:false}
       // }, 
+      prioritySliderValue: {
+        deep: true,
+        handler: function(data) {
+          var prefix = "#recommend-helper-", name = ""
+          var min=data[0], max=data[1]
+
+          for (var i=0; i<min; i++) {
+            name = prefix + i
+            d3.selectAll(name).style("visibility", "hidden")
+          }
+
+          for (var i=min; i<=max; i++) {
+            name = prefix + i
+            d3.selectAll(name).style("visibility", "visible")
+          }
+
+          for (var i=max+1; i<=5; i++) {
+            name = prefix + i
+            d3.selectAll(name).style("visibility", "hidden")
+          }
+        }
+      }
       
   },
   beforeMount: function() {
@@ -2010,6 +2051,12 @@ export default {
     this.num2header = new Map
     this.header2num = new Map
     this.recommendData = [[], [], [], [], []]
+    this.isPriorityToSend = new Array(5).fill(true)
+
+    // this.prioritySliderMark = new Object
+    // for (var i=1; i<6; i++) {
+    //   this.prioritySliderMark[i] = i
+    // }
 
     // set column width to be the same
     var row = this.tabularDatasetList[0]
@@ -2238,7 +2285,7 @@ export default {
     // margin-top: 5px;
     text-align: center;
   }
-  .tranform-button-container {
+  .toolbar {
     // margin-top: 5px;
     height:@transform-button-container-height;
     // margin-bottom: @padding;
@@ -2248,16 +2295,33 @@ export default {
     // border-bottom:1px solid #c8c6c4;
     // height:@transform-button-container-height;
     width:100%;
-    display: -webkit-flex;
-    display: flex;
-    flex-direction: row;
+    // display: -webkit-flex;
+    // display: flex;
+    // flex-direction: row;
     // padding-top: 4px;
     padding-left: @padding;
     // padding-right: 10px;
     // padding-bottom: 4px;
     background: white;
     align-items: center;
-    border-bottom: 1px solid #c8c6c4;
+    border-bottom: 1px solid #cecece;
+    // overflow: hidden;
+    .el-row {
+      height:100%;
+    }
+    .el-col {
+      text-align:left;
+      height:100%;
+      // white-space: nowrap;
+      // overflow: hidden;
+    }
+    .toolbar-label {
+      font-size: 100%;
+      user-select: none;
+      color: #8a8785;
+      margin-right: @padding;
+      height: @transform-button-height;
+    }
     .button {
       font-size: 100%;
       background-color: transparent;
@@ -2268,6 +2332,7 @@ export default {
       user-select: none;
       margin-right:@padding;
       height: @transform-button-height;
+      margin-top:4.5px;
     }
     .button:hover {
       background-color: #e4e9eeb6;
@@ -2275,16 +2340,31 @@ export default {
       border: none;
       cursor: pointer;
       user-select: none;
-      margin-right:@padding;
+      // margin-right: @padding;
       height: @transform-button-height;
     }
+    .toolbar-vertical-separator {
+      border-left: 1px solid #cecece;
+      height: @transform-button-height;
+      margin-right: 2*@padding;
+      margin-left: @padding;
+      width: 4px;
+      user-select: none;
+    }
+    .priority-slider{
+      margin-left: @padding;
+      position:relative;
+      width:60%;
+      height:100%;
+    }    
   }
+  
   .table-view-svg-container {
     position: absolute;
     // height:100%;
     left: @padding;
     right:0%;
-    top:@transform-button-container-height +  @padding;
+    top:@transform-button-container-height +  1rem;
     bottom:0%;
     overflow:auto;
     // margin-top:1%;
