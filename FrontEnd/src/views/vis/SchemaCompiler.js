@@ -329,13 +329,15 @@ export let markConf = {
     bar: function () {
         this.properties = {};
         this.properties.opacity = new confTemplate.opacity(0.6);
+        // this.properties.height = new confTemplate.width('height', 1, 100, undefined);
         // this.properties.baseline = new confTemplate.select_radius("base line", ["alphabetic", "top", "middle", "bottom"], "alphabetic");
         // this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
     },
     boxplot: function (df_size, df_opacity, df_color, df_orient, df_extent) {
         this.properties = {};
-        this.properties.size = new confTemplate.width('width', 1, 100, 30);
-        this.properties.opacity = new confTemplate.opacity(df_opacity);
+        this.properties.size = new confTemplate.width('size', 10, 100, undefined);
+        this.properties.opacity = new confTemplate.opacity(undefined);
+        this.properties.color = new confTemplate.color();
     },
     line: function (df_strokeWidth, df_color, df_interpolate) {
         this.properties = {};

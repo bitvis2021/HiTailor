@@ -65,6 +65,8 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
             let line_template;
+
+            // simple line chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 selections_cell = selections_cell;
                 selections_cell.SetYSelections(['value']);
@@ -114,6 +116,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
         case supportedTemplate.ANQorNQ_Bar_Chart:
             console.log("bar char range", metaData_obj.x.range);
+            // simple bar chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 selections_cell.AddYSelection("value");
                 selections_cell.AddXSelection("value");
@@ -129,11 +132,11 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 }
                 if (!is_X) {
                     [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                    selections_cell.xSelect.selections = [];
+                    selections_cell.SetXSelections(["value"]);
                     picture = './templates/simple bar chart y.png'
                 }
                 else {
-                    selections_cell.ySelect.selections = [];
+                    selections_cell.SetYSelections(["value"]);
                 }
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
@@ -354,9 +357,13 @@ export function GetTemplates(metaData_obj, visData_arr) {
             templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_arr, 'x'), 'horizon')
+
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Box_Plot, metaData_obj, visData_arr, 'y'), 'vertical')
         }
         else {
             templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Box_Plot, metaData_obj, visData_arr, 'x'), 'horizon')
         }
     }
     if (metaData_obj.x.range >= 2 && metaData_obj.y.range >= 2) {
@@ -662,7 +669,12 @@ VegaTemplate.prototype.GetVegaConfig = function () {
 VegaTemplate.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
+
+    if (!!this.vegaConfig.encoding.y && !!this.vegaConfig.encoding.x) {
+        this.vegaConfig.encoding.y.title = null;
+        this.vegaConfig.encoding.x.title = null;
+    }
     return this.vegaConfig;
 }
 
