@@ -65,6 +65,8 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
             let line_template;
+
+            // simple line chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 selections_cell = selections_cell;
                 selections_cell.SetYSelections(['value']);
@@ -114,6 +116,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
         case supportedTemplate.ANQorNQ_Bar_Chart:
             console.log("bar char range", metaData_obj.x.range);
+            // simple bar chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 selections_cell.AddYSelection("value");
                 selections_cell.AddXSelection("value");
@@ -129,11 +132,11 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 }
                 if (!is_X) {
                     [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                    selections_cell.xSelect.selections = [];
+                    selections_cell.SetXSelections(["value"]);
                     picture = './templates/simple bar chart y.png'
                 }
                 else {
-                    selections_cell.ySelect.selections = [];
+                    selections_cell.SetYSelections(["value"]);
                 }
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
@@ -318,28 +321,20 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
             }
 
-        // horizon 是y比较多
-        case supportedTemplate.NQ_Histogram_Heatmap:
-            let n_selections = selections_horizon;
-            n_selections.SetXSelections(selections_horizon.GetYSelections())
-            n_selections.SetYSelections(selections_horizon.GetYSelections())
-            if (is_X) {
-                return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-            }
-            else {
-                return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-            }
-        case supportedTemplate.NQ_Histogram_Scatterplot:
-
-            n_selections = selections_horizon;
-            n_selections.SetXSelections(selections_horizon.GetYSelections())
-            n_selections.SetYSelections(selections_horizon.GetYSelections())
-            if (is_X) {
-                return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-            }
-            else {
-                return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-            }
+        // case supportedTemplate.NQ_Histogram_Heatmap:
+        //     if (is_X) {
+        //         return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+        //     }
+        //     else {
+        //         return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+        //     }
+        // case supportedTemplate.NQ_Histogram_Scatterplot:
+        //     if (is_X) {
+        //         return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+        //     }
+        //     else {
+        //         return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+        //     }
         default:
             break;
     }
@@ -354,9 +349,13 @@ export function GetTemplates(metaData_obj, visData_arr) {
             templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_arr, 'x'), 'horizon')
+
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Box_Plot, metaData_obj, visData_arr, 'y'), 'vertical')
         }
         else {
             templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Box_Plot, metaData_obj, visData_arr, 'x'), 'horizon')
         }
     }
     if (metaData_obj.x.range >= 2 && metaData_obj.y.range >= 2) {
@@ -404,8 +403,7 @@ export function GetTemplates(metaData_obj, visData_arr) {
     return templates.GetTemplates();
 }
 
-// TODO: 目前row是乱序的，只能用hashmap了，所以应该想 “如果有相等的atom” 应该怎么做
-function betterGetObjSelections(visData_arr, metaData_obj, direction_str) {
+function GetObjSelections(visData_arr, metaData_obj, direction_str) {
     // atom col: column header sort == x range
     let atom_col_key, atom_row_key;
     metaData_obj.x.headers.forEach(element => {
@@ -423,178 +421,64 @@ function betterGetObjSelections(visData_arr, metaData_obj, direction_str) {
         console.log("atom key undefine", atom_row_key, atom_col_key);
         return null;
     }
-
+    let visDataObj_arr = []
     let ECSelections = new FieldSelection();
 
-    let visDataObj_arr = []
-    let current_atom_value = '';
-    let obj;
-
-    let is_vertical = true;
     let atom_key = atom_col_key;
     let another_atom_key = atom_row_key;
     if (direction_str == 'horizon' || direction_str == 'x') {
-        is_vertical = false;
         atom_key = atom_row_key;
         another_atom_key = atom_col_key;
     }
 
-    // until atom key change change, use another_atom_key's value as key
+    let bracket = {};
+    let sequence = [];
+
+    // atom_key as a key. if atom_key is the first key, update the sequence number. and then push the number
     for (let i = 0; i < visData_arr.length; i++) {
         const element = visData_arr[i];
 
-        if (current_atom_value != element[atom_key]) {
-            if (obj != undefined) {
-                visDataObj_arr.push(obj);
-            }
-            // new object
-            obj = {};
-
-            // add column attribute
-            for (const key in element) {
-                if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
-                    obj[key] = element[key];
-                }
-            }
-            current_atom_value = element[atom_key];
+        let row_data_key = element[atom_key];
+        if (bracket[row_data_key] == undefined) {
+            sequence.push(row_data_key);
+            bracket[row_data_key] = {};
         }
-        obj[element[another_atom_key]] = element['value'];
-    }
-    visDataObj_arr.push(obj);
 
+        bracket[row_data_key][element[another_atom_key]] = element['value'];
 
-    console.log('new visData', visDataObj_arr);
-    let XSelection = []
-    let YSelection = []
-    // vertical: Y is atom key (col)
-    if (is_vertical) {
-        for (const key in visData_arr[0]) {
-            if (Object.hasOwnProperty.call(visData_arr[0], key)) {
-                if (key.substring[0, 3] == atom_key.substring(0, 3)) {
-                    YSelection.push(key);
-                }
-                else {
-                    XSelection.push(key);
-                }
+        for (const key in element) {
+            if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
+                bracket[row_data_key][key] = element[key];
             }
         }
     }
-    else {
-        for (const key in visDataObj_arr[0]) {
-            if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
-                if (key.substring(0, 3) == atom_key.substring(0, 3)) {
-                    XSelection.push(key);
-                }
-                else {
-                    YSelection.push(key);
-                }
+    for (let i = 0; i < sequence.length; i++) {
+        const rowName = sequence[i];
+        visDataObj_arr.push(bracket[rowName]);
+    }
+
+    let selections = [];
+    let unImportantSelection = [];
+
+    for (const key in visDataObj_arr[0]) {
+        if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
+            if (key.substring(0, 3) == atom_key.substring(0, 3)) {
+                unImportantSelection.push(key);
+                console.log("atom key", key)
+            }
+            else {
+                selections.push(key);
             }
         }
     }
-    ECSelections.SetXSelections(XSelection);
-    ECSelections.SetYSelections(YSelection);
+
+    selections = selections.concat(unImportantSelection);
+
+    ECSelections.SetXSelections(selections);
+    ECSelections.SetYSelections(selections);
+    console.log('new ECSelections', ECSelections);
     return [visDataObj_arr, ECSelections];
 }
-
-// return [obj_visData, ECSelections]
-function GetObjSelections(visData_arr, metaData_obj, direction_str) {
-    // return betterGetObjSelections(visData_arr, metaData_obj, direction_str);
-    let objs = {}
-    let is_vertical = true;
-
-    // direction means the direction of each strip
-    if (direction_str == 'horizon' || direction_str == 'x') {
-        is_vertical = false;
-    }
-    for (const key in visData_arr[0]) {
-        if (Object.hasOwnProperty.call(visData_arr[0], key)) {
-            objs[key] = {};
-        }
-    }
-
-    for (let i = 0; i < visData_arr.length; i++) {
-        const cell = visData_arr[i];
-        for (const key in cell) {
-            if (Object.hasOwnProperty.call(cell, key)) {
-                const rowName = cell[key];
-                if (objs[key][rowName] != undefined) {
-                    objs[key][rowName].push(Number(cell['value']));
-                }
-                else {
-                    objs[key][rowName] = [];
-                    objs[key][rowName].push(Number(cell['value']));
-                }
-            }
-        }
-    }
-    let selections = {};
-    let selections_name = [];
-    for (const key in objs) {
-        if (is_vertical && key.substring(0, 3) == 'row') {
-            for (const selection in objs[key]) {
-                if (Object.hasOwnProperty.call(objs[key], selection)) {
-                    const arr = objs[key][selection];
-                    if (arr.length != metaData_obj.y.range) {
-                        break;
-                    }
-                    selections[selection] = arr;
-                    selections_name.push(selection.split('.').pop());
-                }
-            }
-        }
-        else if (!is_vertical && key.substring(0, 3) == 'col') {
-            for (const selection in objs[key]) {
-                if (Object.hasOwnProperty.call(objs[key], selection)) {
-                    const arr = objs[key][selection];
-                    if (arr.length != metaData_obj.x.range) {
-                        break;
-                    }
-                    selections[selection] = arr;
-                    selections_name.push(selection.split('.').pop());
-                }
-            }
-        }
-    }
-
-    let obj_visData = []
-    let ECSelections = new FieldSelection();
-
-    if (is_vertical) {
-        // select the biggest header
-        let header = metaData_obj.y.headers[metaData_obj.y.headers.length - 1];
-        ECSelections.SetXSelections(selections_name);
-        ECSelections.SetYSelections([header.name]);
-
-        for (let i = 0; i < metaData_obj.y.range; i++) {
-            let cell = {};
-            for (const key in selections) {
-                let processed_key = key.split('.').pop()
-                cell[processed_key] = selections[key][i];
-                cell[header.name] = header.sort[i];
-            }
-            obj_visData.push(cell);
-        }
-    }
-    else {
-        let header = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
-        ECSelections.SetYSelections(selections_name);
-        ECSelections.SetXSelections([header.name]);
-
-        for (let i = 0; i < metaData_obj.x.range; i++) {
-            let cell = {};
-            for (const key in selections) {
-                let processed_key = key.split('.').pop()
-                cell[processed_key] = selections[key][i];
-                cell[header.name] = header.sort[i];
-            }
-            obj_visData.push(cell);
-        }
-    }
-
-
-    return [obj_visData, ECSelections];
-}
-
 
 function Templates() {
     this.templates = {}
@@ -657,7 +541,14 @@ VegaTemplate.prototype.GetVegaConfig = function () {
 VegaTemplate.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
+
+    if (!!this.vegaConfig.encoding) {
+        if (!!this.vegaConfig.encoding.y && !!this.vegaConfig.encoding.x) {
+            this.vegaConfig.encoding.y.title = null;
+            this.vegaConfig.encoding.x.title = null;
+        }
+    }
     return this.vegaConfig;
 }
 
@@ -833,14 +724,26 @@ function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previ
 function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
     this.selections = selections_obj;
     this.is_X = true;
-    if (direction == 'y') {
+    this.col_row_selection = [];
+    this.obj_selection = [];
+
+    selections_obj.GetYSelections().forEach(element => {
+        if (element.substring(0, 3) == 'row' || element.substring(0, 3) == 'col') {
+            this.col_row_selection.push(element);
+        }
+        else {
+            this.obj_selection.push(element);
+        }
+    });
+
+    if (direction == 'y' || 'vertical') {
         this.is_X = false;
         this.vegaConfig = {
             "data": { "values": visData_arr },
             "transform": [
                 { "window": [{ "op": "count", "as": "index" }] },
                 {
-                    "fold": selections_obj.GetYSelections()
+                    "fold": this.obj_selection
                 },
                 {
                     "joinaggregate": [
@@ -859,12 +762,12 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                 {
                     "mark": { "type": "line", "opacity": 0.3 },
                     "encoding": {
-                        "color": { "type": "nominal", "field": selections_obj.GetXSelections().at(0), "legend": null },
+                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
                         "detail": { "type": "nominal", "field": "index" },
                         "y": {
                             "type": "nominal",
                             "field": "key",
-                            "sort": selections_obj.GetYSelections()
+                            "sort": this.obj_selection
                         },
                         "x": { "type": "quantitative", "field": "norm_val", "axis": null }
                     }
@@ -875,7 +778,7 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                         "detail": { "aggregate": "count" },
                         "y": {
                             "field": "key",
-                            "sort": selections_obj.GetYSelections()
+                            "sort": this.obj_selection
                         }
                     }
                 }
@@ -889,7 +792,7 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
             "transform": [
                 { "window": [{ "op": "count", "as": "index" }] },
                 {
-                    "fold": selections_obj.GetXSelections()
+                    "fold": this.obj_selection
                 },
                 {
                     "joinaggregate": [
@@ -908,12 +811,12 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                 {
                     "mark": { "type": "line", "opacity": 0.3 },
                     "encoding": {
-                        "color": { "type": "nominal", "field": selections_obj.GetYSelections().at(0), "legend": null },
+                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
                         "detail": { "type": "nominal", "field": "index" },
                         "x": {
                             "type": "nominal",
                             "field": "key",
-                            "sort": selections_obj.GetXSelections()
+                            "sort": this.obj_selection
                         },
                         "y": { "type": "quantitative", "field": "norm_val", "axis": null }
                     }
@@ -924,7 +827,7 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                         "detail": { "aggregate": "count" },
                         "x": {
                             "field": "key",
-                            "sort": selections_obj.GetXSelections()
+                            "sort": this.obj_selection
                         }
                     }
                 }
@@ -955,9 +858,11 @@ ParallelCoordinatePlot.prototype.CompileTweakedConfig = function (vegaConfig_obj
 ParallelCoordinatePlot.prototype.GetSelections = function () {
     if (this.is_X) {
         this.selections.SetXSelections([])
+        this.selections.SetYSelections(this.col_row_selection);
     }
     else {
         this.selections.SetYSelections([])
+        this.selections.SetXSelections(this.col_row_selection);
     }
     return this.selections;
 }
@@ -996,16 +901,16 @@ function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str) {
                 transform: [{ calculate: "datum['" + ySelect_str + "'] - " + Offset1.toString(), as: ySelect_str }],
                 mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
                 encoding: {
-                    y: { field: ySelect_str, type: "quantitative", scale: { zero: false, nice: false, domain: [0, Offset2] }, axis: { labels: false, ticks: false, title: null } },
-                    x: { field: xSelect_str, type: "nominal", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
+                    y: { field: ySelect_str, type: "quantitative" },
+                    x: { field: xSelect_str, type: "nominal" },
                 }
             },
             {
                 transform: [{ calculate: "datum['" + ySelect_str + "'] - " + Offset2, as: "ny" }],
                 mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
                 encoding: {
-                    y: { field: "ny", type: "quantitative", scale: { zero: false, nice: false, domain: [0, Offset2] } },
-                    x: { field: xSelect_str, type: "nominal", scale: { zero: false, nice: false }, axis: { labels: false, ticks: false, title: null } },
+                    y: { field: "ny", type: "quantitative" },
+                    x: { field: xSelect_str, type: "nominal" },
                 }
             }
         ]
@@ -1021,7 +926,9 @@ HorizonGraphTemplate.prototype.GetVegaConfig = function () {
 
 // Real vega-lite data
 HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -15 } };
+    this.vegaConfig.layer[0].mark.clip = true;
+    this.vegaConfig.layer[1].mark.clip = true;
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
     return this.vegaConfig;
@@ -1048,7 +955,7 @@ HorizonGraphTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) 
 
     this.vegaConfig.layer[1] = JSON.parse(JSON.stringify(vegaConfig_obj));
     this.vegaConfig.layer[1].transform = [{ calculate: "datum['" + ySelect + "'] - " + Offset2, as: "ny" }]
-    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative", axis: { labels: false, ticks: false, title: null } };
+    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative" };
 
     return this.vegaConfig;
 }
