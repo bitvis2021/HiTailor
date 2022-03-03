@@ -435,8 +435,8 @@ export function GetTemplates(metaData_obj, visData_arr) {
         ]
 
         Q2Chart.forEach(element => {
-            templates.AddTemplate(GetTemplate(element, metaData_obj, visData_arr, 'x'), 'using row data');
-            templates.AddTemplate(GetTemplate(element, metaData_obj, visData_arr, 'y'), 'using column data');
+            templates.AddTemplate(GetTemplate(element, metaData_obj, visData_arr, 'x'), 'Using row data');
+            templates.AddTemplate(GetTemplate(element, metaData_obj, visData_arr, 'y'), 'Using column data');
 
         });
     }
@@ -505,7 +505,6 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
         if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
             if (key.substring(0, 3) == atom_key.substring(0, 3)) {
                 unImportantSelection.push(key);
-                console.log("atom key", key)
             }
             else {
                 selections.push(key);
@@ -513,6 +512,7 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
         }
     }
 
+    unImportantSelection.sort();
     selections = selections.concat(unImportantSelection);
 
     ECSelections.SetXSelections(selections);
