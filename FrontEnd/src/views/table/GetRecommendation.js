@@ -78,7 +78,7 @@ export function get_reference_node(header, start, end, isRow, hasTransposed) {
             }
             else if (start > ranges[j].start) {
                 if (end == ranges[j].end) {
-                if (children.length!=0 && children[j].indexOf(linearName)!=-1 
+                if (children.length!=0 && children[j].indexOf(linearName)!=-1
                 && start == ranges[j].start+1) {    // choose a single node(not including linear)
                     var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:true}
                     res.push(tmp)
@@ -166,8 +166,64 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
         }
     }
     else { // multiple references
-        if (layer == 0) return  // don't recommend when first layer
-        // todo!!!!!!!!!!!!!!!!!
+        var resRanges = []
+        var priority = 1
+        for (var i=0; i<refer.length; i++) {
+            var name = refer[i].name
+            var ranges = JSON.parse(JSON.stringify(header[layer].get(name).range))
+            var find
+            if (i != 0) {
+                find = new Array(resRanges.length).fill(false)
+            }
+            for (var j=0; j<ranges.length; j++) {
+                if (j == refer[i].times)    continue    // don't recommend itself
+                if (i == 0) {
+                    resRanges.push(ranges[j])
+                }
+                else {
+                    for (var k=0; k<resRanges.length; k++) {
+                        if (resRanges[k].end+1 == ranges[j].start) {
+                            resRanges[k].end = ranges[j].end
+                            find[k] = true
+                            break
+                        }
+                    }
+                }
+            }
+            if (i != 0 && find.indexOf(false)!=-1) {
+                for (var j=0; j<find.length; j++) {
+                    if(find[j] == false) {
+                        resRanges.splice(j, 1)
+                    }
+                }
+            }
+        }
+        
+        for (var i=0; i<resRanges.length; i++) {
+            var pos = {top:null, bottom:null, right:null, left:null}
+            if (isRow) {
+                pos.top = resRanges[i].start
+                pos.bottom = resRanges[i].end
+                pos.left = left
+                pos.right = right
+
+                var tmp = {pos: pos, priority: priority}
+                res[priority-1].row.push(tmp)
+                recommendData[priority-1].push(pos)
+                draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+            }
+            else {
+                pos.top = top
+                pos.bottom = bottom
+                pos.left = resRanges[i].start
+                pos.right = resRanges[i].end
+
+                var tmp = {pos: pos, priority: priority}
+                res[priority-1].column.push(tmp)
+                recommendData[priority-1].push(pos)
+                draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+            }
+        }
     }
 }
 
