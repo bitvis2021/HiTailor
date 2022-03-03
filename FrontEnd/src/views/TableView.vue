@@ -1,5 +1,5 @@
 <template>
-  <div class="table-view" @mouseup="handle_mouse_up()">
+  <div class="table-view">
     <div class="header-button-container" v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)">
       <button class="button" id="row-header-button"  plain size="small"
         @click="choose_header('row')"> 
@@ -68,8 +68,12 @@
       </el-row> 
     </div>
 
-    <div class="table-view-svg-container">
-      <svg class="table-view-svg" :height="markHeight + heightRangeList[heightRangeList.length-1]" :width="markWidth + widthRangeList[widthRangeList.length-1]"        @mousemove="handle_mouse_move($event)">
+    <div class="table-view-svg-container" @mousedown="handle_click_on_blank()">
+      <svg class="table-view-svg" 
+        :height="markHeight + heightRangeList[heightRangeList.length-1]" 
+        :width="markWidth + widthRangeList[widthRangeList.length-1]"        
+        @mousemove="handle_mouse_move($event)"
+        @mouseup.stop="handle_mouse_up()">
         <rect x="0" y="0" :width=markWidth :height=markHeight class="table-mark" />
 
         <g v-if="isCurrFlat">
@@ -116,12 +120,12 @@
                 y="0" 
                 :width="widthRangeList[rowDistributionList[rowindex][columnindex].end+1] - widthRangeList[rowDistributionList[rowindex][columnindex].start]"
                 :height="rowHeightList[rowindex]"
-                @mousedown="handle_mouse_down(rowindex, columnindex)">
+                @mousedown.stop="handle_mouse_down(rowindex, columnindex)">
               </rect>
               <text v-if="dataValueList[rowindex][columnindex] != 'None'"
                 class="table-cell-text"
                 :x="widthRangeList[rowDistributionList[rowindex][columnindex].start] + textPaddingX" :y="textPaddingY"
-                @mousedown="handle_mouse_down(rowindex, columnindex)">
+                @mousedown.stop="handle_mouse_down(rowindex, columnindex)">
                 {{dataValueList[rowindex][columnindex]}}
               </text>
             </g>
@@ -207,7 +211,7 @@
             :y="markHeightRangeList[rowindex] + markHeight" 
             :width="markWidth"
             :height="markHeightRangeList[rowindex+1] - markHeightRangeList[rowindex]"
-            @mousedown="handle_mouse_down_mark(rowindex,'row')"
+            @mousedown.stop="handle_mouse_down_mark(rowindex,'row')"
             @mouseover="handle_mouse_over_mark(rowindex,'row')"
             @mouseout="handle_mouse_out_mark()">
           </rect>
@@ -217,7 +221,7 @@
             class="table-mark-text"
             :x="markWidth/2"
             :y="markHeightRangeList[rowindex] + markHeight + markTextPaddingY" 
-            @mousedown="handle_mouse_down_mark(rowindex,'row')"
+            @mousedown.stop="handle_mouse_down_mark(rowindex,'row')"
             @mouseover="handle_mouse_over_mark(rowindex,'row')"
             @mouseout="handle_mouse_out_mark()">
             {{rowindex + 1}}
@@ -228,7 +232,7 @@
             :y="markHeightRangeList[rowindex+1] + markHeight - markLinePadding/2"
             :height="markLinePadding"
             :width="markWidth"
-            @mousedown="handle_mouse_down_mark_line(rowindex, 'row')">
+            @mousedown.stop="handle_mouse_down_mark_line(rowindex, 'row')">
           </rect>
         </g>
         
@@ -243,7 +247,7 @@
             y="0" 
             :width="markWidthRangeList[columnindex+1] - markWidthRangeList[columnindex]"
             :height="markHeight"          
-            @mousedown="handle_mouse_down_mark(columnindex, 'column')"
+            @mousedown.stop="handle_mouse_down_mark(columnindex, 'column')"
             @mouseover="handle_mouse_over_mark(columnindex, 'column')"
             @mouseout="handle_mouse_out_mark()">
           </rect>
@@ -254,7 +258,7 @@
             class="table-mark-text"
             :x="markWidthRangeList[columnindex] + markWidth + markColumnWidthList[columnindex]/2"
             :y="markTextPaddingY"
-            @mousedown="handle_mouse_down_mark(columnindex, 'column')"
+            @mousedown.stop="handle_mouse_down_mark(columnindex, 'column')"
             @mouseover="handle_mouse_over_mark(columnindex, 'column')"
             @mouseout="handle_mouse_out_mark()">
             {{cal_column_mark(columnindex)}}
@@ -265,7 +269,7 @@
             y="0"
             :width="markLinePadding"
             :height="markHeight"
-            @mousedown="handle_mouse_down_mark_line(columnindex, 'column')">
+            @mousedown.stop="handle_mouse_down_mark_line(columnindex, 'column')">
           </rect>
         </g>
         
@@ -328,7 +332,7 @@
           :y="markHeight + heightRangeList[headerRange.bottom+1]"
           :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
           :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
-          @mousedown="handle_mouse_down_mask($event)">
+          @mousedown.stop="handle_mouse_down_mask($event)">
         </rect>
 
         <g id="vis-container"/>
@@ -340,7 +344,7 @@
           :y="markHeight + heightRangeList[selectedArea.top]" 
           :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
           :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
-          @mousedown="handle_mouse_down_selected($event)">
+          @mousedown.stop="handle_mouse_down_selected($event)">
         </rect>
       </svg>
     </div>
@@ -708,6 +712,12 @@ export default {
         }
         this.mouseDownMaskState = false
       }
+    },
+    // handle_mouse_up_on_blank() {
+    //   this.clear_selected()
+    // },
+    handle_click_on_blank() {
+      this.clear_selected()
     },
     handle_mouse_over_mark(index, type) {
       if (this.mouseDownState || this.mouseDownMarkState || this.mouseDownMarkLineState)  return
