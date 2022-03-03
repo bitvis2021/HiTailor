@@ -1,0 +1,225 @@
+<template>
+  <div class="unit-view">
+    <div id="unit-chart"></div>
+    <div class="apply-button">
+      <el-row type="flex" class="row-bg" justify="space-between">
+        <el-col :span="6">
+          <el-button type="primary" @click="Apply2Vis" size="mini" round plain>
+            Apply
+          </el-button>
+        </el-col>
+      </el-row>
+    </div>
+    <br />
+
+    <div id="unit-config-panel">
+      <el-divider content-position="left">Unit Config</el-divider>
+      <div style="margin-top: 25px">
+        <div class="encoding-tags">
+          <el-dropdown style="margin: 1%" @command="AddChannel">
+            <el-button type="text" size="mini">
+              <i class="el-icon-circle-plus"></i> Encoding Channel
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                v-for="disabledEncoding in disabledEncodings"
+                :key="disabledEncoding.name"
+                :command="disabledEncoding"
+                >{{ disabledEncoding.name }}</el-dropdown-item
+              >
+            </el-dropdown-menu>
+          </el-dropdown>
+
+          <el-tag
+            style="margin: 1%"
+            size="small"
+            v-for="tag in enabledEncodings"
+            :key="tag.name"
+            closable
+            @close="CloseChannel(tag)"
+          >
+            {{ tag.name }}
+          </el-tag>
+        </div>
+
+        <el-row type="flex" class="row-bg unit-config-box" justify="start">
+          <div class="property-text">shape:</div>
+          <el-select v-model="value" placeholder="select">
+            <el-option
+              v-for="item in shapes"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-row>
+
+        <el-row type="flex" class="row-bg unit-config-box" justify="start">
+          <div class="property-text">scale:</div>
+          <el-select v-model="value" placeholder="select">
+            <el-option
+              v-for="item in scales"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </el-row>
+
+        <el-row type="flex" class="row-bg unit-config-box" justify="start">
+          <div class="property-text">color:</div>
+          <el-color-picker v-model="relativeColor"> </el-color-picker>
+        </el-row>
+
+        <el-row type="flex" class="row-bg unit-config-box" justify="start">
+          <div class="property-text">size:</div>
+          <div style="width: 70%">
+            <el-slider
+              v-model="relativeSize"
+              :step="0.01"
+              :min="0"
+              :max="1"
+            ></el-slider>
+          </div>
+        </el-row>
+
+        <el-row type="flex" class="row-bg unit-config-box" justify="start">
+          <div class="property-text">align:</div>
+          <el-radio-group v-model="align" size="small">
+            <el-row type="flex" justify="space-around">
+              <el-radio-button label="top"></el-radio-button>
+            </el-row>
+            <el-radio-button label="left"></el-radio-button>
+            <el-radio-button label="middle"></el-radio-button>
+            <el-radio-button label="right"></el-radio-button>
+
+            <el-row type="flex" justify="space-around">
+              <el-radio-button label="bottom"></el-radio-button>
+            </el-row>
+          </el-radio-group>
+        </el-row>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  name: "UnitView",
+  components: {},
+  props: [],
+  data() {
+    return {
+      shapes: [
+        { value: "circle", label: "circle" },
+        { value: "square", label: "square" },
+        { value: "triangle", label: "triangle" },
+        { value: "diamond", label: "diamond" },
+      ],
+      scales: [
+        { value: "linear", label: "linear" },
+        { value: "log", label: "log" },
+        { value: "sqrt", label: "sqrt" },
+        { value: "pow", label: "pow" },
+        { value: "abs", label: "abs" },
+      ],
+      relativeColor: "#409EFF",
+      relativeSize: 0.5,
+      disabledEncodings: [
+        { name: "height" },
+        { name: "width" },
+        { name: "xOffset" },
+        { name: "yOffset" },
+      ],
+      enabledEncodings: [{ name: "size" }, { name: "color" }],
+      align: "middle",
+    };
+  },
+  methods: {
+    CloseChannel(tag) {
+      this.enabledEncodings.splice(this.enabledEncodings.indexOf(tag), 1);
+      this.disabledEncodings.push(tag);
+    },
+    AddChannel(tag) {
+      this.disabledEncodings.splice(this.disabledEncodings.indexOf(tag), 1);
+      this.enabledEncodings.push(tag);
+    },
+  },
+  mounted() {},
+};
+</script>
+<style lang="less">
+@input-height: 28px;
+.el-input__inner {
+  height: @input-height !important;
+  line-height: @input-height !important;
+}
+.el-form-item__label {
+  height: @input-height !important;
+  line-height: @input-height !important;
+}
+.el-input__icon {
+  height: @input-height !important;
+  line-height: @input-height !important;
+}
+.el-form-item__content {
+  line-height: @input-height !important;
+}
+.unit-view {
+  left: 0%;
+  width: 100%;
+  top: 0%;
+  height: 100%;
+  .apply-button {
+    // position: absolute;
+    left: 0%;
+    width: 100%;
+    height: 8%;
+    top: 0%;
+    z-index: 100;
+    background-color: white;
+  }
+
+  .el-dropdown-link {
+    cursor: pointer;
+    color: #409eff;
+  }
+  .el-icon-arrow-down {
+    font-size: 12px;
+  }
+
+  #unit-chart {
+    margin: 10px;
+    width: 93%;
+    height: 24vh;
+    border: 1px solid #dddddd;
+    overflow: hidden;
+  }
+
+  #unit-config-panel {
+    padding: 0px 5px 0px 5px;
+    margin-top: 5px;
+    border-radius: 10px;
+    text-align: left;
+    top: 5%;
+  }
+
+  .unit-config-box {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-right: 5px;
+    margin-left: 10px;
+    padding-right: 5px;
+  }
+
+  .encoding-tags {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-right: 5px;
+    margin-left: 5px;
+  }
+}
+</style>
