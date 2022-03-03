@@ -24,8 +24,8 @@
       <div v-else>
         <div class="panel-view-container">
           <div v-if="showUnitPanel">
+            <unit-view></unit-view>
             <br />
-            Unit Panel
           </div>
 
           <div v-if="showPanelView">
@@ -47,6 +47,7 @@
 import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
+import UnitView from "./vis/UnitView.vue";
 import { GetTemplates, VegaTemplate } from "./vis/TemplateCompiler";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
@@ -57,6 +58,7 @@ export default {
   components: {
     PanelView,
     TemplatesView,
+    UnitView,
   },
   computed: {
     VegaConfigNoData() {
