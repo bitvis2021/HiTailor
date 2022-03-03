@@ -48,7 +48,11 @@ import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import UnitView from "./vis/UnitView.vue";
-import { GetTemplates, VegaTemplate } from "./vis/TemplateCompiler";
+import {
+  GetTemplates,
+  VegaTemplate,
+  GetTemplate,
+} from "./vis/TemplateCompiler";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
 // visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
@@ -188,6 +192,20 @@ export default {
 
     this.$bus.$on("visualize-recommendData", (array) => {
       console.log(array);
+      array.forEach((element) => {
+        let position = element.position;
+        let visData = JSON.parse(element.visData);
+        let metaData = JSON.parse(element.metaData);
+        this.VisDB.GenFig(
+          position.height,
+          position.width,
+          position.x,
+          position.y,
+          GetTemplate(this.currentTemplate.name, metaData, visData),
+          visData,
+          metaData
+        );
+      });
     });
 
     // User select data

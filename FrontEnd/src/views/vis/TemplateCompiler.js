@@ -374,6 +374,18 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
             }
             else {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_vertical
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative" },
+                        "color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
+                    }
+                }
+                return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
 
             }
         default:
@@ -404,7 +416,6 @@ export function GetTemplates(metaData_obj, visData_arr) {
             supportedTemplate.ANQorNQ_Bar_Chart,
             supportedTemplate.ANQN_Stacked_Bar_Chart,
             supportedTemplate.NQ_Ranged_Dot_Plot,
-            supportedTemplate.NQ_PieChart,
             supportedTemplate.NQ_Box_Plot,
             supportedTemplate.NQ_Strip_Plot,
             supportedTemplate.NQ_Parallel_Coordinate_Plot,
@@ -425,8 +436,8 @@ export function GetTemplates(metaData_obj, visData_arr) {
             templates.AddTemplate(GetTemplate(supportedTemplate.NNQ_grouped_bar_chart, metaData_obj, visData_arr, 'y'), 'vertical');
         }
 
-
         let Q2Chart = [
+            supportedTemplate.NQ_PieChart,
             supportedTemplate.NQor2Q_Simple_Line_Chart,
             supportedTemplate.Q2_Horizon_Graph,
             supportedTemplate.Q2_Scatter_plot,
@@ -517,7 +528,6 @@ function GetObjSelections(visData_arr, metaData_obj, direction_str) {
 
     ECSelections.SetXSelections(selections);
     ECSelections.SetYSelections(selections);
-    console.log('new ECSelections', ECSelections);
     return [visDataObj_arr, ECSelections];
 }
 
