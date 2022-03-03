@@ -655,7 +655,8 @@ export default {
     },
     handle_mouse_down_selected(event) {
       this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-      this.handle_mouse_down(this.mouseOverCell.row, this.mouseOverCell.column)
+      // this.handle_mouse_down(this.mouseOverCell.row, this.mouseOverCell.column)
+      this.handle_mouse_down_mask(event)
     },
     handle_mouse_over_mark(index, type) {
       if (this.mouseDownState || this.mouseDownMarkState || this.mouseDownMarkLineState)  return
@@ -725,6 +726,9 @@ export default {
 
       this.mouseDownState = true
       this.mouseDownMaskState = true
+
+      // cancel recommend
+      d3.selectAll(".recommend-helper").remove()
       this.$bus.$emit('select-cell')
     },
 
