@@ -22,13 +22,32 @@
               @click="ApplyTemplate(dTemp)"
             >
               <div slot="reference">
-                <el-image
-                  :src="dTemp.img"
-                  :fit="'cover'"
-                  style="width: 112px; height: 64px"
-                  class="template-img"
-                >
-                </el-image>
+                <div>
+                  <el-image
+                    v-if="dTemp.direction == 'Using row data'"
+                    :src="'./templates/row.png'"
+                    :fit="'cover'"
+                    style="width: 112px; height: 64px"
+                    class="template-img"
+                  >
+                  </el-image>
+                  <el-image
+                    v-else-if="dTemp.direction == 'Using column data'"
+                    :src="'./templates/column.png'"
+                    :fit="'cover'"
+                    style="width: 112px; height: 64px"
+                    class="template-img"
+                  >
+                  </el-image>
+                  <el-image
+                    v-else
+                    :src="dTemp.img"
+                    :fit="'cover'"
+                    style="width: 112px; height: 64px"
+                    class="template-img"
+                  >
+                  </el-image>
+                </div>
                 <div class="demonstration">{{ dTemp.direction }}</div>
               </div>
             </div>
