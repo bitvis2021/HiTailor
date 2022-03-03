@@ -12,8 +12,6 @@
     </div>
 
     <div class="toolbar" v-if="isHeaderFixed">
-      
-
       <el-row>
         <el-col :lg="18" :xl="14">
           <span class="toolbar-label">Transformation</span>
@@ -342,10 +340,8 @@
           :y="markHeight + heightRangeList[selectedArea.top]" 
           :width="widthRangeList[selectedArea.right+1] - widthRangeList[selectedArea.left]"
           :height="heightRangeList[selectedArea.bottom+1] - heightRangeList[selectedArea.top]"
-          @mousedown="handle_mouse_down_selected($event)"
-        >
+          @mousedown="handle_mouse_down_selected($event)">
         </rect>
-        
       </svg>
     </div>
   </div>
@@ -353,15 +349,14 @@
 
 <script>
     import { mapState, mapMutations } from 'vuex';
-    import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from '@/transformation/CreateModel.js'
-import { reduce } from 'vega-lite/build/src/encoding';
+    import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from './table/CreateModel.js'
+    import { get_reference_node, cal_recommendation_by_one_reference, cal_recommendation_by_two_references} from './table/GetRecommendation.js'
+    import { get_data_for_transmission, get_pos_for_transmission} from './table/GetSendingData.js'
+    import { reduce } from 'vega-lite/build/src/encoding';
 
 export default {
   name: 'TableView',
-  props: {
-    // "isHeaderFixed": Boolean,
-    // "isTransformView": Boolean
-  },
+  props: {},
   data() {
     return {
       cellWidth: 70,
@@ -375,18 +370,18 @@ export default {
       cellMin: 15,
 
       tabularDatasetList: null,
-      rowDistributionList: null,  // Record the start and end of each cell for each row
-      dataValueList: null,
+      rowDistributionList: [],  // Record the start and end of each cell for each row
+      dataValueList: [],
 
-      columnWidthList: null,
-      rowHeightList: null,
-      markColumnWidthList: null,
-      markRowHeightList: null,
+      columnWidthList: [],
+      rowHeightList: [],
+      markColumnWidthList: [],
+      markRowHeightList: [],
 
-      widthRangeList: null, 
-      heightRangeList: null,
-      markWidthRangeList: null,
-      markHeightRangeList: null,
+      widthRangeList: [], 
+      heightRangeList: [],
+      markWidthRangeList: [],
+      markHeightRangeList: [],
 
       widthChangeSignal: true,
       heightChangeSignal: true,
@@ -394,8 +389,6 @@ export default {
       markHeightChangeSignal: true,
 
       selectedCell: {cstart:null, cend:null, rstart:null, rend:null},
-      // selectedCell: null,
-      // selectedArea: null,
       selectedArea: {top:null, left:null, bottom:null, right:null},
       selectedMark: {index:null, type:null},
 
@@ -427,11 +420,6 @@ export default {
       rowHeaderIndex: 100,  // row headers' indexes starts from 100
       newHeaderIndex: 200, // new headers' indexes starts from 200
 
-      // colHeaderChangeSignal: true,
-      // rowHeaderChangeSignal: true,
-
-      // isTransformView: false
-      // childIsTransformView: this.isTransformView
       isHeaderFixed: false,
       isCurrFlat: false,
       flatAttrName: null,
@@ -442,9 +430,7 @@ export default {
       visRerenderPrePos: {x:0, y:0},
       visRerenderAfterPos: {x:0, y:0},
 
-      recommendData: null,
-      isPriorityToSend: null,
-      // prioritySliderMark: null,
+      recommendData: [[], [], [], [], []],
       prioritySliderValue:[0, 5]
     }
   },
@@ -474,15 +460,6 @@ export default {
       else {
         this.markHeightRangeList = res
       }
-    },
-    cal_column_mark(index) {
-      var res = ""
-      var first = parseInt(index / 26)
-      if(first > 0) {
-        res = String.fromCharCode(64+first)
-      }
-      res += String.fromCharCode(65+(index % 26))
-      return res
     },
     cal_mouse_over_cell(x, y, headerFixed=false) {
       x = x - this.markWidth
@@ -563,42 +540,16 @@ export default {
         }
       }
     },
-    handle_mouse_move(event) {
-      if (this.mouseDownMarkLineState) {
-        if (this.mouseDownMarkLine.type == "column") {
-          var offset = event.offsetX - this.markWidth - this.markWidthRangeList[this.mouseDownMarkLine.index]
-          if (offset < this.cellMin) offset = this.cellMin
-          this.markColumnWidthList[this.mouseDownMarkLine.index] = offset
-          this.markWidthChangeSignal = !this.markWidthChangeSignal
-        }
-        else if (this.mouseDownMarkLine.type == "row") {
-          var offset = event.offsetY - this.markHeight - this.markHeightRangeList[this.mouseDownMarkLine.index]
-          if (offset < this.cellMin) offset = this.cellMin
-          this.markRowHeightList[this.mouseDownMarkLine.index] = offset
-          this.markHeightChangeSignal = !this.markHeightChangeSignal
-        }
+    cal_column_mark(index) {
+      var res = ""
+      var first = parseInt(index / 26)
+      if(first > 0) {
+        res = String.fromCharCode(64+first)
       }
-      else if (this.mouseDownMarkState) {
-        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-        if (this.selectedMark.type == 'column') {
-          this.selectedArea.left = this.selectedMark.index < this.mouseOverCell.ccurrent ? this.selectedMark.index : this.mouseOverCell.ccurrent
-          this.selectedArea.right = this.selectedMark.index > this.mouseOverCell.ccurrent ? this.selectedMark.index : this.mouseOverCell.ccurrent
-        }
-        else {
-          this.selectedArea.top = this.selectedMark.index < this.mouseOverCell.rcurrent ? this.selectedMark.index : this.mouseOverCell.rcurrent
-          this.selectedArea.bottom = this.selectedMark.index > this.mouseOverCell.rcurrent ? this.selectedMark.index : this.mouseOverCell.rcurrent
-        }
-      }
-      else if (this.mouseDownState) {
-        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-
-        this.selectedArea.top = this.selectedCell.rstart < this.mouseOverCell.rstart ? this.selectedCell.rstart : this.mouseOverCell.rstart
-        this.selectedArea.bottom = this.selectedCell.rend > this.mouseOverCell.rend ? this.selectedCell.rend : this.mouseOverCell.rend
-        this.selectedArea.left = this.selectedCell.cstart < this.mouseOverCell.cstart ? this.selectedCell.cstart : this.mouseOverCell.cstart
-        this.selectedArea.right = this.selectedCell.cend > this.mouseOverCell.cend ? this.selectedCell.cend : this.mouseOverCell.cend   
-      }   
-       else  return  // ignore other mousemoves when mouse is not down 
+      res += String.fromCharCode(65+(index % 26))
+      return res
     },
+   
     handle_mouse_down(row, column) {
       this.selectByMark.row = false
       this.selectByMark.column = false
@@ -653,18 +604,69 @@ export default {
         this.visRerenderPrePos.y = this.markHeight + this.markHeightRangeList[index+1]
       }
     },
+    handle_mouse_down_mask(event) {
+      this.cal_mouse_over_cell(event.offsetX, event.offsetY)
+
+      this.selectByMark.row = false
+      this.selectByMark.column = false
+
+      this.selectedCell.cstart = this.mouseOverCell.cstart
+      this.selectedCell.cend = this.mouseOverCell.cend
+      this.selectedCell.rstart = this.mouseOverCell.rstart
+      this.selectedCell.rend = this.mouseOverCell.rend
+
+      this.selectedArea.top = this.mouseOverCell.rstart
+      this.selectedArea.left = this.mouseOverCell.cstart
+      this.selectedArea.bottom = this.mouseOverCell.rend
+      this.selectedArea.right = this.mouseOverCell.cend
+
+      this.mouseDownState = true
+      this.mouseDownMaskState = true
+
+      // cancel recommend
+      d3.selectAll(".recommend-helper").remove()
+      this.$bus.$emit('select-cell')
+    },
     handle_mouse_down_selected(event) {
       this.cal_mouse_over_cell(event.offsetX, event.offsetY)
       // this.handle_mouse_down(this.mouseOverCell.row, this.mouseOverCell.column)
       this.handle_mouse_down_mask(event)
     },
-    handle_mouse_over_mark(index, type) {
-      if (this.mouseDownState || this.mouseDownMarkState || this.mouseDownMarkLineState)  return
-      this.mouseOverMark.index = index
-      this.mouseOverMark.type = type
-    },
-    handle_mouse_out_mark() {
-      this.mouseOverMark = {index:null, type:null}
+    handle_mouse_move(event) {
+      if (this.mouseDownMarkLineState) {
+        if (this.mouseDownMarkLine.type == "column") {
+          var offset = event.offsetX - this.markWidth - this.markWidthRangeList[this.mouseDownMarkLine.index]
+          if (offset < this.cellMin) offset = this.cellMin
+          this.markColumnWidthList[this.mouseDownMarkLine.index] = offset
+          this.markWidthChangeSignal = !this.markWidthChangeSignal
+        }
+        else if (this.mouseDownMarkLine.type == "row") {
+          var offset = event.offsetY - this.markHeight - this.markHeightRangeList[this.mouseDownMarkLine.index]
+          if (offset < this.cellMin) offset = this.cellMin
+          this.markRowHeightList[this.mouseDownMarkLine.index] = offset
+          this.markHeightChangeSignal = !this.markHeightChangeSignal
+        }
+      }
+      else if (this.mouseDownMarkState) {
+        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
+        if (this.selectedMark.type == 'column') {
+          this.selectedArea.left = this.selectedMark.index < this.mouseOverCell.ccurrent ? this.selectedMark.index : this.mouseOverCell.ccurrent
+          this.selectedArea.right = this.selectedMark.index > this.mouseOverCell.ccurrent ? this.selectedMark.index : this.mouseOverCell.ccurrent
+        }
+        else {
+          this.selectedArea.top = this.selectedMark.index < this.mouseOverCell.rcurrent ? this.selectedMark.index : this.mouseOverCell.rcurrent
+          this.selectedArea.bottom = this.selectedMark.index > this.mouseOverCell.rcurrent ? this.selectedMark.index : this.mouseOverCell.rcurrent
+        }
+      }
+      else if (this.mouseDownState) {
+        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
+
+        this.selectedArea.top = this.selectedCell.rstart < this.mouseOverCell.rstart ? this.selectedCell.rstart : this.mouseOverCell.rstart
+        this.selectedArea.bottom = this.selectedCell.rend > this.mouseOverCell.rend ? this.selectedCell.rend : this.mouseOverCell.rend
+        this.selectedArea.left = this.selectedCell.cstart < this.mouseOverCell.cstart ? this.selectedCell.cstart : this.mouseOverCell.cstart
+        this.selectedArea.right = this.selectedCell.cend > this.mouseOverCell.cend ? this.selectedCell.cend : this.mouseOverCell.cend   
+      }   
+       else  return  // ignore other mousemoves when mouse is not down 
     },
     handle_mouse_up () {
       this.mouseDownState = false
@@ -707,31 +709,14 @@ export default {
         this.mouseDownMaskState = false
       }
     },
-
-    handle_mouse_down_mask(event) {
-      this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-
-      this.selectByMark.row = false
-      this.selectByMark.column = false
-
-      this.selectedCell.cstart = this.mouseOverCell.cstart
-      this.selectedCell.cend = this.mouseOverCell.cend
-      this.selectedCell.rstart = this.mouseOverCell.rstart
-      this.selectedCell.rend = this.mouseOverCell.rend
-
-      this.selectedArea.top = this.mouseOverCell.rstart
-      this.selectedArea.left = this.mouseOverCell.cstart
-      this.selectedArea.bottom = this.mouseOverCell.rend
-      this.selectedArea.right = this.mouseOverCell.cend
-
-      this.mouseDownState = true
-      this.mouseDownMaskState = true
-
-      // cancel recommend
-      d3.selectAll(".recommend-helper").remove()
-      this.$bus.$emit('select-cell')
+    handle_mouse_over_mark(index, type) {
+      if (this.mouseDownState || this.mouseDownMarkState || this.mouseDownMarkLineState)  return
+      this.mouseOverMark.index = index
+      this.mouseOverMark.type = type
     },
-
+    handle_mouse_out_mark() {
+      this.mouseOverMark = {index:null, type:null}
+    },
 
     choose_header(type) {
       if (type == 'column') {
@@ -761,14 +746,6 @@ export default {
         this.$emit("changeHeaderFixed", true)
       }
     },  
-    // to_trans_view() {
-    //   this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
-    //   this.selectedArea = {top:0, left:0, bottom:0, right:0}
-    //   this.selectedMark = {index:null, type:null}
-    //   this.selectByMark = {row:false, column:false}
-
-    //   this.isTransformView = true
-    // }, 
     clear_selected() {
       this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
       this.selectedArea = {top:null, left:null, bottom:null, right:null}
@@ -796,6 +773,47 @@ export default {
         return list.concat(new Array(n-list.length).fill(filling))
       }
     },
+
+    handle_transform_swap(name, isSwapUp) {
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_swap(name, this.rowHeader, isSwapUp, true)
+      }
+      else {
+        this.transform_swap(name, this.colHeader, isSwapUp, false)
+      }
+    },
+    handle_transform_linear_or_stacked(name, times) {
+      var distributionInfo = this.headerDistribution.get(name)
+      var layer = distributionInfo.layer
+      var isRow = distributionInfo.isRowHeader 
+      var header = isRow ? this.rowHeader: this.colHeader
+      var headerInfo = header[layer].get(name)
+      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
+        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow) : this.transform_2linear(name, this.colHeader, times, isRow)
+      else {  // is linear
+        isRow ? this.transform_2stacked(name, this.rowHeader, times, isRow) : this.transform_2stacked(name, this.colHeader, times, isRow)
+      }
+    },
+    handle_transform_2stacked(name) {
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_2stacked(name, this.rowHeader, true)
+      }
+      else {
+        this.transform_2stacked(name, this.colHeader, false)
+      }
+    },
+    handle_transform_2linear(name, times) {
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_2linear(name, this.rowHeader, times, true)
+      }
+      else {
+        this.transform_2linear(name, this.colHeader, times, false)
+      }
+    },
+
     transform_fold() {
       this.clear_selected()
       this.$bus.$emit("change-header")
@@ -875,15 +893,6 @@ export default {
       this.send_change_height_signal()
       this.send_change_width_signal()
     },
-    handle_transform_swap(name, isSwapUp) {
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_swap(name, this.rowHeader, isSwapUp, true)
-      }
-      else {
-        this.transform_swap(name, this.colHeader, isSwapUp, false)
-      }
-    },
     transform_swap(name, header, isSwapUp, isRow) {
       this.clear_selected()
       this.$bus.$emit("change-header")
@@ -946,7 +955,7 @@ export default {
 
       // if it's linear, change to stacked
       // var linearChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
-      // if (header[upLayerNum].children
+
       var new1st = Array.from(header[upLayerNum])[0][1].parent
       var new2nd = Array.from(header[upLayerNum])[0][1].children[0]
       var new3rd = Array.from(header[downLayerNum])[0][1].parent
@@ -1018,9 +1027,6 @@ export default {
       // swap position in header array
       header[upLayerNum] = header.splice(downLayerNum, 1, header[upLayerNum])[0]
 
-      // this.rowHeaderChangeSignal = !this.rowHeaderChangeSignal
-      // this.colHeaderChangeSignal = !this.colHeaderChangeSignal
-
       // re-calculate header numbers
       // up layer
       for (var item of header[upLayerNum]) {
@@ -1067,27 +1073,6 @@ export default {
         this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
       }
 
-    },
-    handle_transform_linear_or_stacked(name, times) {
-      var distributionInfo = this.headerDistribution.get(name)
-      var layer = distributionInfo.layer
-      var isRow = distributionInfo.isRowHeader 
-      var header = isRow ? this.rowHeader: this.colHeader
-      var headerInfo = header[layer].get(name)
-      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
-        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow) : this.transform_2linear(name, this.colHeader, times, isRow)
-      else {  // is linear
-        isRow ? this.transform_2stacked(name, this.rowHeader, times, isRow) : this.transform_2stacked(name, this.colHeader, times, isRow)
-      }
-    },
-    handle_transform_2stacked(name) {
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_2stacked(name, this.rowHeader, true)
-      }
-      else {
-        this.transform_2stacked(name, this.colHeader, false)
-      }
     },
     transform_2stacked(name, header, times, isRow) {
       this.clear_selected()
@@ -1183,15 +1168,6 @@ export default {
       else {
         this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, this.markColumnWidthList.length-1, 0)
         this.send_change_width_signal()       
-      }
-    },
-    handle_transform_2linear(name, times) {
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_2linear(name, this.rowHeader, times, true)
-      }
-      else {
-        this.transform_2linear(name, this.colHeader, times, false)
       }
     },
     transform_2linear(name, header, times, isRow) {
@@ -1369,26 +1345,12 @@ export default {
 
     },
 
-    get_data_for_transmission(top, bottom, left, right) {
-      var data = this.get_data_from_chosen(top, bottom, left, right)
-      var metadata = this.gen_metadata_from_chosen(top, bottom, left, right)
-      var chgdata = this.change_data_form(data)
-      var jsdata = this.gen_json_from_data(data, chgdata)
-
-      return [jsdata, metadata]
-    },
-    get_pos_for_transmission(top, bottom, left, right) {
-      var x = this.markWidth + this.widthRangeList[left]
-      var y = this.markHeight + this.heightRangeList[top]
-      var width = this.widthRangeList[right+1] - this.widthRangeList[left]
-      var height= this.heightRangeList[bottom+1] - this.heightRangeList[top]
-      var pos = {"x":x, "y":y, "width":width, "height":height}
-
-      return pos
-    },
     transmit_chosen_to_vis(top, bottom, left, right) {
-      var [jsdata, metadata] = this.get_data_for_transmission(top, bottom, left, right)
-      var pos = this.get_pos_for_transmission(top, bottom, left, right)
+      var [jsdata, metadata] = get_data_for_transmission(top, bottom, left, right, 
+        this.headerRange, this.valueDistribution, this.seq2num, this.rowHeader.length, this.colHeader.length, 
+        this.headerDistribution, this.colHeader, this.rowHeader)
+      var pos = get_pos_for_transmission(top, bottom, left, right, 
+        this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
       console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
     },
@@ -1406,8 +1368,11 @@ export default {
           var left = area.left+this.headerRange.right+1
           var right = area.right+this.headerRange.right+1
 
-          var [jsdata, metadata] = this.get_data_for_transmission(top, bottom, left, right)
-          var pos = this.get_pos_for_transmission(top, bottom, left, right)
+          var [jsdata, metadata] = get_data_for_transmission(top, bottom, left, right,
+            this.headerRange, this.valueDistribution, this.seq2num, this.rowHeader.length, this.colHeader.length, 
+            this.headerDistribution, this.colHeader, this.rowHeader)
+          var pos = get_pos_for_transmission(top, bottom, left, right,
+            this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
           var obj = {position: pos, visData: jsdata, metaData: metadata, priority: i+1}
           dataArray.push(obj)
         }
@@ -1415,179 +1380,10 @@ export default {
       console.log("recommend-data-to-send", dataArray)
       this.$bus.$emit('visualize-recommendData', dataArray)
     },
-    get_data_from_chosen(top, bottom, left, right) {
-      var res=[]
-      for (var i=top; i<=bottom; i++) {
-        for (var j=left; j<=right; j++) {
-          var pos = [i-this.headerRange.bottom-1, j-this.headerRange.right-1].toString()
-          var seq = this.valueDistribution.get(pos)
-          var value = this.seq2num.get(seq).value
-          var arrseq = Array.from(seq)
-          arrseq.push(value)
-          res.push(arrseq)      
-        }
-      }
-      return res
-    },
-    change_data_form(origindata) {
-      var data = JSON.parse(JSON.stringify(origindata))
-      var rh = new Array(this.rowHeader.length).fill("")
-      var ch = new Array(this.colHeader.length).fill("")
-
-      for (var i=0; i<data.length; i++) {      
-        if (i == 0) {
-          // cal prefix position when it's the first line
-          for (var k=0; k<data[i].length-1; k++) {
-            var info = this.headerDistribution.get(data[i][k])
-            if (info.isRowHeader) {
-              rh[info.layer] = k
-            }
-            else {
-              ch[info.layer] = k
-            }
-          }
-        }
-        // add prefix
-        var prefix = ""
-        for (var k=0; k<ch.length; k++) {
-          // column
-          data[i][ch[k]] = prefix + data[i][ch[k]]
-          prefix = (data[i][ch[k]] + " > ")
-        }
-        
-        prefix = ""
-        for (var k=0; k<rh.length; k++) {
-          // row
-          data[i][rh[k]] = prefix + data[i][rh[k]]
-          prefix = (data[i][rh[k]] + " > ")
-        }          
-      }
-      return data
-    },
-    gen_json_from_data(data, chgdata) {
-      var res=[]
-      for (var i=0; i<data.length; i++) {
-        var obj={}
-        for (var j=0; j<data[i].length; j++) {
-          if (j == data[i].length-1) {
-            obj["value"] = chgdata[i][j]
-          }
-          else {
-            var info = this.headerDistribution.get(data[i][j])
-            var name
-            if (info.isRowHeader) {
-              name = "column "
-              name += this.cal_column_mark(info.layer)
-            }
-            else {
-              name = "row " + (info.layer+1)
-            }
-            obj[name] = chgdata[i][j]
-          }
-        }
-        res.push(obj)
-      }
-      var js = JSON.stringify(res)
-    
-      return js
-    },
-    gen_metadata_from_chosen(top, bottom, left, right) {
-      var res = {"x":null, "y":null}
-      var xobj = {"range": 0, "headers":[]}
-      var yobj = {"range": 0, "headers":[]}
-
-      xobj.range = right - left + 1
-      yobj.range = bottom - top + 1
-
-      // col headers
-      var totalPre = []
-      for (var i=0; i<this.colHeader.length; i++) {
-        var hobj = new Object
-        hobj["name"] = "row " + (i+1)
-        hobj["sort"] = []
-        var currPre = []
-        for (var j=left-this.headerRange.right-1; j<=right-this.headerRange.right-1;) {
-          for (var item of this.colHeader[i]) {
-            var find = false
-            var ranges = item[1].range
-            for (var k=0; k<ranges.length; k++) {
-              if (j <= ranges[k].end && j >= ranges[k].start) {
-                find = true
-                var pre = {"start": ranges[k].start, "end":ranges[k].end}
-                currPre.push(pre)
-                break
-              }
-            }
-            if (find) {
-              var nname = ""
-              for (var q=0; q<totalPre.length; q++) {
-                if (j <= totalPre[q].end && j >= totalPre[q].start) {
-                  nname += xobj.headers[i-1].sort[q] + " > "
-                  break
-                }
-              }
-              nname += item[0]
-              hobj.sort.push(nname)
-              j = ranges[k].end + 1
-              break
-            }
-          }          
-        }
-        totalPre = currPre
-        xobj.headers.push(hobj)
-      }
-
-      // row headers
-      totalPre = []
-      for (var i=0; i<this.rowHeader.length; i++) {
-        var hobj = new Object
-        hobj["name"] = "column " + this.cal_column_mark(i)
-        hobj["sort"] = []
-        var currPre = []
-        for (var j=top-this.headerRange.bottom-1; j<=bottom-this.headerRange.bottom-1;) {
-          for (var item of this.rowHeader[i]) {
-            var find = false
-            var ranges = item[1].range
-            for (var k=0; k<ranges.length; k++) {
-              if (j <= ranges[k].end && j >= ranges[k].start) {
-                find = true
-                var pre = {"start": ranges[k].start, "end":ranges[k].end}
-                currPre.push(pre)
-                break
-              }
-            }
-            if (find) {
-              var nname = ""
-              for (var q=0; q<totalPre.length; q++) {
-                if (j <= totalPre[q].end && j >= totalPre[q].start) {
-                  nname += yobj.headers[i-1].sort[q] + " > "
-                  break
-                }
-              }
-              nname += item[0]
-              hobj.sort.push(nname)
-              j = ranges[k].end + 1
-              break
-            }
-          }          
-        }
-        totalPre = currPre
-        yobj.headers.push(hobj)
-      }
-
-      res.x = xobj
-      res.y = yobj
-
-      var js = JSON.stringify(res)
-      return js
-    },
-    cancel_recommend() {
-      
-    },
     cal_recommendation_data(top, bottom, left, right) {
       this.recommendData = [[], [], [], [], []]
-      var colRefer = this.get_reference_node(this.colHeader, left, right, false)
-      var rowRefer = this.get_reference_node(this.rowHeader, top, bottom, true)
+      var colRefer = get_reference_node(this.colHeader, left, right, false, this.hasTransposed)
+      var rowRefer = get_reference_node(this.rowHeader, top, bottom, true, this.hasTransposed)
       console.log("colRefer", colRefer)
       console.log("rowRefer", rowRefer)
       if (colRefer.length==0 && rowRefer.length==0) {
@@ -1598,257 +1394,36 @@ export default {
       var pri = [{row:[], column:[]}, {row:[], column:[]}]
       // only use colRefer(same row)
       if (colRefer.length != 0) {
-        this.cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri)
+        cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri, 
+          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue)
       }
       
       // only use rowRefer(same column)
       if (rowRefer.length != 0) {
-        this.cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri)
+        cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri, 
+          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue)
       }
 
       // use colRefer & rowRefer
       if (colRefer.length!=0 && rowRefer.length!=0) {
         // priority 3 = 1 + 1
-        var pri3 = this.cal_recommendation_by_two_references(pri, 0, 0, 3) 
+        var pri3 = cal_recommendation_by_two_references(pri, 0, 0, 3, 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
         this.recommendData[2] = pri3
 
         // priority 4 = 1 + 2 = 2 + 1
-        var prii = this.cal_recommendation_by_two_references(pri, 0, 1, 4) 
-        var pri4 = prii.concat(this.cal_recommendation_by_two_references(pri, 1, 0, 4) )
+        var prii = cal_recommendation_by_two_references(pri, 0, 1, 4, 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
+        var pri4 = prii.concat(cal_recommendation_by_two_references(pri, 1, 0, 4, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) )
         this.recommendData[3] = pri4
 
         // priority 5 = 2 + 2
-        var pri5 = this.cal_recommendation_by_two_references(pri, 1, 1, 5) 
+        var pri5 = cal_recommendation_by_two_references(pri, 1, 1, 5, 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
         this.recommendData[4] = pri5
       }
     },
-    draw_recommendation_area(top, bottom, left, right, priority) {
-      var color
-      switch(priority) {  // choose color by priority
-        case 1:
-          color = "#08519c"
-          break
-        case 2:
-          color = "#428dc6"
-          break
-        case 3:
-          color = "#6bafd6"
-          break
-        case 4:
-          color = "#9ebee1"
-          break
-        case 5:
-          color = "#deebf7"
-          break
-      }
-      let self = this
-      var area = d3.select("#recommendation-area-container")
-      area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority).datum(priority)
-          .attr("x", this.markWidth + this.widthRangeList[left+this.headerRange.right+1])
-          .attr("y", this.markHeight + this.heightRangeList[top+this.headerRange.bottom+1])
-          .attr("width", this.widthRangeList[right+1+this.headerRange.right+1] - this.widthRangeList[left+this.headerRange.right+1])
-          .attr("height", this.heightRangeList[bottom+1+this.headerRange.bottom+1] - this.heightRangeList[top+this.headerRange.bottom+1])
-          .style("stroke", "grey")
-          .style("stroke-width", "0.3px")
-          .style("fill", color)
-          .style("fill-opacity", "40%")
-          .style("visibility", function(d) { 
-            if (d >= self.prioritySliderValue[0] && d <= self.prioritySliderValue[1])       
-              return "visible"
-            else {
-              return "hidden" 
-            }
-          });
-    },
-    cal_recommendation_by_two_references(prilist, rpri, cpri, priority) {
-      var res = []
-      for (var i=0; i<prilist[rpri].row.length; i++) {
-        for (var j=0; j<prilist[cpri].column.length; j++) {
-          var pos = {top:null, bottom:null, right:null, left:null}
-          pos.top = prilist[rpri].row[i].pos.top
-          pos.bottom = prilist[rpri].row[i].pos.bottom
-          pos.left = prilist[cpri].column[j].pos.left
-          pos.right = prilist[cpri].column[j].pos.right
 
-          res.push(pos)
-          this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
-        }
-      }
-      return res
-    },
-    cal_recommendation_by_one_reference(refer, top, bottom, left, right, header, isRow, res) {
-      var layer = refer[0].layer
-      var hasLinear = refer[0].hasLinear
-      var isLinear = refer[0].isLinear
-      if (refer.length == 1) { // single reference
-        var refername = refer[0].name
-        var refertimes = refer[0].times
-        for (var [key, value] of header[layer]) {
-          var ranges = value.range
-          var priority = key==refername ? 1 : 2
-          for (var i=0; i<ranges.length; i++) {
-            if (key==refername && i == refertimes) continue // don't recommend itself
-            var pos = {top:null, bottom:null, right:null, left:null}
-            if (isRow) {
-              if (isLinear && !hasLinear) {
-                pos.top = ranges[i].start + 1
-              }
-              else {
-                pos.top = ranges[i].start
-              }
-              pos.bottom = ranges[i].end
-              pos.left = left
-              pos.right = right
-
-              var tmp = {pos: pos, priority: priority}
-              res[priority-1].row.push(tmp)
-              this.recommendData[priority-1].push(pos)
-              this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
-            }
-            else {
-              pos.top = top
-              pos.bottom = bottom
-              if (isLinear && !hasLinear) {
-                pos.left = ranges[i].start + 1
-              }
-              else {
-                pos.left = ranges[i].start
-              }
-              pos.right = ranges[i].end
-              var tmp = {pos: pos, priority: priority}
-              res[priority-1].column.push(tmp)
-              this.recommendData[priority-1].push(pos)
-              this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
-            }
-          }
-        }
-      }
-      else { // multiple references
-        if (layer == 0) return  // don't recommend when first layer
-        // todo!!!!!!!!!!!!!!!!!
-      }
-    },
-    get_reference_node(header, start, end, isRow) {     
-      var res = []
-      var linearName = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
-      var findFlag = false
-      // var findSome = false
-      for (var i=0; i<header.length; i++) {
-        for (var [key, value] of header[i]) {
-          var goNextLayer = false
-          var ranges = value.range, children = value.children
-          for (var j=0; j<ranges.length; j++) {
-            if (start == ranges[j].start && end == ranges[j].end) {   // choose a single node(including linear)
-              var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
-              if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                tmp.hasLinear = true 
-                tmp.isLinear = true
-                // especially
-                if (children[j].length == 1) {
-                  tmp.name = children[j][0]
-                  tmp.times = 0
-                  tmp.layer = i+1
-                  tmp.hasLinear = false
-                  tmp.isLinear = false
-                }
-              }
-              res.push(tmp)
-              findFlag = true
-              break
-            }
-            else {
-              if (start == ranges[j].start) {
-                if (end < ranges[j].end) {
-                  goNextLayer = true
-                  break
-                }
-                else {
-                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
-                  if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                    tmp.hasLinear = true
-                    tmp.isLinear = true
-                  }
-                  res.push(tmp)
-                  break
-                }
-              }
-              else if (start < ranges[j].start) {
-                if (end == ranges[j].end) {
-                  if (res.length != 0) {
-                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
-                    if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                      tmp.hasLinear = true
-                      tmp.isLinear = true
-                    }
-                    res.push(tmp)
-                    findFlag = true
-                    break
-                  }
-                }
-                else if (end < ranges[j].end){
-                  if (end < ranges[j].start) {
-                    continue
-                  }
-                  else {
-                    if (i != header.length-1) { // not last layer
-                      res = []
-                      findFlag = true
-                      break
-                    }
-                  }
-                }
-                else {
-                  var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
-                  if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                    tmp.hasLinear = true
-                    tmp.isLinear = true
-                  }
-                  res.push(tmp)
-                  break
-                }
-              }
-              else if (start > ranges[j].start) {
-                if (end == ranges[j].end) {
-                  if (children.length!=0 && children[j].indexOf(linearName)!=-1 
-                  && start == ranges[j].start+1) {    // choose a single node(not including linear)
-                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:true}
-                    res.push(tmp)
-                    findFlag = true
-                    break
-                  }
-                  else {
-                    goNextLayer = true
-                    break
-                  }
-                }
-                else if (end < ranges[j].end){
-                  goNextLayer = true
-                  break
-                }
-                else {
-                  if (start > ranges[j].end) {
-                    continue
-                  }
-                  else {
-                    if (i != header.length-1) { // not last layer
-                      res = []
-                      findFlag = true
-                      break
-                    }
-                  }
-                }
-              }
-            }
-          }
-          if (findFlag) break
-          if (goNextLayer) break
-        }
-        if (findFlag) break
-        // if (findSome) break
-      }
-
-      return res
-    },
     before_header_interaction(id, isRowHeader, name, times, layer) {
       let self = this
       // delete other helpers
@@ -1951,6 +1526,7 @@ export default {
       }    
     }
   },
+
   watch: {
       displayMode: function() {
       },
@@ -1975,14 +1551,6 @@ export default {
         }
         cal_header_range(this.colHeader)
       },
-      // colHeaderChangeSignal: function() {
-      //   for (var i=0; i<this.colHeader.length; i++) {
-      //     for (var item of this.colHeader[i].values()) {
-      //       item.range = []
-      //     }
-      //   }
-      //   cal_header_range(this.colHeader)
-      // },
       rowHeader: function() {
         for (var i=0; i<this.rowHeader.length; i++) {
           for (var item of this.rowHeader[i].values()) {
@@ -1991,14 +1559,6 @@ export default {
         }
         cal_header_range(this.rowHeader)
       },
-      // rowHeaderChangeSignal: function() {
-      //   for (var i=0; i<this.rowHeader.length; i++) {
-      //     for (var item of this.rowHeader[i].values()) {
-      //       item.range = []
-      //     }
-      //   }
-      //   cal_header_range(this.rowHeader)
-      // },
       num2seq: {
         handler() {
           console.log(this.num2seq)
@@ -2006,12 +1566,6 @@ export default {
         deep: true
 
       },
-      // isTransformView: function() {
-      //   this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
-      //   this.selectedArea = {top:0, left:0, bottom:0, right:0}
-      //   this.selectedMark = {index:null, type:null}
-      //   this.selectByMark = {row:false, column:false}
-      // }, 
       prioritySliderValue: {
         deep: true,
         handler: function(data) {
@@ -2036,29 +1590,13 @@ export default {
       }
       
   },
+
   beforeMount: function() {
     this.tabularDatasetList = sysDatasetObj.tabularDatasetList 
-    this.rowDistributionList = []
-    this.columnWidthList = []
-    this.widthRangeList = []
-    this.rowHeightList = [] 
-    this.heightRangeList = []
-    this.markColumnWidthList = []
-    this.markWidthRangeList = []
-    this.markRowHeightList = []
-    this.markHeightRangeList = []
-    this.dataValueList = []
     this.headerDistribution = new Map
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
-    this.recommendData = [[], [], [], [], []]
-    this.isPriorityToSend = new Array(5).fill(true)
-
-    // this.prioritySliderMark = new Object
-    // for (var i=1; i<6; i++) {
-    //   this.prioritySliderMark[i] = i
-    // }
 
     // set column width to be the same
     var row = this.tabularDatasetList[0]
@@ -2134,6 +1672,7 @@ export default {
     this.cal_range_list(this.markColumnWidthList, "mark width")
     this.cal_range_list(this.markRowHeightList, "mark height")
   },
+
   mounted: function() {
     console.log('this.tabularDatasetList', this.tabularDatasetList)
     console.log('this.columnWidthList',this.columnWidthList)
@@ -2158,6 +1697,7 @@ export default {
       console.log("change-header!")
     })
   },
+
   computed: {
     ...mapState([
         'displayMode'
