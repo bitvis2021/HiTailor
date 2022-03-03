@@ -15,7 +15,7 @@
       
 
       <el-row>
-        <el-col :md="18" :lg="16" :xl="14">
+        <el-col :lg="18" :xl="14">
           <span class="toolbar-label">Transformation</span>
           <button v-if="isCurrFlat"
             type="primary" plain size="small" 
@@ -62,7 +62,7 @@
           <span class="toolbar-label">Recommendation  Priority</span>
         </el-col> 
 
-        <el-col :md="8" :lg="8" :xl="6">
+        <el-col :lg="6" :xl="6">
           <div class="priority-slider"> 
             <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
           </div>
@@ -725,7 +725,6 @@ export default {
 
       this.mouseDownState = true
       this.mouseDownMaskState = true
-      this.cancel_recommend()
       this.$bus.$emit('select-cell')
     },
 
@@ -771,6 +770,9 @@ export default {
       this.selectedArea = {top:null, left:null, bottom:null, right:null}
       this.selectedMark = {index:null, type:null}
       this.selectByMark = {row:false, column:false}
+
+      // cancel recommend
+      d3.selectAll(".recommend-helper").remove()
     },
     send_change_height_signal() {
       this.rowHeightList = this.markRowHeightList
@@ -1353,7 +1355,7 @@ export default {
       }
     },
     transform_derive() {
-      this.clear_selected()
+      this.clear_selected()  
       this.$bus.$emit("change-header")
 
     },
@@ -1383,12 +1385,12 @@ export default {
     transmit_chosen_to_vis(top, bottom, left, right) {
       var [jsdata, metadata] = this.get_data_for_transmission(top, bottom, left, right)
       var pos = this.get_pos_for_transmission(top, bottom, left, right)
+      console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
       var data = this.recommendData
-      console.log("recommend-data", data)
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
@@ -1576,7 +1578,7 @@ export default {
       return js
     },
     cancel_recommend() {
-      d3.selectAll(".recommend-helper").remove()
+      
     },
     cal_recommendation_data(top, bottom, left, right) {
       this.recommendData = [[], [], [], [], []]
@@ -2141,13 +2143,11 @@ export default {
       console.log("send recommendation data")
       this.transmit_recommendation_to_vis()
       this.clear_selected()
-      this.cancel_recommend()
     })
 
     this.$bus.$on("select-canvas", () => {
       console.log("remove selections of tableview")
       this.clear_selected()
-      this.cancel_recommend()
     })
 
     this.$bus.$on("change-header", () => {
