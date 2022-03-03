@@ -15,7 +15,7 @@
       
 
       <el-row>
-        <el-col :span="14">
+        <el-col :span="15">
           <span class="toolbar-label">Transformation</span>
           <button v-if="isCurrFlat"
             type="primary" plain size="small" 
@@ -1622,19 +1622,19 @@ export default {
       var color
       switch(priority) {  // choose color by priority
         case 1:
-          color = "red"
+          color = "#08519c"
           break
         case 2:
-          color = "orange"
+          color = "#428fc6"
           break
         case 3:
-          color = "yellow"
+          color = "#6bafd6"
           break
         case 4:
-          color = "green"
+          color = "#9ebee1"
           break
         case 5:
-          color = "blue"
+          color = "#deebf7"
           break
       }
       let self = this
@@ -1645,8 +1645,9 @@ export default {
           .attr("width", this.widthRangeList[right+1+this.headerRange.right+1] - this.widthRangeList[left+this.headerRange.right+1])
           .attr("height", this.heightRangeList[bottom+1+this.headerRange.bottom+1] - this.heightRangeList[top+this.headerRange.bottom+1])
           .style("stroke", "grey")
+          .style("stroke-width", "0.3px")
           .style("fill", color)
-          .style("fill-opacity", "20%")
+          .style("fill-opacity", "40%")
           .style("visibility", function(d) { 
             console.log("dataaaaa", d)
             console.log("slider", self.prioritySliderValue)
@@ -2325,7 +2326,7 @@ export default {
     .button {
       font-size: 100%;
       background-color: transparent;
-      color: #1580d1;
+      color: #3182bd;
       border-radius: 4px;
       border: none;
       cursor: pointer;
@@ -2356,7 +2357,10 @@ export default {
       position:relative;
       width:60%;
       height:100%;
-    }    
+    }  
+    /deep/ .el-slider__bar{
+        background: #82bad6;
+    }  
   }
   
   .table-view-svg-container {
