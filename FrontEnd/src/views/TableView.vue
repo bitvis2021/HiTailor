@@ -1387,7 +1387,26 @@ export default {
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
+      var data = this.recommendData
+      console.log("recommend-data", data)
+      var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
+      if (min==0) min = 1
 
+      for (var i=min-1; i<=max-1; i++) {
+        for (var j=0; j<data[i].length; j++) {
+          var area = data[i][j]
+          var top = area.top+this.headerRange.bottom+1
+          var bottom = area.bottom+this.headerRange.bottom+1
+          var left = area.left+this.headerRange.right+1
+          var right = area.right+this.headerRange.right+1
+
+          var [jsdata, metadata] = this.get_data_for_transmission(top, bottom, left, right)
+          var pos = this.get_pos_for_transmission(top, bottom, left, right)
+          var obj = {position: pos, visData: jsdata, metaData: metadata, priority: i+1}
+          dataArray.push(obj)
+        }
+      }
+      console.log("recommend-data-to-send", dataArray)
       this.$bus.$emit('visualize-recommendData', dataArray)
     },
     get_data_from_chosen(top, bottom, left, right) {
@@ -1462,7 +1481,6 @@ export default {
         }
         res.push(obj)
       }
-      console.log("data", res)
       var js = JSON.stringify(res)
     
       return js
@@ -1553,7 +1571,6 @@ export default {
 
       res.x = xobj
       res.y = yobj
-      console.log("metadata", res)
 
       var js = JSON.stringify(res)
       return js
@@ -1587,16 +1604,16 @@ export default {
       if (colRefer.length!=0 && rowRefer.length!=0) {
         // priority 3 = 1 + 1
         var pri3 = this.cal_recommendation_by_two_references(pri, 0, 0, 3) 
-        this.recommendData.push(pri3)
+        this.recommendData[2] = pri3
 
         // priority 4 = 1 + 2 = 2 + 1
         var prii = this.cal_recommendation_by_two_references(pri, 0, 1, 4) 
         var pri4 = prii.concat(this.cal_recommendation_by_two_references(pri, 1, 0, 4) )
-        this.recommendData.push(pri4)
+        this.recommendData[3] = pri4
 
         // priority 5 = 2 + 2
         var pri5 = this.cal_recommendation_by_two_references(pri, 1, 1, 5) 
-        this.recommendData.push(pri5)
+        this.recommendData[4] = pri5
       }
     },
     draw_recommendation_area(top, bottom, left, right, priority) {
@@ -1630,8 +1647,6 @@ export default {
           .style("fill", color)
           .style("fill-opacity", "40%")
           .style("visibility", function(d) { 
-            console.log("dataaaaa", d)
-            console.log("slider", self.prioritySliderValue)
             if (d >= self.prioritySliderValue[0] && d <= self.prioritySliderValue[1])       
               return "visible"
             else {
@@ -1649,8 +1664,7 @@ export default {
           pos.left = prilist[cpri].column[j].pos.left
           pos.right = prilist[cpri].column[j].pos.right
 
-          var tmp = {pos: pos, priority: priority}
-          res.push(tmp)
+          res.push(pos)
           this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
         }
       }
@@ -1682,7 +1696,7 @@ export default {
 
               var tmp = {pos: pos, priority: priority}
               res[priority-1].row.push(tmp)
-              this.recommendData[priority-1].push(tmp)
+              this.recommendData[priority-1].push(pos)
               this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
             }
             else {
@@ -1697,7 +1711,7 @@ export default {
               pos.right = ranges[i].end
               var tmp = {pos: pos, priority: priority}
               res[priority-1].column.push(tmp)
-              this.recommendData[priority-1].push(tmp)
+              this.recommendData[priority-1].push(pos)
               this.draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority)
             }
           }
@@ -2127,6 +2141,7 @@ export default {
       console.log("send recommendation data")
       this.transmit_recommendation_to_vis()
       this.clear_selected()
+      this.cancel_recommend()
     })
 
     this.$bus.$on("select-canvas", () => {
