@@ -15,7 +15,7 @@
       
 
       <el-row>
-        <el-col :span="15">
+        <el-col :md="18" :lg="16" :xl="14">
           <span class="toolbar-label">Transformation</span>
           <button v-if="isCurrFlat"
             type="primary" plain size="small" 
@@ -62,32 +62,13 @@
           <span class="toolbar-label">Recommendation  Priority</span>
         </el-col> 
 
-        <el-col :span="8">
+        <el-col :md="8" :lg="8" :xl="6">
           <div class="priority-slider"> 
             <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
           </div>
         </el-col>
       </el-row> 
     </div>
-
-    <!-- <div v-if="(headerFixedFlag.row && headerFixedFlag.column) ">
-       <button  class="button"
-       @click="to_trans_view()">
-        transformation
-      </button>
-      <button  class="button"
-        @click="to_vis_view()">
-        visualization
-      </button> -->
- 
-      <!-- <div v-if="!isTransformView">
-        <button type="primary" plain size="small" 
-          class="button"
-          @click="transmit_chosen_to_vis()" > 
-          transmit data
-        </button> 
-      </div> 
-    </div> -->
 
     <div class="table-view-svg-container">
       <svg class="table-view-svg" :height="markHeight + heightRangeList[heightRangeList.length-1]" :width="markWidth + widthRangeList[widthRangeList.length-1]"        @mousemove="handle_mouse_move($event)">
@@ -1625,7 +1606,7 @@ export default {
           color = "#08519c"
           break
         case 2:
-          color = "#428fc6"
+          color = "#428dc6"
           break
         case 3:
           color = "#6bafd6"
@@ -2151,6 +2132,7 @@ export default {
     this.$bus.$on("select-canvas", () => {
       console.log("remove selections of tableview")
       this.clear_selected()
+      this.cancel_recommend()
     })
 
     this.$bus.$on("change-header", () => {
@@ -2283,26 +2265,13 @@ export default {
     cursor: cell;
   }
   .header-button-container {
-    // margin-top: 5px;
     text-align: center;
   }
   .toolbar {
-    // margin-top: 5px;
     height:@transform-button-container-height;
-    // margin-bottom: @padding;
     position:absolute;
-    // text-align: center;
-    // background-color: white;
-    // border-bottom:1px solid #c8c6c4;
-    // height:@transform-button-container-height;
     width:100%;
-    // display: -webkit-flex;
-    // display: flex;
-    // flex-direction: row;
-    // padding-top: 4px;
     padding-left: @padding;
-    // padding-right: 10px;
-    // padding-bottom: 4px;
     background: white;
     align-items: center;
     border-bottom: 1px solid #cecece;
@@ -2313,8 +2282,6 @@ export default {
     .el-col {
       text-align:left;
       height:100%;
-      // white-space: nowrap;
-      // overflow: hidden;
     }
     .toolbar-label {
       font-size: 100%;
@@ -2326,7 +2293,7 @@ export default {
     .button {
       font-size: 100%;
       background-color: transparent;
-      color: #3182bd;
+      color: #3e87cc;
       border-radius: 4px;
       border: none;
       cursor: pointer;
@@ -2341,7 +2308,6 @@ export default {
       border: none;
       cursor: pointer;
       user-select: none;
-      // margin-right: @padding;
       height: @transform-button-height;
     }
     .toolbar-vertical-separator {
@@ -2359,7 +2325,7 @@ export default {
       height:100%;
     }  
     /deep/ .el-slider__bar{
-        background: #82bad6;
+        background: #6ba8e2;
     }  
   }
   
