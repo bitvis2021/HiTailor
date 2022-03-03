@@ -375,8 +375,8 @@ export let confTemplate = {
 export let markConf = {
     arc: function (df_innerRadius, df_outerRadius) {
         this.properties = {};
-        this.properties.innerRadius = new confTemplate.width('inner radius', 1, 100, df_innerRadius);
-        this.properties.outerRadius = new confTemplate.width('outer radius', 1, 100, df_outerRadius);
+        this.properties.innerRadius = new confTemplate.width('inner radius', 1, 100, 0);
+        this.properties.outerRadius = new confTemplate.width('outer radius', 1, 100, 50);
     },
     area: function () {
         this.properties = {};
@@ -387,7 +387,7 @@ export let markConf = {
     bar: function () {
         this.properties = {};
         this.properties.opacity = new confTemplate.opacity(0.6);
-        // this.properties.height = new confTemplate.width('height', 1, 100, undefined);
+        this.properties.width = new confTemplate.width('width', 1, 100, undefined);
         // this.properties.baseline = new confTemplate.select_radius("base line", ["alphabetic", "top", "middle", "bottom"], "alphabetic");
         // this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
     },
@@ -400,7 +400,7 @@ export let markConf = {
     line: function (df_strokeWidth, df_color, df_interpolate) {
         this.properties = {};
         this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], df_interpolate);
-        this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 100, df_strokeWidth);
+        this.properties.strokeWidth = new confTemplate.width('stroke width', 1, 10, undefined);
         this.properties.opacity = new confTemplate.opacity(0.6);
         this.properties.stroke = new confTemplate.color(df_color);
     },

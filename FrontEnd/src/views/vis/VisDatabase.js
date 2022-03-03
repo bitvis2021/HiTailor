@@ -13,8 +13,6 @@ VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database.hasOwnProperty(id)) {
         if (this.database[id].status == status.clear) {
             this.SelectCanvas(id);
-
-            // todo: Bind vis data and id, then commit vegalite here
             this.bus.$emit("select-canvas", id);
         }
         else if (this.database[id].status == status.select) {
@@ -39,6 +37,13 @@ VisDatabase.prototype.MinimizeHandler = function (id) {
     canvas.setAttribute("style", "visibility: hidden;");
 
 
+    let hinter = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    hinter.setAttribute("id", id + '.hinter');
+    hinter.setAttribute("style", "fill:rgb(186, 219, 228,0.3);stroke:rgb(186, 219, 228);stroke-width:0px;visibility:visible");
+    hinter.setAttribute("width", this.database[id].width);
+    hinter.setAttribute("height", this.database[id].height);
+    canvas.append(hinter);
+
     // max button
     let mButton_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
     // max button position
@@ -52,6 +57,7 @@ VisDatabase.prototype.MinimizeHandler = function (id) {
     canvas.append(mButton_box);
 
     document.getElementById(id + '.hButton').setAttribute('style', "visibility: hidden;");
+
 }
 
 VisDatabase.prototype.MaximizeHandler = function (id) {
@@ -60,6 +66,9 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
     canvas.removeAttribute("style");
     let button = document.getElementById(id + '.mButton');
     button.remove();
+
+    let hinter = document.getElementById(id + '.hinter');
+    hinter.remove();
 
     document.getElementById(id + '.hButton').removeAttribute('style');
 }
