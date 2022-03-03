@@ -610,8 +610,18 @@ function Q2Template(tempName_str, vegaConfig_obj, selections_obj, previewPic_str
 }
 Q2Template.prototype = new VegaTemplate();
 Q2Template.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.encoding.x.type = "quantitative";
-    this.vegaConfig.encoding.y.type = "quantitative";
+    if (this.vegaConfig.encoding.x.field.substring(0, 3) == "col" || this.vegaConfig.encoding.x.field.substring(0, 3) == "row") {
+        this.vegaConfig.encoding.x.type = "nominal";
+    }
+    else {
+        this.vegaConfig.encoding.x.type = "quantitative";
+    }
+    if (this.vegaConfig.encoding.y.field.substring(0, 3) == "col" || this.vegaConfig.encoding.y.field.substring(0, 3) == "row") {
+        this.vegaConfig.encoding.y.type = "nominal";
+    }
+    else {
+        this.vegaConfig.encoding.y.type = "quantitative";
+    }
     this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;

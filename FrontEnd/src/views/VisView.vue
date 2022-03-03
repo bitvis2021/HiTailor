@@ -186,6 +186,10 @@ export default {
       }
     });
 
+    this.$bus.$on("visualize-recommendData", (array) => {
+      console.log(array);
+    });
+
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
