@@ -1,3 +1,4 @@
+import { vega } from 'vega-embed';
 import { EncodingCompiler, FieldSelection } from './SchemaCompiler'
 // Reconsitution temp2vega
 // Target: decouple vis 
@@ -21,6 +22,7 @@ export let supportedTemplate = {
     NQ_Parallel_Coordinate_Plot: "Parallel Coordinate Plot",
     NQ_Histogram_Scatterplot: "2D Histogram Scatterplot",
     NQ_Histogram_Heatmap: "2D Histogram Heatmap",
+    NQ_PieChart: "Pie Chart",
 }
 
 // factory model
@@ -41,9 +43,9 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     // horizon
     let [visData_horizon, selections_horizon] = GetObjSelections(visData_arr, metaData_obj, 'horizon');
 
-    let is_X = false;
+    let is_horizon = false;
     if (direction == undefined || direction == 'x' || direction == 'horizontal') {
-        is_X = true;
+        is_horizon = true;
         defaultVal = metaData_obj.x.headers[metaData_obj.x.headers.length - 1];
     }
     else {
@@ -82,7 +84,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 line_template = new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             else {
-                if (is_X) {
+                if (is_horizon) {
                     [visData_arr, selections_cell] = GetObjSelections(visData_arr, metaData_obj, 'x');
                     selections_cell.SetXSelections(selections_cell.GetYSelections());
                     picture = './templates/line chart.png'
@@ -130,7 +132,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                         color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
                     }
                 }
-                if (!is_X) {
+                if (!is_horizon) {
                     [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
                     selections_cell.SetXSelections(["value"]);
                     picture = './templates/simple bar chart y.png'
@@ -151,7 +153,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                         y: { aggregate: "sum", field: "value" }
                     }
                 }
-                if (is_X) {
+                if (is_horizon) {
                     picture = './templates/bar chart.png'
                 }
                 else {
@@ -164,7 +166,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
         case supportedTemplate.NQ_Strip_Plot:
             selections_cell.AddYSelection("value");
             selections_cell.AddXSelection("value");
-            if (is_X) {
+            if (is_horizon) {
                 vegaConfig = {
                     data: { values: visData_arr },
                     mark: "tick",
@@ -203,7 +205,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                     color: { field: defaultVal.name, type: "nominal", sort: defaultVal.sort },
                 }
             }
-            if (is_X) {
+            if (is_horizon) {
                 picture = './templates/box plot y.png';
             } else {
                 [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
@@ -222,7 +224,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                     y: { field: "value", aggregate: "sum" },
                 }
             }
-            if (is_X) {
+            if (is_horizon) {
                 picture = './templates/stacked bar chart.png';
                 vegaConfig.encoding.color = { field: defaultValY.name, type: "nominal", sort: defaultValY.sort };
             } else {
@@ -233,7 +235,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
 
         case supportedTemplate.ANQN_Multi_Series_Line_Chart:
-            if (is_X) {
+            if (is_horizon) {
                 selections_cell.AddYSelection("value");
                 selections_cell.AddXSelection("value");
                 vegaConfig = {
@@ -271,7 +273,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 encoding: {
                 }
             }
-            if (is_X) {
+            if (is_horizon) {
                 let defaultX2 = metaData_obj.x.headers[0]
                 vegaConfig.encoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
                 vegaConfig.encoding.y = { aggregate: "sum", field: "value" };
@@ -300,7 +302,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                     y: { field: "value", type: "quantitative" },
                 }
             }
-            if (is_X) {
+            if (is_horizon) {
                 picture = './templates/ranged dot plot y.png';
                 vegaConfig.encoding.detail = { field: defaultValX.name, type: "nominal", sort: defaultValX.sort };
             } else {
@@ -314,7 +316,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
 
         case supportedTemplate.NQ_Parallel_Coordinate_Plot:
-            if (is_X) {
+            if (is_horizon) {
                 return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png');
             }
             else {
@@ -322,18 +324,36 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             }
 
         case supportedTemplate.NQ_Histogram_Heatmap:
-            if (is_X) {
+            if (is_horizon) {
                 return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
             }
             else {
                 return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
             }
         case supportedTemplate.NQ_Histogram_Scatterplot:
-            if (is_X) {
+            if (is_horizon) {
                 return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
             }
             else {
                 return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+            }
+        case supportedTemplate.NQ_PieChart:
+            if (is_horizon) {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_horizon
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative" },
+                        "color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
+                    }
+                }
+                return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
+            }
+            else {
+
             }
         default:
             break;
@@ -368,6 +388,7 @@ export function GetTemplates(metaData_obj, visData_arr) {
             supportedTemplate.ANQN_Stacked_Bar_Chart,
             supportedTemplate.ANQN_Multi_Series_Line_Chart,
             supportedTemplate.NQ_Parallel_Coordinate_Plot,
+            supportedTemplate.NQ_PieChart,
         ]
         for (let i = 0; i < aggregateChart.length; i++) {
             const chartName = aggregateChart[i];
@@ -571,7 +592,7 @@ Q2Template.prototype = new VegaTemplate();
 Q2Template.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.encoding.x.type = "quantitative";
     this.vegaConfig.encoding.y.type = "quantitative";
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 } };
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
 
@@ -638,7 +659,7 @@ HistogramScatterplot.prototype.GetVegaConfig = function () {
     }
 }
 HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 } };
+    this.vegaConfig.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
     return this.vegaConfig;
@@ -677,7 +698,7 @@ HistogramHeatmap.prototype.GetVegaConfig = function () {
 
 HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
     console.log("heat map");
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 } };
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
     return this.vegaConfig;
@@ -937,7 +958,7 @@ HorizonGraphTemplate.prototype.GetVegaConfig = function () {
 HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.layer[0].mark.clip = true;
     this.vegaConfig.layer[1].mark.clip = true;
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null } };
+    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
     return this.vegaConfig;

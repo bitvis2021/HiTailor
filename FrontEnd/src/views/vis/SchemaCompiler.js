@@ -1,4 +1,4 @@
-
+// 总感觉可以面向对象重构一波
 function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
     // this.positionChannel={
     //     field
@@ -26,12 +26,18 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
             type: 'group select',
             value: '',
             selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
-        };
+        }
         else if (selection_str == 'aggregate') return {
             name: 'aggregate',
             type: 'select',
             value: '',
             selections: ['sum', 'mean', 'stdev', 'median', 'min', 'max', 'count'],
+        }
+        else if (selection_str == 'scale type') return {
+            name: 'scale type',
+            type: 'select',
+            value: '',
+            selections: ['linear', 'pow', 'sqrt', 'symlog', 'log'],
         }
     }
     // make it can use this.ECSelections
@@ -42,37 +48,49 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         x: {
             field: 'xField',
             aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         xOffset: {
             field: 'xField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         y: {
             field: 'yField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         yOffset: {
             field: 'yField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         color: {
             field: 'allField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         detail: {
             field: 'allField',
         },
         size: {
             field: 'allField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         opacity: {
             field: 'allField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
         },
         shape: {
             field: 'allField',
-            aggregate: 'aggregate'
+            aggregate: 'aggregate',
+            'scale type': 'scale type'
+        },
+        theta: {
+            field: 'xField',
+            'scale type': 'scale type'
         }
     }
 
@@ -136,8 +154,10 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
             for (let index = 0; index < schema_obj[encodingName].length; index++) {
                 const property = schema_obj[encodingName][index];
                 if (this.vegaEncoding[encodingName].hasOwnProperty(property.name)) {
+
                     this.vegaEncoding[encodingName][property.name] = property.value;
 
+                    // use is number to judge
                     // special situation
                     if (property.name == 'field') {
                         if (property.value == 'value') {
@@ -153,7 +173,14 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
                     }
                 }
                 else {
-                    this.vegaEncoding[encodingName][property.name] = property.value;
+                    // nested config
+                    if (property.name == 'scale type') {
+                        this.vegaEncoding[encodingName].scale = {};
+                        this.vegaEncoding[encodingName].scale.type = property.value;
+                    }
+                    else {
+                        this.vegaEncoding[encodingName][property.name] = property.value;
+                    }
                 }
             }
 
@@ -217,6 +244,9 @@ EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, pro
     if (this.vegaEncoding.hasOwnProperty(encodingName_str)) {
         if (this.vegaEncoding[encodingName_str].hasOwnProperty(propertyName_str)) {
             delete this.vegaEncoding[encodingName_str][propertyName_str];
+        }
+        else if (propertyName_str == 'scale type') {
+            delete this.vegaEncoding[encodingName_str]['scale']['type'];
         }
     }
 }
