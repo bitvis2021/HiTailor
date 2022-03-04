@@ -155,7 +155,7 @@
             <g v-for="(item, i) in num2header" :key="'col-header-group-'+ i">              
               <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
                 :id="'column-header-'+i" :key="'column-header-'+i"
-                @click="before_header_interaction('column-header-'+i, false, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)">
+                @mousedown.stop="before_header_interaction('column-header-'+i, false, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)">
                 <rect class="header-table-cell" :key="'rect-'+i"
                   :x="cal_column_header_position(item[1].value, item[1].times).x"
                   :y="cal_column_header_position(item[1].value, item[1].times).y"
@@ -175,7 +175,7 @@
             <g v-for="(item, i) in num2header" :key="item.index">
               <g v-if="headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
                 :id="'row-header-'+i" 
-                @click="before_header_interaction('row-header-'+i, true, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)"
+                @mousedown.stop="before_header_interaction('row-header-'+i, true, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)"
                 >
                 <rect class="header-table-cell"
                   :x="cal_row_header_position(item[1].value, item[1].times).x"
@@ -1550,6 +1550,11 @@ export default {
     },
 
     before_header_interaction(id, isRowHeader, name, times, layer) {
+      if (this.selectedArea.top!=null) {
+        this.clear_selected_cell()
+        return
+      }
+
       let self = this
       // delete other helpers
       d3.select("#interaction-helper").remove()
