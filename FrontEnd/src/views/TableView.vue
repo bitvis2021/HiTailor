@@ -38,14 +38,30 @@
           </button>
           <button type="primary" plain size="small" 
             class="button"
-            @click="handle_transform_2stacked('HUMANITIES')" > 
+            @click="handle_transform_2stacked_button()" > 
             ToStacked
           </button>
-          <button type="primary" plain size="small" 
+          <!-- <button type="primary" plain size="small" 
             class="button"
             @click="handle_transform_2linear('HUMANITIES', 0)" > 
             ToLinear
-          </button>
+          </button> -->
+
+          <el-dropdown @command="handle_transform_2linear_dropdown">
+            <div class="drop-down-button">
+              <span class="el-dropdown-link">
+                ToLinear<i class="el-icon-arrow-down el-icon--right"></i>
+              </span>
+            </div>
+
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="sum">Sum</el-dropdown-item>
+              <el-dropdown-item command="avg">Average</el-dropdown-item>
+              <el-dropdown-item command="max">Max</el-dropdown-item>
+              <el-dropdown-item command="min">Min</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+
           <button type="primary" plain size="small" 
             class="button"
             @click="transform_derive()" > 
@@ -395,6 +411,7 @@ export default {
       selectedCell: {cstart:null, cend:null, rstart:null, rend:null},
       selectedArea: {top:null, left:null, bottom:null, right:null},
       selectedMark: {index:null, type:null},
+      selectedHeader: null,
 
       mouseOverCell: {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null},
       mouseOverMark: {index:null, type:null},
@@ -713,10 +730,10 @@ export default {
       }
     },
     // handle_mouse_up_on_blank() {
-    //   this.clear_selected()
+    //   this.clear_selected_cell()
     // },
     handle_click_on_blank() {
-      this.clear_selected()
+      this.clear_selected_cell()
     },
     handle_mouse_over_mark(index, type) {
       if (this.mouseDownState || this.mouseDownMarkState || this.mouseDownMarkLineState)  return
@@ -751,19 +768,10 @@ export default {
           this.colHeader, this.rowHeader, this.num2seq, this.seq2num, this.valueIndex)
         
         this.valueIndex = this.num2seq.size
-        this.clear_selected()
+        this.clear_selected_cell()
         this.$emit("changeHeaderFixed", true)
       }
     },  
-    clear_selected() {
-      this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
-      this.selectedArea = {top:null, left:null, bottom:null, right:null}
-      this.selectedMark = {index:null, type:null}
-      this.selectByMark = {row:false, column:false}
-
-      // cancel recommend
-      d3.selectAll(".recommend-helper").remove()
-    },
     send_change_height_signal() {
       this.rowHeightList = this.markRowHeightList
       this.heightChangeSignal = !this.heightChangeSignal
@@ -783,6 +791,21 @@ export default {
       }
     },
 
+    clear_selected_cell() {
+      this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
+      this.selectedArea = {top:null, left:null, bottom:null, right:null}
+      this.selectedMark = {index:null, type:null}
+      this.selectByMark = {row:false, column:false}
+
+      // cancel recommend
+      d3.selectAll(".recommend-helper").remove()
+    },
+    clear_selected_header() {
+      this.selectedHeader = null
+      d3.select("#interaction-helper").remove()
+      d3.select("#interaction-helper-line").remove()
+    },
+
     handle_transform_swap(name, isSwapUp) {
       var distributionInfo = this.headerDistribution.get(name)
       if (distributionInfo.isRowHeader) {
@@ -792,39 +815,49 @@ export default {
         this.transform_swap(name, this.colHeader, isSwapUp, false)
       }
     },
-    handle_transform_linear_or_stacked(name, times) {
+    // handle_transform_linear_or_stacked(name, times, type) {
+    //   var distributionInfo = this.headerDistribution.get(name)
+    //   var layer = distributionInfo.layer
+    //   var isRow = distributionInfo.isRowHeader 
+    //   var header = isRow ? this.rowHeader: this.colHeader
+    //   var headerInfo = header[layer].get(name)
+    //   if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
+    //     isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, type) : this.transform_2linear(name, this.colHeader, times, isRow, type)
+    //   else {  // is linear
+    //     isRow ? this.transform_2stacked(name, this.rowHeader, times, isRow, type) : this.transform_2stacked(name, this.colHeader, times, isRow, type)
+    //   }
+    // },
+    handle_transform_2stacked_button() {
+      if (this.selectedHeader == null)  return
+      var name = this.selectedHeader.name
+      var times = this.selectedHeader.times
+      var distributionInfo = this.headerDistribution.get(name)
+      if (distributionInfo.isRowHeader) {
+        this.transform_2stacked(name, this.rowHeader, times, true)
+      }
+      else {
+        this.transform_2stacked(name, this.colHeader, times, false)
+      }
+      this.clear_selected_header()
+    },
+    handle_transform_2linear_dropdown(command) {
+      if (this.selectedHeader == null)  return
+      var name = this.selectedHeader.name, times = this.selectedHeader.times
       var distributionInfo = this.headerDistribution.get(name)
       var layer = distributionInfo.layer
       var isRow = distributionInfo.isRowHeader 
       var header = isRow ? this.rowHeader: this.colHeader
       var headerInfo = header[layer].get(name)
       if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
-        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow) : this.transform_2linear(name, this.colHeader, times, isRow)
-      else {  // is linear
-        isRow ? this.transform_2stacked(name, this.rowHeader, times, isRow) : this.transform_2stacked(name, this.colHeader, times, isRow)
+        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
+      else {  // already linear
+        return
       }
-    },
-    handle_transform_2stacked(name) {
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_2stacked(name, this.rowHeader, true)
-      }
-      else {
-        this.transform_2stacked(name, this.colHeader, false)
-      }
-    },
-    handle_transform_2linear(name, times) {
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_2linear(name, this.rowHeader, times, true)
-      }
-      else {
-        this.transform_2linear(name, this.colHeader, times, false)
-      }
+      this.clear_selected_header()
     },
 
     transform_fold() {
-      this.clear_selected()
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
@@ -848,7 +881,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_unfold() {
-      this.clear_selected()
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
       this.isCurrFlat = false
       if (!this.isHeaderFixed) {
@@ -869,7 +902,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_transpose() {
-      this.clear_selected()
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
       this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
@@ -903,7 +936,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_swap(name, header, isSwapUp, isRow) {
-      this.clear_selected()
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
@@ -1084,7 +1117,7 @@ export default {
 
     },
     transform_2stacked(name, header, times, isRow) {
-      this.clear_selected()
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1179,8 +1212,8 @@ export default {
         this.send_change_width_signal()       
       }
     },
-    transform_2linear(name, header, times, isRow) {
-      this.clear_selected()
+    transform_2linear(name, header, times, isRow, type) {
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1241,14 +1274,35 @@ export default {
           arrseq.splice(flag, 0, newChild)
           seq = new Set(arrseq)
 
-          // calculate sum
-          var res = 0          
+          var res, tmpdata = []
+          var sum = 0, count = 0, avg, min, max      
           for (var i=range.start; i<=range.end; i++) {
             var curSeq = this.valueDistribution.get([i,j].toString())
             var v = this.seq2num.get(curSeq).value
-            res += Number(v)
-          } 
-          res = res.toFixed(1)
+            tmpdata.push(v)
+            sum += Number(v)
+            count += 1
+          }
+          sum = sum.toFixed(1)
+          avg = Number(sum / count).toFixed(1)
+          max = Math.max.apply(null,tmpdata)
+          min = Math.min.apply(null,tmpdata)
+
+          switch(type) {
+            case 'sum':
+              res = sum
+              break
+            case 'avg':
+              res = avg
+              break
+            case 'max':
+              res = max
+              break
+            case 'min':
+              res = min
+              break
+          }
+          // res = res.toFixed(1)
           this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
           this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
         }
@@ -1276,14 +1330,45 @@ export default {
           arrseq.splice(flag, 0, newChild)
           seq = new Set(arrseq)
 
-          // calculate sum
-          var res = 0          
+          // // calculate sum
+          // var res = 0          
+          // for (var j=range.start; j<=range.end; j++) {
+          //   var curSeq = this.valueDistribution.get([i,j].toString())
+          //   var v = this.seq2num.get(curSeq).value
+          //   res += Number(v)
+          // } 
+          // res = res.toFixed(1)
+          // this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
+          // this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
+
+          var res, tmpdata = []
+          var sum = 0, count = 0, avg, min, max      
           for (var j=range.start; j<=range.end; j++) {
             var curSeq = this.valueDistribution.get([i,j].toString())
             var v = this.seq2num.get(curSeq).value
-            res += Number(v)
-          } 
-          res = res.toFixed(1)
+            tmpdata.push(v)
+            sum += Number(v)
+            count += 1
+          }
+          avg = Number(sum / count).toFixed(1)
+          max = Math.max.apply(null,tmpdata)
+          min = Math.min.apply(null,tmpdata)
+
+          switch(type) {
+            case 'sum':
+              res = sum
+              break
+            case 'avg':
+              res = avg
+              break
+            case 'max':
+              res = max
+              break
+            case 'min':
+              res = min
+              break
+          }
+          // res = res.toFixed(1)
           this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
           this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
         }
@@ -1344,12 +1429,12 @@ export default {
       }
     },
     transform_derive() {
-      this.clear_selected()  
+      this.clear_selected_cell()  
       this.$bus.$emit("change-header")
 
     },
     transform_merge() {
-      this.clear_selected()
+      this.clear_selected_cell()
       this.$bus.$emit("change-header")
 
     },
@@ -1470,6 +1555,7 @@ export default {
       d3.select("#interaction-helper").remove()
       d3.select("#interaction-helper-line").remove()
 
+      this.selectedHeader = {name:name, times:times}
       // add a new helper
       var rect = d3.select("#"+id).select("rect")
       var text = d3.select("#"+id).select("text")
@@ -1524,7 +1610,7 @@ export default {
               self.transform_swap(name, self.colHeader, true, false)
             }
             else {
-              self.handle_transform_linear_or_stacked(name, times)
+              // self.handle_transform_linear_or_stacked(name, times, 'avg')
             }
             d3.select(this).remove()
             d3.select("#interaction-helper-line").remove()
@@ -1557,7 +1643,7 @@ export default {
               self.transform_swap(name, self.rowHeader, true, true)
             }
             else {
-              self.handle_transform_linear_or_stacked(name, times)
+              // self.handle_transform_linear_or_stacked(name, times, 'sum')
             }
             d3.select(this).remove()
             d3.select("#interaction-helper-line").remove()
@@ -1706,7 +1792,7 @@ export default {
       this.colHeader, this.rowHeader, this.num2seq, this.seq2num, this.valueIndex)
     
     this.valueIndex = this.num2seq.size
-    this.clear_selected()
+    this.clear_selected_cell()
     this.$emit("changeHeaderFixed", true)
 
     // this.selectedArea = {top:this.headerRange.bottom+1, left:this.headerRange.right+1, bottom:this.headerRange.bottom+1, right:this.headerRange.right+1}
@@ -1732,12 +1818,12 @@ export default {
         this.transmit_recommendation_to_vis()
         console.log("not single unit")
       }
-      this.clear_selected()
+      this.clear_selected_cell()
     })
 
     this.$bus.$on("select-canvas", () => {
       console.log("remove selections of tableview")
-      this.clear_selected()
+      this.clear_selected_cell()
     })
 
     this.$bus.$on("change-header", () => {
@@ -1915,6 +2001,13 @@ export default {
       cursor: pointer;
       user-select: none;
       height: @transform-button-height;
+    }
+    .drop-down-button {
+      font-size: 115%;
+      font-family: Tahoma, Arial;
+      color: #3e87cc;
+      cursor: pointer;
+      margin-right:@padding;
     }
     .toolbar-vertical-separator {
       border-left: 1px solid #cecece;
