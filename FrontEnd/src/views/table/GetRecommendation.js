@@ -194,6 +194,8 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
                 for (var j=0; j<find.length; j++) {
                     if(find[j] == false) {
                         resRanges.splice(j, 1)
+                        find.splice(j, 1)
+                        j -= 1
                     }
                 }
             }

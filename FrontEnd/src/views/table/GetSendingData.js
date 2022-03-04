@@ -1,3 +1,10 @@
+export function get_unit_data_for_transmission(x, y, valueDistribution, seq2num) {
+    var pos = [x, y].toString()
+    var seq = valueDistribution.get(pos)
+    var value = seq2num.get(seq).value 
+        
+    return value
+}
 export function get_data_for_transmission(top, bottom, left, right, headerRange, valueDistribution, seq2num, rlength, clength, headerDistribution, colHeader, rowHeader) {
     var data = get_data_from_chosen(top, bottom, left, right, headerRange, valueDistribution, seq2num)
     var metadata = gen_metadata_from_chosen(top, bottom, left, right, colHeader, rowHeader, headerRange)

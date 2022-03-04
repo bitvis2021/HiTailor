@@ -355,7 +355,7 @@
     import { mapState, mapMutations } from 'vuex';
     import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from './table/CreateModel.js'
     import { get_reference_node, cal_recommendation_by_one_reference, cal_recommendation_by_two_references} from './table/GetRecommendation.js'
-    import { get_data_for_transmission, get_pos_for_transmission} from './table/GetSendingData.js'
+    import { get_unit_data_for_transmission, get_data_for_transmission, get_pos_for_transmission} from './table/GetSendingData.js'
     import { reduce } from 'vega-lite/build/src/encoding';
 
 export default {
@@ -706,9 +706,8 @@ export default {
       
       if (this.mouseDownMaskState && this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
-          console.log("this.selectedArea", this.selectedArea)
-          this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
           this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
+          this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
         }
         this.mouseDownMaskState = false
       }
@@ -1363,6 +1362,11 @@ export default {
         this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
       console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
+
+      // single unit, send recommendation too
+      if (top==bottom && left==right) {
+        this.transmit_unit_recommendation_to_vis()
+      }
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
@@ -1389,6 +1393,32 @@ export default {
       }
       console.log("recommend-data-to-send", dataArray)
       this.$bus.$emit('visualize-recommendData', dataArray)
+    },
+    transmit_unit_recommendation_to_vis() {
+      var dataArray = []
+      var data = this.recommendData
+      var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
+      if (min==0) min = 1
+
+      for (var i=min-1; i<=max-1; i++) {
+        for (var j=0; j<data[i].length; j++) {
+          var area = data[i][j]
+          var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
+
+          var top = area.top+this.headerRange.bottom+1
+          var bottom = area.bottom+this.headerRange.bottom+1
+          var left = area.left+this.headerRange.right+1
+          var right = area.right+this.headerRange.right+1
+          var pos = get_pos_for_transmission(top, bottom, left, right,
+            this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
+
+          var obj = {position: pos, value: value, priority: i+1}
+          dataArray.push(obj)
+        }
+      }
+
+      console.log("unit-recommend-data-to-send", dataArray)
+      this.$bus.$emit('visualize-recommendUnit', dataArray)
     },
     cal_recommendation_data(top, bottom, left, right) {
       this.recommendData = [[], [], [], [], []]
@@ -1596,6 +1626,10 @@ export default {
             name = prefix + i
             d3.selectAll(name).style("visibility", "hidden")
           }
+          
+          if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
+            this.transmit_unit_recommendation_to_vis()
+          }
         }
       }
       
@@ -1694,7 +1728,10 @@ export default {
     
     this.$bus.$on("apply-config", () => {
       console.log("send recommendation data")
-      this.transmit_recommendation_to_vis()
+      if (!(this.selectedArea.left==this.selectedArea.right && this.selectedArea.top==this.selectedArea.bottom)) {
+        this.transmit_recommendation_to_vis()
+        console.log("not single unit")
+      }
       this.clear_selected()
     })
 
