@@ -22,21 +22,21 @@
       ></templates-view>
 
       <div v-else>
-        <div class="panel-view-container">
-          <div v-if="showUnitPanel">
-            <unit-view></unit-view>
-            <br />
-          </div>
+        <div v-if="showPanelView">
+          <div id="chart"></div>
+          <panel-view
+            :selections="this.ECSelections"
+            :vegaConfig="this.vegaConfig"
+            v-on:apply-config="PreviewVegaConf"
+            v-on:apply-vis="ApplyVis2Table"
+          ></panel-view>
+        </div>
+      </div>
 
-          <div v-if="showPanelView">
-            <div id="chart"></div>
-            <panel-view
-              :selections="this.ECSelections"
-              :vegaConfig="this.vegaConfig"
-              v-on:apply-config="PreviewVegaConf"
-              v-on:apply-vis="ApplyVis2Table"
-            ></panel-view>
-          </div>
+      <div class="panel-view-container">
+        <div v-show="showUnitPanel">
+          <unit-view></unit-view>
+          <br />
         </div>
       </div>
     </div>

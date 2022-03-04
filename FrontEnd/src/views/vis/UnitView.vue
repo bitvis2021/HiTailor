@@ -44,7 +44,7 @@
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">shape:</div>
-          <el-select v-model="value" placeholder="select">
+          <el-select v-model="shape" placeholder="select">
             <el-option
               v-for="item in shapes"
               :key="item.value"
@@ -57,7 +57,7 @@
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">scale:</div>
-          <el-select v-model="value" placeholder="select">
+          <el-select v-model="scale" placeholder="select">
             <el-option
               v-for="item in scales"
               :key="item.value"
@@ -105,6 +105,7 @@
   </div>
 </template>
 <script>
+import { VisDatabase } from "./VisDatabase";
 export default {
   name: "UnitView",
   components: {},
@@ -124,6 +125,8 @@ export default {
         { value: "pow", label: "pow" },
         { value: "abs", label: "abs" },
       ],
+      scale: "linear",
+      shape: "square",
       relativeColor: "#409EFF",
       relativeSize: 0.5,
       disabledEncodings: [
@@ -134,6 +137,8 @@ export default {
       ],
       enabledEncodings: [{ name: "size" }, { name: "color" }],
       align: "middle",
+      visData_arr: [],
+      VisDB: new VisDatabase(this.$bus),
     };
   },
   methods: {
@@ -145,8 +150,51 @@ export default {
       this.disabledEncodings.splice(this.disabledEncodings.indexOf(tag), 1);
       this.enabledEncodings.push(tag);
     },
+    Apply2Vis() {
+      console.log("vis data arr", this.visData_arr);
+      for (let i = 0; i < this.visData_arr.length; i++) {
+        const element = this.visData_arr[i];
+
+        let test = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect"
+        );
+        let position = element.position;
+        let value = element.value * 0.2;
+        let width = position.width * 0.8;
+        let height = position.height * 0.8;
+        // add back ground
+        test.setAttribute("style", "fill:rgb(90, 156, 248)");
+
+        if (value > height) {
+          value = height;
+        }
+        if (value > width) {
+          value = width;
+        }
+
+        test.setAttribute("width", value);
+        test.setAttribute("height", value);
+        this.VisDB.RenderUnit(
+          "3333",
+          position.height,
+          position.width,
+          position.x,
+          position.y,
+          test
+        );
+      }
+    },
   },
-  mounted() {},
+  mounted() {
+    this.$bus.$on("visualize-recommendUnit", (data) => {
+      console.log("unit data", data);
+      this.visData_arr = data;
+    });
+  },
+  beforeDestroy() {
+    this.$bus.$off("visualize-recommendUnit");
+  },
 };
 </script>
 <style lang="less">
