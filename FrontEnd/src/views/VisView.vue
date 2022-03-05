@@ -22,6 +22,10 @@
       ></templates-view>
 
       <div v-else>
+        <div v-if="showUnitPanel">
+          <unit-view :visData_arr="unitData_arr"></unit-view>
+          <br />
+        </div>
         <div v-if="showPanelView">
           <div id="chart"></div>
           <panel-view
@@ -32,14 +36,20 @@
           ></panel-view>
         </div>
       </div>
-
-      <div class="panel-view-container">
-        <div v-show="showUnitPanel">
-          <unit-view></unit-view>
-          <br />
-        </div>
-      </div>
     </div>
+
+    <!-- remove group canvas -->
+    <el-dialog
+      title="Batch remove"
+      :visible.sync="dialog_removeAll"
+      width="30%"
+    >
+      <span>Do you want remove other figures which belong this group?</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialog_removeAll = false">No</el-button>
+        <el-button type="primary" @click="BatchRemove">Yes</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -85,6 +95,15 @@ export default {
 
       VisDB: new VisDatabase(this.$bus),
       figID: "",
+
+      currentUnit: {
+        position: { x: 0, y: 0, height: 0, width: 0 },
+        value: 0,
+      },
+
+      dialog_removeAll: false,
+      currentGroupID: "",
+      unitData_arr: [],
     };
   },
   computed: {
@@ -167,6 +186,11 @@ export default {
 
       this.$bus.$emit("apply-config");
     },
+
+    BatchRemove() {
+      this.dialog_removeAll = false;
+      this.VisDB.DeleteGroup(this.currentGroupID);
+    },
   },
   mounted() {
     this.OPEN_VIS_PANEL();
@@ -191,21 +215,7 @@ export default {
     });
 
     this.$bus.$on("visualize-recommendData", (array) => {
-      console.log(array);
-      array.forEach((element) => {
-        let position = element.position;
-        let visData = JSON.parse(element.visData);
-        let metaData = JSON.parse(element.metaData);
-        this.VisDB.GenFig(
-          position.height,
-          position.width,
-          position.x,
-          position.y,
-          GetTemplate(this.currentTemplate.name, metaData, visData),
-          visData,
-          metaData
-        );
-      });
+      this.VisDB.GenRecommendFigs(array, this.currentTemplate, this.figID);
     });
 
     // User select data
@@ -222,7 +232,8 @@ export default {
         metaData = JSON.parse(metaData);
       }
       if (metaData.x.range == 1 && metaData.y.range == 1) {
-        this.OpenUnitView();
+        this.currentUnit.position = position;
+        this.currentUnit.value = JSON.parse(visData).at(0)["value"];
       } else {
         this.OpenTemplateView();
       }
@@ -248,6 +259,20 @@ export default {
       this.OpenPanelView();
     });
 
+    // User close a canvas that belongs to a group
+    this.$bus.$on("remove-groupCanvas", (group_id) => {
+      this.dialog_removeAll = true;
+      this.currentGroupID = group_id;
+    });
+
+    // Recommend data
+    this.$bus.$on("visualize-recommendUnit", (data) => {
+      data.push(this.currentUnit);
+      this.unitData_arr = data;
+
+      this.OpenUnitView();
+    });
+
     // resize function
     let bus = this.$bus;
     let resizeTimeout;
@@ -271,6 +296,9 @@ export default {
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
     this.$bus.$off("select-canvas");
+
+    this.$bus.$off("remove-groupCanvas");
+    this.$bus.$off("visualize-recommendUnit");
   },
 };
 </script>
