@@ -22,6 +22,10 @@
       ></templates-view>
 
       <div v-else>
+        <div v-if="showUnitPanel">
+          <unit-view :visData_arr="unitData_arr"></unit-view>
+          <br />
+        </div>
         <div v-if="showPanelView">
           <div id="chart"></div>
           <panel-view
@@ -30,13 +34,6 @@
             v-on:apply-config="PreviewVegaConf"
             v-on:apply-vis="ApplyVis2Table"
           ></panel-view>
-        </div>
-      </div>
-
-      <div class="panel-view-container">
-        <div v-show="showUnitPanel">
-          <unit-view :selectedUnit="currentUnit"></unit-view>
-          <br />
         </div>
       </div>
     </div>
@@ -106,6 +103,7 @@ export default {
 
       dialog_removeAll: false,
       currentGroupID: "",
+      unitData_arr: [],
     };
   },
   computed: {
@@ -234,11 +232,8 @@ export default {
         metaData = JSON.parse(metaData);
       }
       if (metaData.x.range == 1 && metaData.y.range == 1) {
-        this.currentUnit = {
-          position: position,
-          value: JSON.parse(visData).at(0)["value"],
-        };
-        this.OpenUnitView();
+        this.currentUnit.position = position;
+        this.currentUnit.value = JSON.parse(visData).at(0)["value"];
       } else {
         this.OpenTemplateView();
       }
@@ -270,6 +265,16 @@ export default {
       this.currentGroupID = group_id;
     });
 
+    // Recommend data
+    this.$bus.$on("visualize-recommendUnit", (data) => {
+      console.log("pre data", data);
+      data.push(this.currentUnit);
+      console.log("after data", data);
+      this.unitData_arr = data;
+
+      this.OpenUnitView();
+    });
+
     // resize function
     let bus = this.$bus;
     let resizeTimeout;
@@ -295,6 +300,7 @@ export default {
     this.$bus.$off("select-canvas");
 
     this.$bus.$off("remove-groupCanvas");
+    this.$bus.$off("visualize-recommendUnit");
   },
 };
 </script>

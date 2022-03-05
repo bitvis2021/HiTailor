@@ -151,7 +151,7 @@ import { UnitCompiler } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
-  props: ["selectedUnit"],
+  props: ["visData_arr"],
   data() {
     return {
       shapes: [
@@ -180,7 +180,6 @@ export default {
       ],
       enabledEncodings: [{ name: "size" }, { name: "opacity" }],
       align: "middle",
-      visData_arr: [],
       VisDB: new VisDatabase(this.$bus),
     };
   },
@@ -226,6 +225,7 @@ export default {
     },
     Apply2Vis() {
       console.log("vis data arr", this.visData_arr);
+      let groupId;
       for (let i = 0; i < this.visData_arr.length; i++) {
         const element = this.visData_arr[i];
 
@@ -246,29 +246,29 @@ export default {
         if (value > width) {
           value = width;
         }
+        if (value <= 0) {
+          value = -value;
+        }
 
         test.setAttribute("r", value);
-        this.VisDB.RenderUnit(
-          "3333",
-          position.height,
-          position.width,
-          position.x,
-          position.y,
-          test
+        
+        groupId = this.VisDB.AddGroupMember(
+          groupId,
+          this.VisDB.RenderUnit(
+            position.height,
+            position.width,
+            position.x,
+            position.y,
+            test
+          )
         );
       }
     },
   },
   mounted() {
-    this.$bus.$on("visualize-recommendUnit", (data) => {
-      console.log("unit data", data);
-      this.visData_arr = data;
-    });
     this.PreviewUnitConfig();
   },
-  beforeDestroy() {
-    this.$bus.$off("visualize-recommendUnit");
-  },
+  beforeDestroy() {},
 };
 </script>
 <style lang="less">
