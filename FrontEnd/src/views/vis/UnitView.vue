@@ -1,6 +1,45 @@
 <template>
   <div class="unit-view">
-    <div id="unit-chart"></div>
+    <div id="unit-chart">
+      <svg viewBox="0 0 1000 1000">
+        <line
+          x1="-1000"
+          y1="300"
+          x2="2000"
+          y2="300"
+          style="stroke: #dddddd; stroke-width: 4"
+        />
+        <line
+          x1="-1000"
+          y1="700"
+          x2="2000"
+          y2="700"
+          style="stroke: #dddddd; stroke-width: 4"
+        />
+        <line
+          x1="150"
+          y1="-1000"
+          x2="150"
+          y2="2000"
+          style="stroke: #dddddd; stroke-width: 4"
+        />
+        <line
+          x1="850"
+          y1="-1000"
+          x2="850"
+          y2="2000"
+          style="stroke: #dddddd; stroke-width: 4"
+        />
+
+        <g
+          id="preview-svg"
+          height="400"
+          width="700"
+          transform="translate(150,300)"
+          style="stroke: #dddddd; stroke-width: 4; fill: transparent"
+        ></g>
+      </svg>
+    </div>
     <div class="apply-button">
       <el-row type="flex" class="row-bg" justify="space-between">
         <el-col :span="6">
@@ -70,7 +109,8 @@
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">color:</div>
-          <el-color-picker v-model="relativeColor"> </el-color-picker>
+          <el-color-picker v-model="color" @change="PreviewUnitConfig">
+          </el-color-picker>
         </el-row>
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
@@ -80,7 +120,8 @@
               v-model="relativeSize"
               :step="0.01"
               :min="0"
-              :max="1"
+              :max="2"
+              @change="PreviewUnitConfig"
             ></el-slider>
           </div>
         </el-row>
@@ -106,10 +147,11 @@
 </template>
 <script>
 import { VisDatabase } from "./VisDatabase";
+import { UnitCompiler } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
-  props: [],
+  props: ["selectedUnit"],
   data() {
     return {
       shapes: [
@@ -126,22 +168,54 @@ export default {
         { value: "abs", label: "abs" },
       ],
       scale: "linear",
-      shape: "square",
-      relativeColor: "#409EFF",
-      relativeSize: 0.5,
+      shape: "circle",
+      color: "#4e78a5",
+      relativeSize: 0.8,
       disabledEncodings: [
+        { name: "color" },
         { name: "height" },
         { name: "width" },
         { name: "xOffset" },
         { name: "yOffset" },
       ],
-      enabledEncodings: [{ name: "size" }, { name: "color" }],
+      enabledEncodings: [{ name: "size" }, { name: "opacity" }],
       align: "middle",
       visData_arr: [],
       VisDB: new VisDatabase(this.$bus),
     };
   },
   methods: {
+    PreviewUnitConfig() {
+      let chart = document.getElementById("preview-svg");
+      let preview = UnitCompiler.GetUnitDom({
+        shape: this.shape,
+        color: this.color,
+        size: 200 * this.relativeSize,
+      });
+
+      preview.setAttribute("transform", "translate(350,200)");
+
+      if (chart.childElementCount == 0) {
+        chart.appendChild(preview);
+      } else {
+        chart.childNodes[chart.childElementCount - 1].replaceWith(preview);
+      }
+    },
+    GetConfig() {
+      let encodings = {};
+      this.disabledEncodings.forEach((element) => {
+        encodings[element.name] = false;
+      });
+      this.enabledEncodings.forEach((element) => {
+        encodings[element.name] = true;
+      });
+      return {
+        encodings: encodings,
+        shape: this.shape,
+        color: this.color,
+        relativeSize: this.relativeSize,
+      };
+    },
     CloseChannel(tag) {
       this.enabledEncodings.splice(this.enabledEncodings.indexOf(tag), 1);
       this.disabledEncodings.push(tag);
@@ -157,7 +231,7 @@ export default {
 
         let test = document.createElementNS(
           "http://www.w3.org/2000/svg",
-          "rect"
+          "circle"
         );
         let position = element.position;
         let value = element.value * 0.2;
@@ -173,8 +247,7 @@ export default {
           value = width;
         }
 
-        test.setAttribute("width", value);
-        test.setAttribute("height", value);
+        test.setAttribute("r", value);
         this.VisDB.RenderUnit(
           "3333",
           position.height,
@@ -191,6 +264,7 @@ export default {
       console.log("unit data", data);
       this.visData_arr = data;
     });
+    this.PreviewUnitConfig();
   },
   beforeDestroy() {
     this.$bus.$off("visualize-recommendUnit");
@@ -243,6 +317,10 @@ export default {
     height: 24vh;
     border: 1px solid #dddddd;
     overflow: hidden;
+    svg {
+      height: 100%;
+      width: 100%;
+    }
   }
 
   #unit-config-panel {

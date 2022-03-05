@@ -35,7 +35,7 @@
 
       <div class="panel-view-container">
         <div v-show="showUnitPanel">
-          <unit-view></unit-view>
+          <unit-view :selectedUnit="currentUnit"></unit-view>
           <br />
         </div>
       </div>
@@ -85,6 +85,11 @@ export default {
 
       VisDB: new VisDatabase(this.$bus),
       figID: "",
+
+      currentUnit: {
+        position: { x: 0, y: 0, height: 0, width: 0 },
+        value: 0,
+      },
     };
   },
   computed: {
@@ -222,6 +227,10 @@ export default {
         metaData = JSON.parse(metaData);
       }
       if (metaData.x.range == 1 && metaData.y.range == 1) {
+        this.currentUnit = {
+          position: position,
+          value: JSON.parse(visData).at(0)["value"],
+        };
         this.OpenUnitView();
       } else {
         this.OpenTemplateView();
