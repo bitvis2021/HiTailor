@@ -13,7 +13,7 @@
 
     <div class="toolbar" v-if="isHeaderFixed">
       <el-row>
-        <el-col :lg="20" :xl="17">
+        <el-col :lg="20" :xl="16">
           <span class="toolbar-label">Transformation</span>
           <button v-if="isCurrFlat"
             type="primary" plain size="small" 
@@ -59,11 +59,11 @@
               <el-dropdown-item command="min">Min</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-          <button type="primary" plain size="small" 
+          <!-- <button type="primary" plain size="small" 
             class="button"
             @click="transform_derive()" > 
             Derive
-          </button>
+          </button> -->
           <button type="primary" plain size="small" 
             class="button"
             @click="transform_merge()" > 
@@ -82,7 +82,7 @@
           </div>
         </el-col>
 
-        <el-col :lg="3" :xl="3" class="recommend-element">
+        <el-col :lg="2" :xl="3" class="recommend-element">
           <div class="priority-slider"> 
             <el-slider v-model="prioritySliderValue" range show-stops :max="directionSelectValue.length==2 ? 5 : (directionSelectValue.length==0 ? 0 : 2)"></el-slider> 
           </div>
@@ -2187,7 +2187,7 @@ export default {
       margin-left: @padding;
       margin-top: 2px;
       position:relative;
-      width:70%;
+      width:80%;
     }  
     // /deep/ .el-slider__bar{
     //   background: #6ba8e2;
