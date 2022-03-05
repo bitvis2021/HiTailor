@@ -749,10 +749,11 @@ export default {
             this.show_recommend_element(true)
             this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
           }
+          else {
+            this.isChoosingUnit = false
+            this.hide_recommend_element()
+          }
           this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
-        }
-        else {
-          this.isChoosingUnit = false
         }
         this.mouseDownMaskState = false
       }
@@ -849,6 +850,7 @@ export default {
       // }
     },
     cancel_recommendation() {
+      this.clear_selected_cell()
       this.clear_recommendation_area()
       this.hide_recommend_element()
     },
@@ -1388,17 +1390,6 @@ export default {
           arrseq.splice(flag, 0, newChild)
           seq = new Set(arrseq)
 
-          // // calculate sum
-          // var res = 0          
-          // for (var j=range.start; j<=range.end; j++) {
-          //   var curSeq = this.valueDistribution.get([i,j].toString())
-          //   var v = this.seq2num.get(curSeq).value
-          //   res += Number(v)
-          // } 
-          // res = res.toFixed(1)
-          // this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
-          // this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
-
           var res, tmpdata = []
           var sum = 0, count = 0, avg, min, max      
           for (var j=range.start; j<=range.end; j++) {
@@ -1426,7 +1417,6 @@ export default {
               res = min
               break
           }
-          // res = res.toFixed(1)
           this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
           this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
         }
@@ -1514,12 +1504,27 @@ export default {
     transmit_recommendation_to_vis() {
       var dataArray = []
       var data = this.recommendData
+
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
+      var direction = this.directionSelectValue
+      var typeArray
+        if (direction.length == 2) {
+          typeArray=[0, 1, 2]
+        }
+        else if (direction.length == 0) {
+          typeArray=[]
+        }
+        else {
+          if (direction[0] == "row") typeArray=[0]
+          else if (direction[0] == "column") typeArray=[1]
+        }
+
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          var area = data[i][j]
+          if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+          var area = data[i][j].area
           var top = area.top+this.headerRange.bottom+1
           var bottom = area.bottom+this.headerRange.bottom+1
           var left = area.left+this.headerRange.right+1
@@ -1540,12 +1545,27 @@ export default {
     transmit_unit_recommendation_to_vis() {
       var dataArray = []
       var data = this.recommendData
+      
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
+      var direction = this.directionSelectValue
+      var typeArray
+        if (direction.length == 2) {
+          typeArray=[0, 1, 2]
+        }
+        else if (direction.length == 0) {
+          typeArray=[]
+        }
+        else {
+          if (direction[0] == "row") typeArray=[0]
+          else if (direction[0] == "column") typeArray=[1]
+        }
+
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          var area = data[i][j]
+          if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+          var area = data[i][j].area
           var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
 
           var top = area.top+this.headerRange.bottom+1
@@ -1578,31 +1598,36 @@ export default {
       // only use colRefer(same row)
       if (colRefer.length != 0) {
         cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri, 
-          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue)
+          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue)
       }
       
       // only use rowRefer(same column)
       if (rowRefer.length != 0) {
         cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri, 
-          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue)
+          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue)
       }
 
       // use colRefer & rowRefer
       if (colRefer.length!=0 && rowRefer.length!=0) {
         // priority 3 = 1 + 1
         var pri3 = cal_recommendation_by_two_references(pri, 0, 0, 3, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue) 
         this.recommendData[2] = pri3
 
         // priority 4 = 1 + 2 = 2 + 1
         var prii = cal_recommendation_by_two_references(pri, 0, 1, 4, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
-        var pri4 = prii.concat(cal_recommendation_by_two_references(pri, 1, 0, 4, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) )
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) 
+        var pri4 = prii.concat(cal_recommendation_by_two_references(pri, 1, 0, 4, this.markWidth, this.markHeight, 
+          this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) )
         this.recommendData[3] = pri4
 
         // priority 5 = 2 + 2
         var pri5 = cal_recommendation_by_two_references(pri, 1, 1, 5, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue) 
         this.recommendData[4] = pri5
       }
     },
@@ -1760,28 +1785,86 @@ export default {
         handler: function(data) {
           var prefix = "#recommend-helper-", name = ""
           var min=data[0], max=data[1]
+          var direct = this.directionSelectValue
 
-          for (var i=0; i<min; i++) {
-            name = prefix + i
-            d3.selectAll(name).style("visibility", "hidden")
+          var typeArray
+          if (direct.length == 2) {
+            typeArray=[0, 1, 2]
+          }
+          else if (direct.length == 0) {
+            typeArray=[]
+          }
+          else {
+            if (direct[0] == "row") typeArray=[0]
+            else if (direct[0] == "column") typeArray=[1]
           }
 
-          for (var i=min; i<=max; i++) {
-            name = prefix + i
-            d3.selectAll(name).style("visibility", "visible")
-          }
+          for (var j=0; j<typeArray.length; j++) {
+            var type = typeArray[j]
+            for (var i=0; i<min; i++) {
+              name = prefix + i + "-" + type
+              d3.selectAll(name).style("visibility", "hidden")
+            }
 
-          for (var i=max+1; i<=5; i++) {
-            name = prefix + i
-            d3.selectAll(name).style("visibility", "hidden")
+            for (var i=min; i<=max; i++) {
+              name = prefix + i +"-" + type
+              d3.selectAll(name).style("visibility", "visible")
+            }
+
+            for (var i=max+1; i<=5; i++) {
+              name = prefix + i + "-" + type
+              d3.selectAll(name).style("visibility", "hidden")
+            }
           }
           
           // if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
           //   this.transmit_unit_recommendation_to_vis()
           // }
         }
-      }
-      
+      },
+      directionSelectValue: {
+        deep: true,
+        handler: function(data) {
+          var prefix = "#recommend-helper-", name = ""
+          var pri = this.prioritySliderValue
+          var min=pri[0], max=pri[1]
+
+          var show, hide
+          if (data.length == 2) {
+            show=[0, 1, 2]
+            hide=[]
+          }
+          else if (data.length == 0) {
+            show=[]
+            hide=[0, 1, 2]
+          }
+          else {
+            if (data[0] == "row") {
+              show=[0]
+              hide=[1, 2]
+
+            }
+            else if (data[0] == "column") {
+              show=[1]
+              hide=[0, 2]
+            }
+          }
+
+          for (var i=min; i<=max; i++) {
+            for (var j=0; j<show.length; j++) {
+              var type = show[j]
+              name = prefix + i +"-" + type
+              d3.selectAll(name).style("visibility", "visible")
+            }
+
+            for (var j=0; j<hide.length; j++) {
+              var type = hide[j]
+              name = prefix + i +"-" + type
+              d3.selectAll(name).style("visibility", "hidden")
+            }
+          }
+        }
+      }      
   },
 
   beforeMount: function() {
@@ -1868,6 +1951,7 @@ export default {
   },
 
   mounted: function() {
+    this.hide_recommend_element()
     console.log('this.selectedTabularData', this.selectedTabularData)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
