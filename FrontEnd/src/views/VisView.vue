@@ -267,9 +267,7 @@ export default {
 
     // Recommend data
     this.$bus.$on("visualize-recommendUnit", (data) => {
-      console.log("pre data", data);
       data.push(this.currentUnit);
-      console.log("after data", data);
       this.unitData_arr = data;
 
       this.OpenUnitView();

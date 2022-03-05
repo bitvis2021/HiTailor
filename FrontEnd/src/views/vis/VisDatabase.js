@@ -85,6 +85,7 @@ VisDatabase.prototype.SelectHandler = function (id) {
             if (this.database[id].type === 'vega') {
                 this.bus.$emit("select-canvas", id);
             }
+            this.AddCloseButton(id);
         }
         else if (this.database[id].status == status.select) {
             // this.CancelSelection(id);
@@ -142,6 +143,37 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
     document.getElementById(id + '.hButton').removeAttribute('style');
 }
 
+VisDatabase.prototype.AddCloseButton = function (id) {
+    // cancel button
+    let button_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    // button position
+    button_box.setAttribute("transform", "translate(" + (this.database[id].x + (this.database[id].width - 18)) + "," + (this.database[id].y - 8) + ")");
+    button_box.setAttribute("id", id + '.button');
+    button_box.setAttribute("class", 'vis-picture-button');
+
+
+    button_box.addEventListener("click", () => {
+        if (this.GetGroupMembers(id).length > 1) {
+            this.bus.$emit("remove-groupCanvas", this.database[id].group_id);
+            this.RemoveGroupMember(this.database[id].group_id, id);
+        }
+        this.RemoveCanvas(id);
+    });
+    let button_border = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    button_border.setAttribute("fill", 'white');
+    button_border.setAttribute("r", '12');
+    button_border.setAttribute("cx", '12');
+    button_border.setAttribute("cy", '12');
+    button_border.setAttribute("stroke", 'rgb(221,223,229)');
+    button_border.setAttribute("stroke-width", '1');
+    // button
+    let button = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    button.setAttribute("d", "M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M17,15.59L15.59,17L12,13.41L8.41,17L7,15.59 L10.59,12L7,8.41L8.41,7L12,10.59L15.59,7L17,8.41L13.41,12L17,15.59z")
+    button_box.append(button_border);
+    button_box.append(button);
+
+    this.GetTable().append(button_box);
+}
 
 VisDatabase.prototype.SelectCanvas = function (id) {
 
@@ -157,37 +189,8 @@ VisDatabase.prototype.SelectCanvas = function (id) {
         path.setAttribute("width", this.database[id].width);
         path.setAttribute("height", this.database[id].height);
 
-        // cancel button
-        let button_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        // button position
-        button_box.setAttribute("transform", "translate(" + (this.database[id].x + (this.database[id].width - 18)) + "," + (this.database[id].y - 8) + ")");
-        button_box.setAttribute("id", id + '.button');
-        button_box.setAttribute("class", 'vis-picture-button');
-
-
-        button_box.addEventListener("click", () => {
-            if (this.GetGroupMembers(id).length > 1) {
-                this.bus.$emit("remove-groupCanvas", this.database[id].group_id);
-                this.RemoveGroupMember(this.database[id].group_id, id);
-            }
-            this.RemoveCanvas(id);
-        });
-        let button_border = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        button_border.setAttribute("fill", 'white');
-        button_border.setAttribute("r", '12');
-        button_border.setAttribute("cx", '12');
-        button_border.setAttribute("cy", '12');
-        button_border.setAttribute("stroke", 'rgb(221,223,229)');
-        button_border.setAttribute("stroke-width", '1');
-        // button
-        let button = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        button.setAttribute("d", "M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M17,15.59L15.59,17L12,13.41L8.41,17L7,15.59 L10.59,12L7,8.41L8.41,7L12,10.59L15.59,7L17,8.41L13.41,12L17,15.59z")
-        button_box.append(button_border);
-        button_box.append(button);
-
-
         canvas.append(path);
-        this.GetTable().append(button_box);
+
         return canvas;
     }
 }
@@ -268,8 +271,10 @@ VisDatabase.prototype.RemoveAllCanvas = function () {
 VisDatabase.prototype.CancelSelection = function (id) {
     if (!!this.database[id]) {
         this.database[id].status = status.clear;
-        if (document.getElementById(id + '.select') != undefined) {
+        if (!!document.getElementById(id + '.select')) {
             document.getElementById(id + '.select').remove();
+        }
+        if (!!document.getElementById(id + '.button')) {
             document.getElementById(id + '.button').remove();
         }
     }
@@ -279,8 +284,10 @@ VisDatabase.prototype.CancelAllSelections = function () {
     for (const id in this.database) {
         if (Object.hasOwnProperty.call(this.database, id)) {
             this.database[id].status = status.clear;
-            if (document.getElementById(id + '.select') != undefined) {
+            if (!!document.getElementById(id + '.select')) {
                 document.getElementById(id + '.select').remove();
+            }
+            if (!!document.getElementById(id + '.button')) {
                 document.getElementById(id + '.button').remove();
             }
         }
@@ -405,8 +412,6 @@ VisDatabase.prototype.RenderUnit = function (height_num, width_num, x_num, y_num
     let table = document.getElementById("vis-container");
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    canvas.setAttribute("r", width);
-    canvas.setAttribute("r", height);
     canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
     canvas.setAttribute("class", "vis-picture");
     canvas.setAttribute("id", canvas_id);
@@ -425,6 +430,8 @@ VisDatabase.prototype.RenderUnit = function (height_num, width_num, x_num, y_num
     canvas.addEventListener("click", () => (this.SelectHandler(canvas_id)));
     canvas.append(background);
 
+    dom_obj.setAttribute("transform", "translate(" + width_num / 2 + "," + height_num / 2 + ")");
+    dom_obj.setAttribute("viewBox", "0 0 " + width + " " + height);
     canvas.append(dom_obj);
 
     table.append(canvas);

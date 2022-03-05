@@ -224,34 +224,12 @@ export default {
       this.enabledEncodings.push(tag);
     },
     Apply2Vis() {
-      console.log("vis data arr", this.visData_arr);
+      let visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
       let groupId;
-      for (let i = 0; i < this.visData_arr.length; i++) {
-        const element = this.visData_arr[i];
 
-        let test = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "circle"
-        );
-        let position = element.position;
-        let value = element.value * 0.2;
-        let width = position.width * 0.8;
-        let height = position.height * 0.8;
-        // add back ground
-        test.setAttribute("style", "fill:rgb(90, 156, 248)");
-
-        if (value > height) {
-          value = height;
-        }
-        if (value > width) {
-          value = width;
-        }
-        if (value <= 0) {
-          value = -value;
-        }
-
-        test.setAttribute("r", value);
-        
+      for (let i = 0; i < visData.length; i++) {
+        let position = visData[i].position;
+        let dom = visData[i].dom;
         groupId = this.VisDB.AddGroupMember(
           groupId,
           this.VisDB.RenderUnit(
@@ -259,7 +237,7 @@ export default {
             position.width,
             position.x,
             position.y,
-            test
+            dom
           )
         );
       }

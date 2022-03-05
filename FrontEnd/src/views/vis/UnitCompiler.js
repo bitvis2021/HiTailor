@@ -3,8 +3,25 @@ export function UnitCompiler() {
 
 }
 
-UnitCompiler.GetUnits = function (data_array) {
+UnitCompiler.GetUnits = function (data_array, config) {
+    let [max, min] = findMaxMin(data_array);
+    data_array = remapValue(data_array, max, min);
 
+    let sizeBaseLine = findLengthBaseLine(data_array);
+    let size = sizeBaseLine * config.relativeSize/2;
+
+    console.log("remapped size", size);
+
+    for (let i = 0; i < data_array.length; i++) {
+        let generateConfig = {
+            shape: config.shape,
+            color: config.color, // need remap
+            size: data_array[i].value * size
+        }
+
+        data_array[i].dom = this.GetUnitDom(generateConfig);
+    }
+    return data_array;
 }
 
 function findMaxMin(data_array) {
@@ -24,21 +41,28 @@ function findMaxMin(data_array) {
 
 function remapValue(data_array, max, min) {
     let baseLine = max - min;
+
+    let y = function (x) {
+        return 0.8 * x + 0.2;
+    }
+
     for (let i = 0; i < data_array.length; i++) {
         const element = data_array[i];
-        let value = Number(element.value) - min;
-        data_array[i].value = value / baseLine;
+        let x = (Number(element.value) - min) / baseLine;
+        console.log("remap val:", y(x), "origin:", x, "baseline:", baseLine);
+        data_array[i].value = y(x);
     }
+    return data_array;
 }
 
 function findLengthBaseLine(data_array) {
     let min = Infinity;
     for (let i = 0; i < data_array.length; i++) {
-        const element = data_array[i];
+        const element = data_array[i].position;
         if (Number(element.width) < min) {
             min = element.width;
         }
-        else if (Number(element.height) > min) {
+        if (Number(element.height) < min) {
             min = element.height;
         }
     }
