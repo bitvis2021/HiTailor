@@ -4,10 +4,25 @@ import vegaEmbed from "vega-embed";
 // 应该从这里获得selection
 
 
-export function VisDatabase(eventBus_obj) {
-    this.database = {};
-    this.bus = eventBus_obj;
-}
+// export function VisDatabase(eventBus_obj) {
+//     this.database = {};
+//     this.bus = eventBus_obj;
+// }
+
+
+export let VisDatabase = (function () {
+    let instance;
+    let CreateSingleton = function (eventBus_obj) {
+        this.database = {};
+        this.bus = eventBus_obj;
+        if (instance) {
+            return instance;
+        }
+        return instance = this;
+    }
+    return CreateSingleton;
+})();
+
 
 VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database.hasOwnProperty(id)) {
@@ -271,6 +286,47 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     this.RenderCanvas(canvas_id);
     return canvas_id;
 }
+
+VisDatabase.prototype.RenderUnit = function (groupId_str, height_num, width_num, x_num, y_num, dom_obj) {
+    // 1. set json
+    // 2. append canvas
+    // 3. add canvas object to database
+    // 4. render
+
+    // let canvas_id = this.GenID();
+
+    // add to db
+    // let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_arr, metaData_obj);
+    // this.database[canvas_id] = metaData;
+
+    let height = height_num - 1.1;
+    let width = width_num - 1.1;
+    let x = x_num + 0.5;
+    let y = y_num + 0.5;
+
+    let table = document.getElementById("vis-container");
+    let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    canvas.setAttribute("class", groupId_str);
+    canvas.setAttribute("width", width);
+    canvas.setAttribute("height", height);
+    canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
+    canvas.setAttribute("class", "vis-picture");
+
+    // add back ground
+    background.setAttribute("style", "fill:rgb(255,255,255)");
+    background.setAttribute("width", width);
+    background.setAttribute("height", height);
+
+    // click event
+    // canvas.addEventListener("click", () => (this.SelectHandler(id)));
+    canvas.append(background);
+
+    canvas.append(dom_obj);
+
+    table.append(canvas);
+}
+
 
 VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
     this.bus = bus_vmObj;
