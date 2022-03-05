@@ -1,5 +1,5 @@
 import vegaEmbed from "vega-embed";
-
+import { GetTemplate } from "./TemplateCompiler";
 // todo: 把vega lite 与data部分 decouple. 在gen config的时候才进行组装。
 // 应该从这里获得selection
 
@@ -15,6 +15,7 @@ export let VisDatabase = (function () {
     let CreateSingleton = function (eventBus_obj) {
         this.database = {};
         this.bus = eventBus_obj;
+        this.group = {};
         if (instance) {
             return instance;
         }
@@ -23,17 +24,46 @@ export let VisDatabase = (function () {
     return CreateSingleton;
 })();
 
+VisDatabase.prototype.GetGroupID = function (id) {
+    return this.database[id]['group_id'];
+}
+// input one member's id, then get other members
+VisDatabase.prototype.GetGroupMembers = function (id) {
+    if (this.database[id].hasOwnProperty('group_id')) {
+        return this.group[this.database[id].group_id];
+    }
+    return [id];
+}
+VisDatabase.prototype.DeleteGroup = function (group_id) {
+    for (let i = 0, len = this.group[group_id].length; i < len; i++) {
+        let memberID = this.group[group_id][i];
+        console.log('deleteing', memberID);
+        this.RemoveCanvas(memberID);
+    }
+
+    // delete this.group[group_id];
+}
+VisDatabase.prototype.RemoveGroupMember = function (group_id, id) {
+    if (!!this.group[group_id]) {
+        this.group[group_id].splice(this.group[group_id].indexOf(id), 1);
+        if (this.group[group_id].length == 0) {
+            delete this.group[group_id];
+        }
+    }
+}
+VisDatabase.prototype.AddGroupMember = function (group_id, id) {
+    if (group_id == undefined || this.group[group_id] == undefined) {
+        console.log("undefine");
+        group_id = this.GenID();
+        this.group[group_id] = [];
+    }
+    this.database[id].group_id = group_id;
+    this.group[group_id].push(id);
+    return group_id;
+}
 
 VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database.hasOwnProperty(id)) {
-        if (this.database[id].status == status.clear) {
-            this.SelectCanvas(id);
-            this.bus.$emit("select-canvas", id);
-        }
-        else if (this.database[id].status == status.select) {
-            this.CancelSelection(id);
-        }
-
         // close other selection
         for (const key in this.database) {
             if (Object.hasOwnProperty.call(this.database, key)) {
@@ -42,6 +72,31 @@ VisDatabase.prototype.SelectHandler = function (id) {
                 }
             }
         }
+
+        if (this.database[id].status == status.clear) {
+            // this.SelectCanvas(id);
+            // this.bus.$emit("select-canvas", id);
+
+            for (let i = 0; i < this.GetGroupMembers(id).length; i++) {
+                const otherID = this.GetGroupMembers(id)[i];
+
+                this.SelectCanvas(otherID);
+            }
+            if (this.database[id].type === 'vega') {
+                this.bus.$emit("select-canvas", id);
+            }
+            this.AddCloseButton(id);
+        }
+        else if (this.database[id].status == status.select) {
+            // this.CancelSelection(id);
+
+            for (let i = 0; i < this.GetGroupMembers(id).length; i++) {
+                const otherID = this.GetGroupMembers(id)[i];
+
+                this.CancelSelection(otherID);
+            }
+        }
+
     }
 }
 
@@ -88,26 +143,22 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
     document.getElementById(id + '.hButton').removeAttribute('style');
 }
 
-
-VisDatabase.prototype.SelectCanvas = function (id) {
-
-    this.database[id].status = status.select;
-    let canvas = this.GetCanvas(id);
-
-    // selection stroke
-    let path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    path.setAttribute("id", id + '.select');
-    path.setAttribute("style", "fill:rgb(186, 219, 228,0.2);stroke:rgb(70,130,180);stroke-width:2px");
-    path.setAttribute("width", this.database[id].width);
-    path.setAttribute("height", this.database[id].height);
-
+VisDatabase.prototype.AddCloseButton = function (id) {
     // cancel button
     let button_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
     // button position
-    button_box.setAttribute("transform", "translate(" + (this.database[id].width - 18) + "," + -8 + ")");
+    button_box.setAttribute("transform", "translate(" + (this.database[id].x + (this.database[id].width - 18)) + "," + (this.database[id].y - 8) + ")");
     button_box.setAttribute("id", id + '.button');
     button_box.setAttribute("class", 'vis-picture-button');
-    button_box.addEventListener("click", () => (this.RemoveCanvas(id)));
+
+
+    button_box.addEventListener("click", () => {
+        if (this.GetGroupMembers(id).length > 1) {
+            this.bus.$emit("remove-groupCanvas", this.database[id].group_id);
+            this.RemoveGroupMember(this.database[id].group_id, id);
+        }
+        this.RemoveCanvas(id);
+    });
     let button_border = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     button_border.setAttribute("fill", 'white');
     button_border.setAttribute("r", '12');
@@ -121,11 +172,27 @@ VisDatabase.prototype.SelectCanvas = function (id) {
     button_box.append(button_border);
     button_box.append(button);
 
+    this.GetTable().append(button_box);
+}
 
-    canvas.append(path);
-    canvas.append(button_box);
-    return canvas;
+VisDatabase.prototype.SelectCanvas = function (id) {
 
+    if (!!this.database[id]) {
+
+        this.database[id].status = status.select;
+        let canvas = this.GetCanvas(id);
+
+        // selection stroke
+        let path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        path.setAttribute("id", id + '.select');
+        path.setAttribute("style", "fill:rgb(186, 219, 228,0.2);stroke:rgb(70,130,180);stroke-width:2px");
+        path.setAttribute("width", this.database[id].width);
+        path.setAttribute("height", this.database[id].height);
+
+        canvas.append(path);
+
+        return canvas;
+    }
 }
 
 VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
@@ -202,10 +269,14 @@ VisDatabase.prototype.RemoveAllCanvas = function () {
 }
 
 VisDatabase.prototype.CancelSelection = function (id) {
-    this.database[id].status = status.clear;
-    if (document.getElementById(id + '.select') != undefined) {
-        document.getElementById(id + '.select').remove();
-        document.getElementById(id + '.button').remove();
+    if (!!this.database[id]) {
+        this.database[id].status = status.clear;
+        if (!!document.getElementById(id + '.select')) {
+            document.getElementById(id + '.select').remove();
+        }
+        if (!!document.getElementById(id + '.button')) {
+            document.getElementById(id + '.button').remove();
+        }
     }
 }
 
@@ -213,8 +284,10 @@ VisDatabase.prototype.CancelAllSelections = function () {
     for (const id in this.database) {
         if (Object.hasOwnProperty.call(this.database, id)) {
             this.database[id].status = status.clear;
-            if (document.getElementById(id + '.select') != undefined) {
+            if (!!document.getElementById(id + '.select')) {
                 document.getElementById(id + '.select').remove();
+            }
+            if (!!document.getElementById(id + '.button')) {
                 document.getElementById(id + '.button').remove();
             }
         }
@@ -226,9 +299,15 @@ VisDatabase.prototype.GetCanvas = function (id) {
 }
 
 VisDatabase.prototype.RemoveCanvas = function (id) {
-    if (this.GetCanvas(id) != null) {
+    if (!!document.getElementById(id)) {
         document.getElementById(id).remove();
     }
+    let button = document.getElementById(id + ".button");
+    if (!!button) {
+        button.remove();
+    }
+
+    // this.RemoveGroupMember(this.GetGroupID(id), id);
     delete this.database[id];
 }
 
@@ -282,49 +361,81 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     // add to db
     let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_arr, metaData_obj);
     this.database[canvas_id] = metaData;
-
+    this.database[canvas_id].type = 'vega';
     this.RenderCanvas(canvas_id);
     return canvas_id;
 }
 
-VisDatabase.prototype.RenderUnit = function (groupId_str, height_num, width_num, x_num, y_num, dom_obj) {
+VisDatabase.prototype.GenRecommendFigs = function (recommendData_array, currentTemplate_obj, currentID) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
     // 4. render
 
-    // let canvas_id = this.GenID();
+    // generate group
+    let group_id = this.GenID();
+    this.group[group_id] = [];
 
-    // add to db
-    // let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_arr, metaData_obj);
-    // this.database[canvas_id] = metaData;
+    this.AddGroupMember(group_id, currentID);
+
+    let currentTemplate = currentTemplate_obj;
+
+    for (let i = 0, len = recommendData_array.length; i < len; i++) {
+        let element = recommendData_array.at(i);
+        let position = element.position;
+        let visData = JSON.parse(element.visData);
+        let metaData = JSON.parse(element.metaData);
+        let id = this.GenFig(
+            position.height,
+            position.width,
+            position.x,
+            position.y,
+            GetTemplate(currentTemplate.name, metaData, visData),
+            visData,
+            metaData
+        );
+        this.AddGroupMember(group_id, id);
+
+    }
+    return group_id;
+}
+
+VisDatabase.prototype.RenderUnit = function (height_num, width_num, x_num, y_num, dom_obj) {
 
     let height = height_num - 1.1;
     let width = width_num - 1.1;
     let x = x_num + 0.5;
     let y = y_num + 0.5;
 
+    let canvas_id = this.GenID();
+
     let table = document.getElementById("vis-container");
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    canvas.setAttribute("class", groupId_str);
-    canvas.setAttribute("width", width);
-    canvas.setAttribute("height", height);
     canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
     canvas.setAttribute("class", "vis-picture");
+    canvas.setAttribute("id", canvas_id);
 
     // add back ground
     background.setAttribute("style", "fill:rgb(255,255,255)");
     background.setAttribute("width", width);
     background.setAttribute("height", height);
 
+    // add to db
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, null, null, null);
+    this.database[canvas_id] = metaData;
+    this.database[canvas_id].type = 'unit';
+
     // click event
-    // canvas.addEventListener("click", () => (this.SelectHandler(id)));
+    canvas.addEventListener("click", () => (this.SelectHandler(canvas_id)));
     canvas.append(background);
 
+    dom_obj.setAttribute("transform", "translate(" + width_num / 2 + "," + height_num / 2 + ")");
+    dom_obj.setAttribute("viewBox", "0 0 " + width + " " + height);
     canvas.append(dom_obj);
 
     table.append(canvas);
+    return canvas_id;
 }
 
 
@@ -336,6 +447,10 @@ VisDatabase.prototype.ObjectData = function () {
     // Get Object data
 }
 
+VisDatabase.prototype.GetTable = function () {
+    return document.getElementById("vis-container");
+}
+
 VisDatabase.prototype.RenderCanvas = function (id) {
     // 1. get meta data
     // 2. tweak meta data
@@ -343,7 +458,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     // 4. append
 
     // let table = document.getElementsByClassName("table-view-svg")[0];
-    let table = document.getElementById("vis-container")
+    let table = this.GetTable();
     let height = this.database[id].height - 1.1;
     let width = this.database[id].width - 1.1;
     let x = this.database[id].x + 0.5;
