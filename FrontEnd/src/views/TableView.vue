@@ -406,7 +406,7 @@ export default {
       markLinePadding: 8,
       cellMin: 15,
 
-      tabularDatasetList: null,
+      selectedTabularData: null,
       rowDistributionList: [],  // Record the start and end of each cell for each row
       dataValueList: [],
 
@@ -1785,14 +1785,15 @@ export default {
   },
 
   beforeMount: function() {
-    this.tabularDatasetList = sysDatasetObj.tabularDatasetList 
+    this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"]
+    console.log('selectedTabularData', this.selectedTabularData)
     this.headerDistribution = new Map
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
 
     // set column width to be the same
-    var row = this.tabularDatasetList[0]
+    var row = this.selectedTabularData[0]
     var item
     for (item in row) {
       var lengthList = row[item].length, len
@@ -1802,18 +1803,18 @@ export default {
       }
     }
   
-    var rcount = this.tabularDatasetList.length
+    var rcount = this.selectedTabularData.length
     for (var i=0; i<rcount; i++) {
       this.rowHeightList.push(this.cellHeight)
       this.markRowHeightList.push(this.cellHeight)
     }
 
     var rindex
-    for (rindex in this.tabularDatasetList) {
+    for (rindex in this.selectedTabularData) {
       var cindex
       var r = [], rvalue = []
-      for (cindex in this.tabularDatasetList[rindex]) {
-        var item = this.tabularDatasetList[rindex][cindex]
+      for (cindex in this.selectedTabularData[rindex]) {
+        var item = this.selectedTabularData[rindex][cindex]
         var range = {start:item.start, end:item.end}
         r.push(range)
         rvalue.push(item.value)
@@ -1824,15 +1825,15 @@ export default {
 
     // automatically fix header
     // range-right
-    for (var i=0; i<this.tabularDatasetList[0].length; i++) {
-      if (this.tabularDatasetList[0][i].value!='None' && this.tabularDatasetList[0][i].value!='' && this.tabularDatasetList[0][i].value!=' ') {
-        this.headerRange.right = this.tabularDatasetList[0][i].start-1
+    for (var i=0; i<this.selectedTabularData[0].length; i++) {
+      if (this.selectedTabularData[0][i].value!='None' && this.selectedTabularData[0][i].value!='' && this.selectedTabularData[0][i].value!=' ') {
+        this.headerRange.right = this.selectedTabularData[0][i].start-1
         break
       }
     }
     // range-bottom
-    for (var i=0; i<this.tabularDatasetList.length; i++) {
-      if (this.tabularDatasetList[i][0].value!='None' && this.tabularDatasetList[i][0].value!='' && this.tabularDatasetList[i][0].value!=' ') {
+    for (var i=0; i<this.selectedTabularData.length; i++) {
+      if (this.selectedTabularData[i][0].value!='None' && this.selectedTabularData[i][0].value!='' && this.selectedTabularData[i][0].value!=' ') {
         this.headerRange.bottom =i-1
         break
       }
@@ -1867,8 +1868,7 @@ export default {
   },
 
   mounted: function() {
-    this.hide_recommend_element()
-    console.log('this.tabularDatasetList', this.tabularDatasetList)
+    console.log('this.selectedTabularData', this.selectedTabularData)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
     console.log("this.rowDistributionList", this.rowDistributionList)
