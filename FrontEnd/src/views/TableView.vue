@@ -844,6 +844,7 @@ export default {
       d3.selectAll(".recommend-element").style("visibility", "hidden")
     },
     show_recommend_element(notShowButton=false) {
+      this.directionSelectValue = ["row", "column"]
       d3.selectAll(".recommend-element").style("visibility", "visible")
       // if (notShowButton) {
       //   d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
@@ -902,17 +903,30 @@ export default {
     },
     handle_transform_2linear_dropdown(command) {
       if (this.selectedHeader == null)  return
-      var name = this.selectedHeader.name, times = this.selectedHeader.times
+      var name = this.selectedHeader.name
       var distributionInfo = this.headerDistribution.get(name)
       var layer = distributionInfo.layer
       var isRow = distributionInfo.isRowHeader 
       var header = isRow ? this.rowHeader: this.colHeader
-      var headerInfo = header[layer].get(name)
-      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
-        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
-      else {  // already linear
-        return
+
+      for (var [key, headerInfo] of header[layer]) {
+        var ranges = headerInfo.range
+        for (var times=0; times<ranges.length; times++) {
+          if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
+            isRow ? this.transform_2linear(key, this.rowHeader, times, isRow, command) : this.transform_2linear(key, this.colHeader, times, isRow, command)
+          else {  // already linear
+            return
+          }
+        }
       }
+
+      // var headerInfo = header[layer].get(name)
+      // if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
+      //   isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
+      // else {  // already linear
+      //   return
+      // }
+
       this.clear_selected_header()
     },
 
@@ -2168,13 +2182,14 @@ export default {
       width: 4px;
       user-select: none;
     }
-
     .recommend-element{
       display: inline;
     }
 
+    // direction select
     /deep/.el-input__suffix {
       transition: 0s;
+
     }
     /deep/.el-input.el-input--mini.el-input--suffix {
       width: 155px;
@@ -2182,16 +2197,17 @@ export default {
     /deep/.el-select.el-select--mini {
       margin-right: 15px;
     }
-  
+
+    // priority slider
     .priority-slider{
       margin-left: @padding;
       margin-top: 2px;
       position:relative;
       width:80%;
     }  
-    // /deep/ .el-slider__bar{
-    //   background: #6ba8e2;
-    // }  
+    /deep/ .el-slider__bar{
+      background: #6ba8e2;
+    }  
     /deep/.el-slider__button {
       width: 8px;
       height: 8px;
