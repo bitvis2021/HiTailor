@@ -21,22 +21,22 @@
             @click="transform_unfold()" > 
             Unfold
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="transform_fold()" > 
             Fold
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat" 
             class="button"
             @click="transform_transpose()" > 
             Transpose
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="handle_transform_swap('FALL 2001', false)" > 
             Swap
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat" 
             class="button"
             @click="handle_transform_2stacked_button()" > 
             ToStacked
@@ -46,7 +46,7 @@
             @click="handle_transform_2linear('HUMANITIES', 0)" > 
             ToLinear
           </button> -->
-          <el-dropdown @command="handle_transform_2linear_dropdown">
+          <el-dropdown @command="handle_transform_2linear_dropdown"  v-if="!isCurrFlat">
             <div class="drop-down-button">
               <span class="el-dropdown-link">
                 ToLinear<i class="el-icon-arrow-down el-icon--right"></i>
@@ -64,7 +64,7 @@
             @click="transform_derive()" > 
             Derive
           </button> -->
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="transform_merge()" > 
             Merge
@@ -388,7 +388,7 @@
     import { mapState, mapMutations } from 'vuex';
     import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from './table/CreateModel.js'
     import { get_reference_node, cal_recommendation_by_one_reference, cal_recommendation_by_two_references} from './table/GetRecommendation.js'
-    import { get_unit_data_for_transmission, get_data_for_transmission, get_pos_for_transmission} from './table/GetSendingData.js'
+    import { get_unit_data_for_transmission, get_data_for_transmission, get_pos_for_transmission, get_data_from_chosen} from './table/GetSendingData.js'
     import { reduce } from 'vega-lite/build/src/encoding';
 
 export default {
@@ -891,19 +891,7 @@ export default {
     handle_transform_2stacked_button() {
       if (this.selectedHeader == null)  return
       var name = this.selectedHeader.name
-      var times = this.selectedHeader.times
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_2stacked(name, this.rowHeader, times, true)
-      }
-      else {
-        this.transform_2stacked(name, this.colHeader, times, false)
-      }
-      this.clear_selected_header()
-    },
-    handle_transform_2linear_dropdown(command) {
-      if (this.selectedHeader == null)  return
-      var name = this.selectedHeader.name
+      // var times = this.selectedHeader.times
       var distributionInfo = this.headerDistribution.get(name)
       var layer = distributionInfo.layer
       var isRow = distributionInfo.isRowHeader 
@@ -912,14 +900,51 @@ export default {
       for (var [key, headerInfo] of header[layer]) {
         var ranges = headerInfo.range
         for (var times=0; times<ranges.length; times++) {
-          if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
-            isRow ? this.transform_2linear(key, this.rowHeader, times, isRow, command) : this.transform_2linear(key, this.colHeader, times, isRow, command)
-          else {  // already linear
-            return
+          if (isRow) {
+            this.transform_2stacked(key, this.rowHeader, times, true)
+            for (var item of this.num2header) {
+              if (this.headerDistribution.get(item[1].value).isRowHeader) {
+                this.cal_row_header_position(item[1].value, item[1].times)
+              }
+            }
+            this.cal_range_list(this.markRowHeightList, "mark height")
+            this.cal_range_list(this.rowHeightList, "height")
+          }
+          else {
+            this.transform_2stacked(key, this.colHeader, times, false)
+            for (var item of this.num2header) {
+              if (!this.headerDistribution.get(item[1].value).isRowHeader) {
+                this.cal_column_header_position(item[1].value, item[1].times)
+              }
+            }
+            this.cal_range_list(this.markColumnWidthList, "mark width")
+            this.cal_range_list(this.columnWidthList, "width")
+
+          }
+          
+          // recalculate value-cell position
+          for (var item of this.num2seq) {
+            this.cal_value_cell_position(item[1].seq)
           }
         }
       }
-
+      this.clear_selected_header()
+      // if (distributionInfo.isRowHeader) {
+      //   this.transform_2stacked(name, this.rowHeader, times, true)
+      // }
+      // else {
+      //   this.transform_2stacked(name, this.colHeader, times, false)
+      // }
+      // this.clear_selected_header()
+    },
+    handle_transform_2linear_dropdown(command) {
+      if (this.selectedHeader == null)  return
+      var name = this.selectedHeader.name
+      // var times = this.selectedHeader.times
+      var distributionInfo = this.headerDistribution.get(name)
+      var layer = distributionInfo.layer
+      var isRow = distributionInfo.isRowHeader 
+      var header = isRow ? this.rowHeader: this.colHeader
       // var headerInfo = header[layer].get(name)
       // if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
       //   isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
@@ -927,6 +952,42 @@ export default {
       //   return
       // }
 
+      for (var [key, headerInfo] of header[layer]) {
+        var ranges = headerInfo.range
+        for (var times=0; times<ranges.length; times++) {
+          if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  { // is stacked
+            if (isRow) {
+              this.transform_2linear(key, this.rowHeader, times, isRow, command)
+              for (var item of this.num2header) {
+                if (this.headerDistribution.get(item[1].value).isRowHeader) {
+                  this.cal_row_header_position(item[1].value, item[1].times)
+                }
+              }
+              this.cal_range_list(this.markRowHeightList, "mark height")
+              this.cal_range_list(this.rowHeightList, "height")
+            }
+            else {
+              this.transform_2linear(key, this.colHeader, times, isRow, command)
+              for (var item of this.num2header) {
+                if (!this.headerDistribution.get(item[1].value).isRowHeader) {
+                  this.cal_column_header_position(item[1].value, item[1].times)
+                }
+              }
+              this.cal_range_list(this.markColumnWidthList, "mark width")
+              this.cal_range_list(this.columnWidthList, "width")
+
+            }
+            
+            // recalculate value-cell position
+            for (var item of this.num2seq) {
+              this.cal_value_cell_position(item[1].seq)
+            }
+          }
+          else {  // already linear todo change operator
+            continue
+          }
+        }
+      }
       this.clear_selected_header()
     },
 
@@ -935,7 +996,7 @@ export default {
       this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
-        this.flatData = this.get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1)
+        this.flatData = get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1, this.headerRange, this.valueDistribution, this.seq2num)
         if (this.flatAttrName == null) {
           this.flatAttrName = []
           for (var i=0; i<this.flatData[0].length; i++) {
@@ -1376,7 +1437,7 @@ export default {
               res = min
               break
           }
-          // res = res.toFixed(1)
+
           this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
           this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
         }
@@ -1648,7 +1709,7 @@ export default {
 
     before_header_interaction(id, isRowHeader, name, times, layer) {
       if (this.selectedArea.top!=null) {
-        this.clear_selected_cell()
+        this.clear_selected_cell(true)
         return
       }
 
