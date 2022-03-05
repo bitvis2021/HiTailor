@@ -46,14 +46,12 @@
             @click="handle_transform_2linear('HUMANITIES', 0)" > 
             ToLinear
           </button> -->
-
           <el-dropdown @command="handle_transform_2linear_dropdown">
             <div class="drop-down-button">
               <span class="el-dropdown-link">
                 ToLinear<i class="el-icon-arrow-down el-icon--right"></i>
               </span>
             </div>
-
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="sum">Sum</el-dropdown-item>
               <el-dropdown-item command="avg">Average</el-dropdown-item>
@@ -61,7 +59,6 @@
               <el-dropdown-item command="min">Min</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-
           <button type="primary" plain size="small" 
             class="button"
             @click="transform_derive()" > 
@@ -72,26 +69,32 @@
             @click="transform_merge()" > 
             Merge
           </button>
-          <span class="toolbar-vertical-separator" />
-          <span class="toolbar-label">Recommendation</span>
-          
-          <span class="toolbar-label">Direction</span>
-          <el-select v-model="recommendDirectionValue" multiple placeholder="请选择" size="mini" style="width=155px">
-            <el-option key="row" label="row" value="row" />
-            <el-option key="column" label="column" value="column" />
-          </el-select>
 
-          <span class="toolbar-label">Priority</span>
-        </el-col>
-
-        <el-col :lg="3" :xl="3">
-          <div class="priority-slider"> 
-            <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
+          <div class="recommend-element">
+            <span class="toolbar-vertical-separator" />
+            <span class="toolbar-label">Recommendation</span>
+            <span class="toolbar-label" style="color:#3e87cc">Direction</span>
+            <el-select v-model="directionSelectValue" multiple placeholder="Select" size="mini" style="width=155px">
+              <el-option key="row" label="row" value="row" />
+              <el-option key="column" label="column" value="column" />
+            </el-select>
+            <span class="toolbar-label" style="color:#3e87cc">Priority</span>
           </div>
         </el-col>
 
-        <el-col :lg="1" :xl="1">
-          <el-button type="primary" icon="el-icon-check" size="mini" plain style="margin-top:6px"></el-button>
+        <el-col :lg="3" :xl="3" class="recommend-element">
+          <div class="priority-slider"> 
+            <el-slider v-model="prioritySliderValue" range show-stops :max="directionSelectValue.length==2 ? 5 : (directionSelectValue.length==0 ? 0 : 2)"></el-slider> 
+          </div>
+        </el-col>
+
+        <el-col :lg="2" :xl="2" class="recommend-element">
+          <el-button id="recommend-apply-button" type="primary" icon="el-icon-check" size="mini" plain style="margin-top:6px" circle
+            @click="confirm_recommendation()">
+          </el-button>
+          <el-button id="recommend-apply-button" type="danger" icon="el-icon-close" size="mini" plain style="margin-top:6px" circle
+            @click="cancel_recommendation()">
+          </el-button>
         </el-col>
 
       </el-row> 
@@ -465,9 +468,11 @@ export default {
       visRerenderPrePos: {x:0, y:0},
       visRerenderAfterPos: {x:0, y:0},
 
+      isChoosingUnit: false,
+
       recommendData: [[], [], [], [], []],
       prioritySliderValue:[0, 5],
-      recommendDirectionValue: ["row", "column"]
+      directionSelectValue: ["row", "column"]
     }
   },
 
@@ -641,6 +646,7 @@ export default {
       }
     },
     handle_mouse_down_mask(event) {
+      this.clear_selected_header()
       this.cal_mouse_over_cell(event.offsetX, event.offsetY)
 
       this.selectByMark.row = false
@@ -738,8 +744,15 @@ export default {
       
       if (this.mouseDownMaskState && this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
-          this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
+          if (this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left == this.selectedArea.right)  {// single unit recommend here
+            this.isChoosingUnit = true
+            this.show_recommend_element(true)
+            this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
+          }
           this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
+        }
+        else {
+          this.isChoosingUnit = false
         }
         this.mouseDownMaskState = false
       }
@@ -806,19 +819,49 @@ export default {
       }
     },
 
-    clear_selected_cell() {
+    clear_selected_cell(clearRecommend=false) {
       this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
       this.selectedArea = {top:null, left:null, bottom:null, right:null}
       this.selectedMark = {index:null, type:null}
       this.selectByMark = {row:false, column:false}
 
       // cancel recommend
-      d3.selectAll(".recommend-helper").remove()
+      if (clearRecommend) {
+        d3.selectAll(".recommend-helper").remove()
+      }
     },
     clear_selected_header() {
       this.selectedHeader = null
       d3.select("#interaction-helper").remove()
       d3.select("#interaction-helper-line").remove()
+    },
+    clear_recommendation_area() {
+      d3.selectAll(".recommend-helper").remove()
+      this.recommendData = null
+    },
+    hide_recommend_element() {
+      d3.selectAll(".recommend-element").style("visibility", "hidden")
+    },
+    show_recommend_element(notShowButton=false) {
+      d3.selectAll(".recommend-element").style("visibility", "visible")
+      // if (notShowButton) {
+      //   d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
+      // }
+    },
+    cancel_recommendation() {
+      this.clear_recommendation_area()
+      this.hide_recommend_element()
+    },
+    confirm_recommendation() {
+      if (this.isChoosingUnit) {
+        this.transmit_unit_recommendation_to_vis()
+      }
+      else {
+        this.transmit_recommendation_to_vis()
+      }
+      this.hide_recommend_element()
+      this.clear_recommendation_area()
+      this.clear_selected_cell()
     },
 
     handle_transform_swap(name, isSwapUp) {
@@ -1463,10 +1506,10 @@ export default {
       console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
 
-      // single unit, send recommendation too
-      if (top==bottom && left==right) {
-        this.transmit_unit_recommendation_to_vis()
-      }
+      // // single unit, send recommendation too
+      // if (top==bottom && left==right) {
+      //   this.transmit_unit_recommendation_to_vis()
+      // }
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
@@ -1733,9 +1776,9 @@ export default {
             d3.selectAll(name).style("visibility", "hidden")
           }
           
-          if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
-            this.transmit_unit_recommendation_to_vis()
-          }
+          // if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
+          //   this.transmit_unit_recommendation_to_vis()
+          // }
         }
       }
       
@@ -1824,6 +1867,7 @@ export default {
   },
 
   mounted: function() {
+    this.hide_recommend_element()
     console.log('this.tabularDatasetList', this.tabularDatasetList)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
@@ -1833,12 +1877,13 @@ export default {
     console.log("this.dataValueList", this.dataValueList)
     
     this.$bus.$on("apply-config", () => {
-      console.log("send recommendation data")
       if (!(this.selectedArea.left==this.selectedArea.right && this.selectedArea.top==this.selectedArea.bottom)) {
-        this.transmit_recommendation_to_vis()
+        // this.transmit_recommendation_to_vis()
         console.log("not single unit")
+        this.show_recommend_element()
+        this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
       }
-      this.clear_selected_cell()
+      this.clear_selected_cell(false)
     })
 
     this.$bus.$on("select-canvas", () => {
@@ -2040,6 +2085,13 @@ export default {
       user-select: none;
     }
 
+    .recommend-element{
+      display: inline;
+    }
+
+    /deep/.el-input__suffix {
+      transition: 0s;
+    }
     /deep/.el-input.el-input--mini.el-input--suffix {
       width: 155px;
     }
@@ -2049,12 +2101,19 @@ export default {
   
     .priority-slider{
       margin-left: @padding;
+      margin-top: 2px;
       position:relative;
       width:70%;
     }  
-    /deep/ .el-slider__bar{
-      background: #6ba8e2;
-    }  
+    // /deep/ .el-slider__bar{
+    //   background: #6ba8e2;
+    // }  
+    /deep/.el-slider__button {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transition: 0s;
+    }
   }
   
   .table-view-svg-container {
