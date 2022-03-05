@@ -1,5 +1,5 @@
 import vegaEmbed from "vega-embed";
-
+import { GetTemplate } from "./TemplateCompiler";
 // todo: 把vega lite 与data部分 decouple. 在gen config的时候才进行组装。
 // 应该从这里获得selection
 
@@ -15,6 +15,7 @@ export let VisDatabase = (function () {
     let CreateSingleton = function (eventBus_obj) {
         this.database = {};
         this.bus = eventBus_obj;
+        this.group = {};
         if (instance) {
             return instance;
         }
@@ -23,17 +24,37 @@ export let VisDatabase = (function () {
     return CreateSingleton;
 })();
 
+VisDatabase.prototype.GetGroupID = function (id) {
+    return this.database[id]['group_id'];
+}
+// input one member's id, then get other members
+VisDatabase.prototype.GetGroupMembers = function (id) {
+    if (this.database[id].hasOwnProperty('group_id')) {
+        return this.group[this.database[id].group_id];
+    }
+    return [id];
+}
+VisDatabase.prototype.DeleteGroup = function (group_id) {
+    this.group[group_id].forEach(memberID => {
+        this.RemoveCanvas(memberID);
+    });
+    delete this.group[group_id];
+}
+VisDatabase.prototype.RemoveGroupMember = function (group_id, id) {
+    if (!!this.group[group_id]) {
+        this.group[group_id].splice(this.group[group_id].indexOf(id), 1);
+        if (this.group[group_id].length == 0) {
+            delete this.group[group_id];
+        }
+    }
+}
+VisDatabase.prototype.AddGroupMember = function (group_id, id) {
+    this.database[id].group_id = group_id;
+    this.group[group_id].push(id);
+}
 
 VisDatabase.prototype.SelectHandler = function (id) {
     if (this.database.hasOwnProperty(id)) {
-        if (this.database[id].status == status.clear) {
-            this.SelectCanvas(id);
-            this.bus.$emit("select-canvas", id);
-        }
-        else if (this.database[id].status == status.select) {
-            this.CancelSelection(id);
-        }
-
         // close other selection
         for (const key in this.database) {
             if (Object.hasOwnProperty.call(this.database, key)) {
@@ -42,6 +63,28 @@ VisDatabase.prototype.SelectHandler = function (id) {
                 }
             }
         }
+
+        if (this.database[id].status == status.clear) {
+            // this.SelectCanvas(id);
+            // this.bus.$emit("select-canvas", id);
+
+            for (let i = 0; i < this.GetGroupMembers(id).length; i++) {
+                const otherID = this.GetGroupMembers(id)[i];
+
+                this.SelectCanvas(otherID);
+            }
+            this.bus.$emit("select-canvas", id);
+        }
+        else if (this.database[id].status == status.select) {
+            // this.CancelSelection(id);
+
+            for (let i = 0; i < this.GetGroupMembers(id).length; i++) {
+                const otherID = this.GetGroupMembers(id)[i];
+
+                this.CancelSelection(otherID);
+            }
+        }
+
     }
 }
 
@@ -91,41 +134,50 @@ VisDatabase.prototype.MaximizeHandler = function (id) {
 
 VisDatabase.prototype.SelectCanvas = function (id) {
 
-    this.database[id].status = status.select;
-    let canvas = this.GetCanvas(id);
+    if (!!this.database[id]) {
 
-    // selection stroke
-    let path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    path.setAttribute("id", id + '.select');
-    path.setAttribute("style", "fill:rgb(186, 219, 228,0.2);stroke:rgb(70,130,180);stroke-width:2px");
-    path.setAttribute("width", this.database[id].width);
-    path.setAttribute("height", this.database[id].height);
+        this.database[id].status = status.select;
+        let canvas = this.GetCanvas(id);
 
-    // cancel button
-    let button_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    // button position
-    button_box.setAttribute("transform", "translate(" + (this.database[id].width - 18) + "," + -8 + ")");
-    button_box.setAttribute("id", id + '.button');
-    button_box.setAttribute("class", 'vis-picture-button');
-    button_box.addEventListener("click", () => (this.RemoveCanvas(id)));
-    let button_border = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    button_border.setAttribute("fill", 'white');
-    button_border.setAttribute("r", '12');
-    button_border.setAttribute("cx", '12');
-    button_border.setAttribute("cy", '12');
-    button_border.setAttribute("stroke", 'rgb(221,223,229)');
-    button_border.setAttribute("stroke-width", '1');
-    // button
-    let button = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    button.setAttribute("d", "M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M17,15.59L15.59,17L12,13.41L8.41,17L7,15.59 L10.59,12L7,8.41L8.41,7L12,10.59L15.59,7L17,8.41L13.41,12L17,15.59z")
-    button_box.append(button_border);
-    button_box.append(button);
+        // selection stroke
+        let path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        path.setAttribute("id", id + '.select');
+        path.setAttribute("style", "fill:rgb(186, 219, 228,0.2);stroke:rgb(70,130,180);stroke-width:2px");
+        path.setAttribute("width", this.database[id].width);
+        path.setAttribute("height", this.database[id].height);
+
+        // cancel button
+        let button_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        // button position
+        button_box.setAttribute("transform", "translate(" + (this.database[id].x + (this.database[id].width - 18)) + "," + (this.database[id].y - 8) + ")");
+        button_box.setAttribute("id", id + '.button');
+        button_box.setAttribute("class", 'vis-picture-button');
 
 
-    canvas.append(path);
-    canvas.append(button_box);
-    return canvas;
+        button_box.addEventListener("click", () => {
+            if (this.GetGroupMembers(id).length > 1) {
+                this.bus.$emit("remove-groupCanvas", this.database[id].group_id);
+            }
+            this.RemoveCanvas(id);
+        });
+        let button_border = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        button_border.setAttribute("fill", 'white');
+        button_border.setAttribute("r", '12');
+        button_border.setAttribute("cx", '12');
+        button_border.setAttribute("cy", '12');
+        button_border.setAttribute("stroke", 'rgb(221,223,229)');
+        button_border.setAttribute("stroke-width", '1');
+        // button
+        let button = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        button.setAttribute("d", "M12,2C6.47,2,2,6.47,2,12s4.47,10,10,10s10-4.47,10-10S17.53,2,12,2z M17,15.59L15.59,17L12,13.41L8.41,17L7,15.59 L10.59,12L7,8.41L8.41,7L12,10.59L15.59,7L17,8.41L13.41,12L17,15.59z")
+        button_box.append(button_border);
+        button_box.append(button);
 
+
+        canvas.append(path);
+        this.GetTable().append(button_box);
+        return canvas;
+    }
 }
 
 VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after_y) {
@@ -202,10 +254,12 @@ VisDatabase.prototype.RemoveAllCanvas = function () {
 }
 
 VisDatabase.prototype.CancelSelection = function (id) {
-    this.database[id].status = status.clear;
-    if (document.getElementById(id + '.select') != undefined) {
-        document.getElementById(id + '.select').remove();
-        document.getElementById(id + '.button').remove();
+    if (!!this.database[id]) {
+        this.database[id].status = status.clear;
+        if (document.getElementById(id + '.select') != undefined) {
+            document.getElementById(id + '.select').remove();
+            document.getElementById(id + '.button').remove();
+        }
     }
 }
 
@@ -226,9 +280,15 @@ VisDatabase.prototype.GetCanvas = function (id) {
 }
 
 VisDatabase.prototype.RemoveCanvas = function (id) {
-    if (this.GetCanvas(id) != null) {
-        document.getElementById(id).remove();
+    console.log("delete", id);
+
+    document.getElementById(id).remove();
+    let button = document.getElementById(id + ".button");
+    if (!!button) {
+        button.remove();
     }
+
+    this.RemoveGroupMember(this.GetGroupID(id), id);
     delete this.database[id];
 }
 
@@ -287,6 +347,38 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     return canvas_id;
 }
 
+VisDatabase.prototype.GenRecommendFigs = function (recommendData_array, currentTemplate_obj, currentID) {
+    // 1. set json
+    // 2. append canvas
+    // 3. add canvas object to database
+    // 4. render
+
+    // generate group
+    let group_id = this.GenID();
+    this.group[group_id] = [];
+
+    this.AddGroupMember(group_id, currentID);
+
+    let currentTemplate = currentTemplate_obj;
+
+    recommendData_array.forEach((element) => {
+        let position = element.position;
+        let visData = JSON.parse(element.visData);
+        let metaData = JSON.parse(element.metaData);
+        let id = this.GenFig(
+            position.height,
+            position.width,
+            position.x,
+            position.y,
+            GetTemplate(currentTemplate.name, metaData, visData),
+            visData,
+            metaData
+        );
+        this.AddGroupMember(group_id, id);
+    });
+    return group_id;
+}
+
 VisDatabase.prototype.RenderUnit = function (groupId_str, height_num, width_num, x_num, y_num, dom_obj) {
     // 1. set json
     // 2. append canvas
@@ -336,6 +428,10 @@ VisDatabase.prototype.ObjectData = function () {
     // Get Object data
 }
 
+VisDatabase.prototype.GetTable = function () {
+    return document.getElementById("vis-container");
+}
+
 VisDatabase.prototype.RenderCanvas = function (id) {
     // 1. get meta data
     // 2. tweak meta data
@@ -343,7 +439,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     // 4. append
 
     // let table = document.getElementsByClassName("table-view-svg")[0];
-    let table = document.getElementById("vis-container")
+    let table = this.GetTable();
     let height = this.database[id].height - 1.1;
     let width = this.database[id].width - 1.1;
     let x = this.database[id].x + 0.5;
