@@ -13,7 +13,7 @@
 
     <div class="toolbar" v-if="isHeaderFixed">
       <el-row>
-        <el-col :lg="18" :xl="14">
+        <el-col :lg="20" :xl="17">
           <span class="toolbar-label">Transformation</span>
           <button v-if="isCurrFlat"
             type="primary" plain size="small" 
@@ -73,15 +73,29 @@
             Merge
           </button>
           <span class="toolbar-vertical-separator" />
-          <span class="toolbar-label">Recommendation  Priority</span>
-        </el-col> 
+          <span class="toolbar-label">Recommendation</span>
+          
+          <span class="toolbar-label">Direction</span>
+          <el-select v-model="recommendDirectionValue" multiple placeholder="请选择" size="mini" style="width=155px">
+            <el-option key="row" label="row" value="row" />
+            <el-option key="column" label="column" value="column" />
+          </el-select>
 
-        <el-col :lg="6" :xl="6">
+          <span class="toolbar-label">Priority</span>
+        </el-col>
+
+        <el-col :lg="3" :xl="3">
           <div class="priority-slider"> 
             <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
           </div>
         </el-col>
+
+        <el-col :lg="1" :xl="1">
+          <el-button type="primary" icon="el-icon-check" size="mini" plain style="margin-top:6px"></el-button>
+        </el-col>
+
       </el-row> 
+        
     </div>
 
     <div class="table-view-svg-container" @mousedown="handle_click_on_blank()">
@@ -452,7 +466,8 @@ export default {
       visRerenderAfterPos: {x:0, y:0},
 
       recommendData: [[], [], [], [], []],
-      prioritySliderValue:[0, 5]
+      prioritySliderValue:[0, 5],
+      recommendDirectionValue: ["row", "column"]
     }
   },
 
@@ -1995,7 +2010,7 @@ export default {
       border: none;
       cursor: pointer;
       user-select: none;
-      margin-right:@padding;
+      // margin-right:@padding;
       height: @transform-button-height;
       margin-top:4.5px;
     }
@@ -2012,7 +2027,9 @@ export default {
       font-family: Tahoma, Arial;
       color: #3e87cc;
       cursor: pointer;
-      margin-right:@padding;
+      // margin-right:@padding;
+      padding-left: 6px;
+      padding-right: 6px;
     }
     .toolbar-vertical-separator {
       border-left: 1px solid #cecece;
@@ -2022,14 +2039,21 @@ export default {
       width: 4px;
       user-select: none;
     }
+
+    /deep/.el-input.el-input--mini.el-input--suffix {
+      width: 155px;
+    }
+    /deep/.el-select.el-select--mini {
+      margin-right: 15px;
+    }
+  
     .priority-slider{
       margin-left: @padding;
       position:relative;
-      width:60%;
-      height:100%;
+      width:70%;
     }  
     /deep/ .el-slider__bar{
-        background: #6ba8e2;
+      background: #6ba8e2;
     }  
   }
   
