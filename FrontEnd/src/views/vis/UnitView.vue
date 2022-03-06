@@ -213,6 +213,8 @@ export default {
         shape: this.shape,
         color: this.color,
         relativeSize: this.relativeSize,
+		scale: this.scale,
+		align: this.align
       };
     },
     CloseChannel(tag) {
