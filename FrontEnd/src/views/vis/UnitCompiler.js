@@ -7,19 +7,45 @@ UnitCompiler.GetUnits = function (data_array, config) {
     let [max, min] = findMaxMin(data_array);
 
 	// unitView => config => remap to each array => GetUnitDom
-    data_array = remapValue(data_array, max, min,GetScaleFunction(config.scale));
+	data_array = remapValue(data_array, max, min,GetScaleFunction(config.scale));
+	let lengthBaseLine = findLengthBaseLine(data_array);
+	let size = lengthBaseLine * config.relativeSize/2; // size must exist
+	let height=false;
+  	let width=false;
+	let yOffset=false;
+	let xOffset=false;
 
-    let sizeBaseLine = findLengthBaseLine(data_array);
-    let size = sizeBaseLine * config.relativeSize/2;
+	if (config.encodings.height) {
+		height=true;		
+	}
 
-    console.log("remapped size", size);
+	if (config.encodings.width) {
+		width=true;		
+	}
 
-    for (let i = 0; i < data_array.length; i++) {
-        let generateConfig = {
-            shape: config.shape,
-            color: config.color, // need remap
-            size: data_array[i].value * size
-        }
+	if (config.encodings.yOffset) {
+		yOffset=true;		
+	}
+
+	if (config.encodings.xOffset) {
+		xOffset=true;		
+	}
+
+    
+	for (let i = 0; i < data_array.length; i++) {
+		let generateConfig = {
+			shape: config.shape,
+			color: config.color, // need remap
+			align:config.align,
+			size: data_array[i].value * size,
+			height:height,
+			width:width,
+			yOffset:yOffset,
+			xOffset:xOffset,
+			frameHeight:data_array[i].position.height,
+			frameWidth:data_array[i].position.width,
+			sizeBaseLine:lengthBaseLine
+		}
 
         data_array[i].dom = this.GetUnitDom(generateConfig);
     }
@@ -45,21 +71,16 @@ function findMaxMin(data_array) {
 function GetScaleFunction(scaleType_str) {
 	if (scaleType_str=="linear"||!!!scaleType_str) {
 		return x => 0.8 * x + 0.2;
-
 	}
 	else if (scaleType_str=="log") {
-		return
+		return x => Math.log(x+1)+(1-Math.log(2))
 	}
 	else if (scaleType_str=="sqrt") {
-		return x => {
-			let linear=GetScaleFunction("linear");
-			return linear(x)*linear(x);
-		}
+		return x => GetScaleFunction("linear")(Math.sqrt(x));
 	}
 	else if (scaleType_str=="pow") {
-		return
+		return x => GetScaleFunction("linear")(x*x);
 	}
-	
 }
 
 function remapValue(data_array, max, min,scaleFunction_func) {
@@ -94,9 +115,17 @@ function findLengthBaseLine(data_array) {
 // scale: "linear",
 // align:
 config={
-    shape: "circle / square",
-    color: "",
-    size: number,
+			shape: config.shape,
+			color: config.color, // need remap
+			align:config.align,
+			size: data_array[i].value * size,
+			height:height,
+			width:width,
+			yOffset:yOffset,
+			xOffset:xOffset,
+			frameHeight:data_array[i].position.height,
+			frameWidth:data_array[i].position.width,
+			sizeBaseLine:sizeBaseLine
 }
 */
 UnitCompiler.GetUnitDom = function (config_obj) {
@@ -107,12 +136,62 @@ UnitCompiler.GetUnitDom = function (config_obj) {
             "circle"
         );
         dom.setAttribute("r", config_obj.size);
+		let height=dom.getAttribute("r");
+		let width=dom.getAttribute("r");
+		if (config_obj.align=="middle") {
+		}
+		else if (config_obj.align=="left") {
+			dom.setAttribute("transform", "translate(-"+(config_obj.frameWidth/2-width)+",0)");
+		}
+		else if (config_obj.align=="top") {
+			dom.setAttribute("transform", "translate(0,-"+(config_obj.frameHeight/2-height)+")");
+		}
+		else if (config_obj.align=="right") {
+			dom.setAttribute("transform", "translate("+(config_obj.frameWidth/2-width)+",0)");
+		}
+		else if (config_obj.align=="bottom") {
+			dom.setAttribute("transform", "translate(0,"+(config_obj.frameHeight/2-height)+")");
+		}
+
     }
     else if (config_obj.shape = "square") {
         dom = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "rect"
         );
+		if (config_obj.height) {
+			dom.setAttribute("height", config_obj.size*2);
+			dom.setAttribute("width", 0.7*config_obj.sizeBaseLine);
+		}
+		else if (config_obj.width) {			
+			dom.setAttribute("height", 0.7*config_obj.sizeBaseLine);
+			dom.setAttribute("width", config_obj.size*2);
+		}
+		console.log("config",config_obj)
+		if (config_obj.width == config_obj.height) {
+			dom.setAttribute("width", config_obj.size*2);
+			dom.setAttribute("height", config_obj.size*2);
+		}
+		let height=dom.getAttribute("height");
+		let width=dom.getAttribute("width");
+
+		if (config_obj.align=="middle") {
+			dom.setAttribute("transform", "translate(-"+width/2+",-"+height/2+")");
+		}
+		else if (config_obj.align=="left") {
+			dom.setAttribute("transform", "translate(-"+config_obj.frameWidth/2+",-"+height/2+")");
+		}
+		else if (config_obj.align=="top") {
+			dom.setAttribute("transform", "translate(-"+width/2+",-"+config_obj.frameHeight/2+")");
+		}
+		else if (config_obj.align=="right") {
+			dom.setAttribute("transform", "translate("+(config_obj.frameWidth/2-width)+",-"+height/2+")");
+		}
+		else if (config_obj.align=="bottom") {
+			dom.setAttribute("transform", "translate(-"+width/2+","+(config_obj.frameHeight/2-height)+")");
+		}
+
+
     }
     dom.setAttribute("style", "fill:" + config_obj.color);
 
