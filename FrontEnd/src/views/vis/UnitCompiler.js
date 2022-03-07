@@ -146,7 +146,6 @@ function remapValue(data_array, max, min, scaleFunction_func) {
 	for (let i = 0; i < data_array.length; i++) {
 		const element = data_array[i];
 		let x = (Number(element.value) - min) / baseLine;
-		console.log("remap val:", y(x), "origin:", x, "baseline:", baseLine);
 		data_array[i].originValue = Number(element.value);
 		data_array[i].value = y(x);
 	}

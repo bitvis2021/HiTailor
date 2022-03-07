@@ -14,12 +14,12 @@
         ></el-button>
       </el-row>
 
-      <div v-show="showUnitPanel">
-        <unit-view :currentUnit="currentUnit" :fig="figID"></unit-view>
+      <div v-if="showUnitPanel&&unitData_arr.length>1">
+        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
         <br />
       </div>
       <templates-view
-        v-if="showTemplates"
+        v-else-if="showTemplates"
         v-on:select-template="SelectTemplate"
         :templates="this.templates"
       ></templates-view>
@@ -80,7 +80,7 @@ export default {
   },
   data() {
     return {
-      showTemplates: true,
+      showTemplates: false,
       showUnitPanel: false,
 
       visData: {}, // data from visualize selected data
@@ -95,13 +95,14 @@ export default {
       VisDB: new VisDatabase(this.$bus),
       figID: "",
 
+      dialog_removeAll: false,
+      currentGroupID: "",
+
+      unitData_arr: [],
       currentUnit: {
         position: { x: 0, y: 0, height: 0, width: 0 },
         value: 0,
       },
-
-      dialog_removeAll: false,
-      currentGroupID: "",
     };
   },
   computed: {
@@ -232,7 +233,6 @@ export default {
       if (metaData.x.range == 1 && metaData.y.range == 1) {
         this.currentUnit.position = position;
         this.currentUnit.value = JSON.parse(visData).at(0)["value"];
-        this.OpenUnitView();
       } else {
         this.OpenTemplateView();
       }
@@ -248,6 +248,13 @@ export default {
       );
     });
 
+    this.$bus.$on("visualize-recommendUnit", (data) => {
+      data.push(this.currentUnit);
+      this.unitData_arr = data;
+
+      this.OpenUnitView();
+    });
+
     // User click vis. Restore previous context.
     this.$bus.$on("select-canvas", (id) => {
       this.figID = id;
@@ -259,6 +266,23 @@ export default {
         this.OpenPanelView();
       } else {
         console.log("open Unit");
+        let group = this.VisDB.GetGroupMembers(this.figID);
+        this.unitData_arr = [];
+        for (let i = 0; i < group.length; i++) {
+          let db = this.VisDB.database[group[i]];
+          if (!!db) {
+            let config = {};
+            config.value = db.visData;
+            config.id = db.id;
+            config.position = {
+              x: db.x,
+              y: db.y,
+              height: db.height,
+              width: db.width,
+            };
+            this.unitData_arr.push(config);
+          }
+        }
         this.OpenUnitView();
       }
     });
@@ -292,7 +316,7 @@ export default {
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
     this.$bus.$off("select-canvas");
-
+    this.$bus.$off("visualize-recommendUnit");
     this.$bus.$off("remove-groupCanvas");
   },
 };
@@ -384,3 +408,4 @@ export default {
   }
 }
 </style>
+
