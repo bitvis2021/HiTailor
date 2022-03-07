@@ -411,15 +411,21 @@ VisDatabase.prototype.RenderUnit = function (height_num, width_num, x_num, y_num
 
     let table = document.getElementById("vis-container");
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
     canvas.setAttribute("class", "vis-picture");
     canvas.setAttribute("id", canvas_id);
-
+	
+	let vis = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    vis.setAttribute("style", "fill:rgb(255,255,255)");
+    vis.setAttribute("width", width);
+    vis.setAttribute("height", height);
+	
     // add back ground
+	let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     background.setAttribute("style", "fill:rgb(255,255,255)");
     background.setAttribute("width", width);
     background.setAttribute("height", height);
+	
 
     // add to db
     let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, null, null, null);
@@ -431,10 +437,27 @@ VisDatabase.prototype.RenderUnit = function (height_num, width_num, x_num, y_num
     canvas.append(background);
 
     dom_obj.setAttribute("transform", "translate(" + width_num / 2 + "," + height_num / 2 + ")");
-    dom_obj.setAttribute("viewBox", "0 0 " + width + " " + height);
-    canvas.append(dom_obj);
+    
 
-    table.append(canvas);
+	let clipRef = document.createElementNS("http://www.w3.org/2000/svg","defs");	
+
+	let clip = document.createElementNS("http://www.w3.org/2000/svg","clipPath");
+	clipRef.append(clip);
+	clip.setAttribute("id",canvas_id+"clip");
+	// add back ground
+	let clip_path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    clip_path.setAttribute("width", width);
+    clip_path.setAttribute("height", height);
+	// clip_path.setAttribute("x", x_num);
+	// clip_path.setAttribute("y", y_num);
+	clip.append(clip_path);
+	canvas.append(clipRef);
+	
+	vis.append(dom_obj);
+	vis.setAttribute("clip-path", "url(#"+canvas_id+"clip"+")");
+	canvas.append(vis);
+
+	table.append(canvas);
     return canvas_id;
 }
 

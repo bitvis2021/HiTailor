@@ -64,6 +64,7 @@
                 v-for="disabledEncoding in disabledEncodings"
                 :key="disabledEncoding.name"
                 :command="disabledEncoding"
+                @change="PreviewUnitConfig"
                 >{{ disabledEncoding.name }}</el-dropdown-item
               >
             </el-dropdown-menu>
@@ -83,7 +84,11 @@
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">shape:</div>
-          <el-select v-model="shape" placeholder="select">
+          <el-select
+            v-model="shape"
+            placeholder="select"
+            @change="PreviewUnitConfig"
+          >
             <el-option
               v-for="item in shapes"
               :key="item.value"
@@ -96,7 +101,11 @@
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">scale:</div>
-          <el-select v-model="scale" placeholder="select">
+          <el-select
+            v-model="scale"
+            placeholder="select"
+            @change="PreviewUnitConfig"
+          >
             <el-option
               v-for="item in scales"
               :key="item.value"
@@ -120,7 +129,7 @@
               v-model="relativeSize"
               :step="0.01"
               :min="0"
-              :max="2"
+              :max="3"
               @change="PreviewUnitConfig"
             ></el-slider>
           </div>
@@ -128,7 +137,11 @@
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">align:</div>
-          <el-radio-group v-model="align" size="small">
+          <el-radio-group
+            v-model="align"
+            size="small"
+            @change="PreviewUnitConfig"
+          >
             <el-row type="flex" justify="space-around">
               <el-radio-button label="top"></el-radio-button>
             </el-row>
@@ -158,18 +171,17 @@ export default {
         { value: "circle", label: "circle" },
         { value: "square", label: "square" },
         { value: "triangle", label: "triangle" },
-        { value: "diamond", label: "diamond" },
       ],
-	  scales: [
-	  { value: "linear", label: "linear" },
-	  { value: "pow", label: "pow" },
-	  { value: "log", label: "log" },
-	  { value: "sqrt", label: "sqrt" },
-	  ],
-	  scale: "linear",
-	  shape: "circle",
-	  color: "#4e78a5",
-	  relativeSize: 0.8,
+      scales: [
+        { value: "linear", label: "linear" },
+        { value: "pow", label: "pow" },
+        { value: "log", label: "log" },
+        { value: "sqrt", label: "sqrt" },
+      ],
+      scale: "linear",
+      shape: "circle",
+      color: "#4e78a5",
+      relativeSize: 0.8,
       disabledEncodings: [
         { name: "color" },
         { name: "height" },
@@ -185,11 +197,51 @@ export default {
   methods: {
     PreviewUnitConfig() {
       let chart = document.getElementById("preview-svg");
-      let preview = UnitCompiler.GetUnitDom({
-        shape: this.shape,
-        color: this.color,
-        size: 200 * this.relativeSize,
+      let encodings = {};
+      this.disabledEncodings.forEach((element) => {
+        encodings[element.name] = false;
       });
+      this.enabledEncodings.forEach((element) => {
+        encodings[element.name] = true;
+      });
+
+      let config = this.GetConfig();
+      let height = 200;
+      let width = 350;
+
+      config.size = height * 0.5;
+      config.height = height * 0.5;
+      config.width = height * 0.5;
+
+      config.xOffset = 0;
+      config.yOffset = 0;
+      config.frameHeight = 400;
+      config.frameWidth = 700;
+      
+      if (config.encodings.size) {
+        config.size = height * this.relativeSize;
+        config.height = height * this.relativeSize;
+        config.width = height * this.relativeSize;
+      }
+      if (config.encodings.height) {
+        config.height = height * this.relativeSize;
+      }
+      if (config.encodings.width) {
+        config.width = width * this.relativeSize;
+      }
+
+      if (config.encodings.xOffset) {
+        config.xOffset = 100;
+      }
+      if (config.encodings.yOffset) {
+        config.yOffset = 100;
+      }
+
+      if (config.encodings.opacity) {
+        config.opacity = 0.8;
+      }
+
+      let preview = UnitCompiler.GetUnitDom(config);
 
       preview.setAttribute("transform", "translate(350,200)");
 
@@ -212,17 +264,19 @@ export default {
         shape: this.shape,
         color: this.color,
         relativeSize: this.relativeSize,
-		scale: this.scale,
-		align: this.align
+        scale: this.scale,
+        align: this.align,
       };
     },
     CloseChannel(tag) {
       this.enabledEncodings.splice(this.enabledEncodings.indexOf(tag), 1);
       this.disabledEncodings.push(tag);
+      this.PreviewUnitConfig();
     },
     AddChannel(tag) {
       this.disabledEncodings.splice(this.disabledEncodings.indexOf(tag), 1);
       this.enabledEncodings.push(tag);
+      this.PreviewUnitConfig();
     },
     Apply2Vis() {
       let visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
