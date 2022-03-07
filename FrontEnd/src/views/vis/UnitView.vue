@@ -167,6 +167,7 @@ export default {
   props: ["visData_arr"],
   data() {
     return {
+      currentID: "",
       shapes: [
         { value: "circle", label: "circle" },
         { value: "square", label: "square" },
@@ -217,7 +218,7 @@ export default {
       config.yOffset = 0;
       config.frameHeight = 400;
       config.frameWidth = 700;
-      
+
       if (config.encodings.size) {
         config.size = height * this.relativeSize;
         config.height = height * this.relativeSize;
@@ -281,20 +282,33 @@ export default {
     Apply2Vis() {
       let visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
       let groupId;
-
-      for (let i = 0; i < visData.length; i++) {
-        let position = visData[i].position;
-        let dom = visData[i].dom;
-        groupId = this.VisDB.AddGroupMember(
-          groupId,
-          this.VisDB.RenderUnit(
+      if (this.currentID == "") {
+        for (let i = 0; i < visData.length; i++) {
+          let position = visData[i].position;
+          let dom = visData[i].dom;
+          this.currentID = this.VisDB.GenUnit(
             position.height,
             position.width,
             position.x,
             position.y,
             dom
-          )
-        );
+          );
+          groupId = this.VisDB.AddGroupMember(groupId, this.currentID);
+        }
+      } else {
+        let group = this.VisDB.GetGroupMembers(this.currentID);
+        for (let i = 0; i < group.length; i++) {
+          const id = group[i];
+          let position = visData[i].position;
+          this.VisDB.RerenderCanvas(
+            id,
+            position.x,
+            position.y,
+            position.height,
+            position.width,
+            visData[i].dom
+          );
+        }
       }
     },
   },

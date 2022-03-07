@@ -231,7 +231,7 @@ VisDatabase.prototype.ReconfigAllCanvas = function (pre_x, pre_y, after_x, after
     }
 }
 
-VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width) {
+VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width, newDom_dom) {
     // 1. get new metadata
     // 2. remove old canvas data
     if (x != undefined) {
@@ -239,7 +239,10 @@ VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width) {
         this.database[id].y = y;
         this.database[id].height = height;
         this.database[id].width = width;
+    }
 
+    if (this.database[id].type == "unit" && !!newDom_dom) {
+        this.database[id].dom = newDom_dom;
     }
 
     if (this.GetCanvas(id) != null) {
@@ -366,6 +369,20 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     return canvas_id;
 }
 
+VisDatabase.prototype.GenUnit = function (height_num, width_num, x_num, y_num, dom_obj) {
+
+    let canvas_id = this.GenID();
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, null, null, null);
+    this.database[canvas_id] = metaData;
+    this.database[canvas_id].type = 'unit';
+
+    this.database[canvas_id].dom = dom_obj;
+
+    this.RenderCanvas(canvas_id);
+
+    return canvas_id;
+}
+
 VisDatabase.prototype.GenRecommendFigs = function (recommendData_array, currentTemplate_obj, currentID) {
     // 1. set json
     // 2. append canvas
@@ -400,68 +417,6 @@ VisDatabase.prototype.GenRecommendFigs = function (recommendData_array, currentT
     return group_id;
 }
 
-VisDatabase.prototype.RenderUnit = function (height_num, width_num, x_num, y_num, dom_obj) {
-
-    let height = height_num - 1.1;
-    let width = width_num - 1.1;
-    let x = x_num + 0.5;
-    let y = y_num + 0.5;
-
-    let canvas_id = this.GenID();
-
-    let table = document.getElementById("vis-container");
-    let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
-    canvas.setAttribute("class", "vis-picture");
-    canvas.setAttribute("id", canvas_id);
-	
-	let vis = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    vis.setAttribute("style", "fill:rgb(255,255,255)");
-    vis.setAttribute("width", width);
-    vis.setAttribute("height", height);
-	
-    // add back ground
-	let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    background.setAttribute("style", "fill:rgb(255,255,255)");
-    background.setAttribute("width", width);
-    background.setAttribute("height", height);
-	
-
-    // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, null, null, null);
-    this.database[canvas_id] = metaData;
-    this.database[canvas_id].type = 'unit';
-
-    // click event
-    canvas.addEventListener("click", () => (this.SelectHandler(canvas_id)));
-    canvas.append(background);
-
-    dom_obj.setAttribute("transform", "translate(" + width_num / 2 + "," + height_num / 2 + ")");
-    
-
-	let clipRef = document.createElementNS("http://www.w3.org/2000/svg","defs");	
-
-	let clip = document.createElementNS("http://www.w3.org/2000/svg","clipPath");
-	clipRef.append(clip);
-	clip.setAttribute("id",canvas_id+"clip");
-	// add back ground
-	let clip_path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    clip_path.setAttribute("width", width);
-    clip_path.setAttribute("height", height);
-	// clip_path.setAttribute("x", x_num);
-	// clip_path.setAttribute("y", y_num);
-	clip.append(clip_path);
-	canvas.append(clipRef);
-	
-	vis.append(dom_obj);
-	vis.setAttribute("clip-path", "url(#"+canvas_id+"clip"+")");
-	canvas.append(vis);
-
-	table.append(canvas);
-    return canvas_id;
-}
-
-
 VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
     this.bus = bus_vmObj;
 }
@@ -487,73 +442,116 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let x = this.database[id].x + 0.5;
     let y = this.database[id].y + 0.5;
 
-    let chartJson = JSON.parse(JSON.stringify(this.GetVegaLite(id, height - 0.3, width - 0.3)));
-    console.log("rendering", chartJson);
-
-    let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    if (canvas) {
+    if (this.database[id].type == "unit") {
+        let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
         canvas.setAttribute("id", id);
-        canvas.setAttribute("width", width);
-        canvas.setAttribute("height", height);
         canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
         canvas.setAttribute("class", "vis-picture");
 
+        let vis = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        vis.setAttribute("style", "fill:rgb(255,255,255)");
+        vis.setAttribute("width", width);
+        vis.setAttribute("height", height);
+
         // add back ground
+        let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         background.setAttribute("style", "fill:rgb(255,255,255)");
         background.setAttribute("width", width);
         background.setAttribute("height", height);
 
         // click event
         canvas.addEventListener("click", () => (this.SelectHandler(id)));
+        canvas.append(background);
 
+        let clipRef = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+
+        let clip = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+        clipRef.append(clip);
+        clip.setAttribute("id", id + "clip");
+        // add back ground
+        let clip_path = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        clip_path.setAttribute("width", width);
+        clip_path.setAttribute("height", height);
+
+        clip.append(clip_path);
+        canvas.append(clipRef);
+
+        this.database[id].dom.setAttribute("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        vis.append(this.database[id].dom);
+        vis.setAttribute("clip-path", "url(#" + id + "clip" + ")");
+
+        canvas.append(vis);
         table.append(canvas);
+    }
+    else {
+        let chartJson = JSON.parse(JSON.stringify(this.GetVegaLite(id, height - 0.3, width - 0.3)));
+        console.log("rendering", chartJson);
 
-        // get svg from #gen-chart
-        let tempSvgFragament_Id = "gen-" + id;
+        let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        if (canvas) {
+            canvas.setAttribute("id", id);
+            canvas.setAttribute("width", width);
+            canvas.setAttribute("height", height);
+            canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
+            canvas.setAttribute("class", "vis-picture");
 
-        if (document.getElementById(tempSvgFragament_Id) == undefined) {
-            let svgFragment = document.createElement("div");
-            svgFragment.setAttribute("id", tempSvgFragament_Id);
-            document.getElementById("gen-chart").appendChild(svgFragment);
-        } // it never release
+            // add back ground
+            background.setAttribute("style", "fill:rgb(255,255,255)");
+            background.setAttribute("width", width);
+            background.setAttribute("height", height);
 
-        vegaEmbed("#" + tempSvgFragament_Id, chartJson, {
-            renderer: "svg",
-            actions: false,
-        }).then(() => {
-            // get vis picture
-            let pic =
-                document.getElementById(tempSvgFragament_Id).childNodes[0].childNodes[0];
+            // click event
+            canvas.addEventListener("click", () => (this.SelectHandler(id)));
 
-            // define offset
-            pic.removeAttribute("transform");
-            pic.setAttribute("transform", "translate(" + '-0.3' + "," + '-0.3' + ")");
+            table.append(canvas);
 
-            // pic.removeChild(pic.childNodes[0]);
+            // get svg from #gen-chart
+            let tempSvgFragament_Id = "gen-" + id;
 
-            // append bacground first
-            canvas.append(background);
-            // then add vis picture
-            canvas.append(pic);
+            if (document.getElementById(tempSvgFragament_Id) == undefined) {
+                let svgFragment = document.createElement("div");
+                svgFragment.setAttribute("id", tempSvgFragament_Id);
+                document.getElementById("gen-chart").appendChild(svgFragment);
+            } // it never release
 
-            let defs = document.getElementById(tempSvgFragament_Id).childNodes[0].childNodes[0];
-            canvas.append(defs);
+            vegaEmbed("#" + tempSvgFragament_Id, chartJson, {
+                renderer: "svg",
+                actions: false,
+            }).then(() => {
+                // get vis picture
+                let pic =
+                    document.getElementById(tempSvgFragament_Id).childNodes[0].childNodes[0];
+
+                // define offset
+                pic.removeAttribute("transform");
+                pic.setAttribute("transform", "translate(" + '-0.3' + "," + '-0.3' + ")");
+
+                // pic.removeChild(pic.childNodes[0]);
+
+                // append bacground first
+                canvas.append(background);
+                // then add vis picture
+                canvas.append(pic);
+
+                let defs = document.getElementById(tempSvgFragament_Id).childNodes[0].childNodes[0];
+                canvas.append(defs);
 
 
-            // hidden button
-            let hButton_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            // hidden button position
-            hButton_box.setAttribute("transform", "scale(" + 0.02 + "," + 0.02 + ") translate(-60,-70)");
-            hButton_box.setAttribute("id", id + '.hButton');
-            let hButton = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            hButton.setAttribute("d", "M864 96a64 64 0 0 1 64 64v704a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V160a64 64 0 0 1 64-64h704zM448 544H256l-3.744 0.224a32 32 0 0 0-28.032 28.032L224 576l0.224 3.744a32 32 0 0 0 28.032 28.032L256 608h114.72l-131.84 131.872a32 32 0 0 0-2.688 42.24l2.656 3.04a32 32 0 0 0 42.24 2.656l3.04-2.656L416 653.216V768l0.224 3.744a32 32 0 0 0 63.552 0L480 768v-192l-0.224-3.744a32 32 0 0 0-28.032-28.032L448 544z m128-320a32 32 0 0 0-31.776 28.256L544 256v192l0.224 3.744a32 32 0 0 0 28.032 28.032L576 480h192l3.744-0.224a32 32 0 0 0 28.032-28.032L800 448l-0.224-3.744a32 32 0 0 0-28.032-28.032L768 416h-114.784l131.936-131.872a32 32 0 0 0 2.656-42.24l-2.656-3.04a32 32 0 0 0-42.24-2.656l-3.04 2.656L608 370.72V256l-0.224-3.744A32 32 0 0 0 576 224z")
-            hButton_box.setAttribute("class", 'vis-picture-hButton');
-            hButton_box.append(hButton);
-            hButton_box.addEventListener("click", () => this.MinimizeHandler(id));
-            hButton_box.setAttribute("fill", '#6a9af1');
-            canvas.append(hButton_box);
-        });
+                // hidden button
+                let hButton_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                // hidden button position
+                hButton_box.setAttribute("transform", "scale(" + 0.02 + "," + 0.02 + ") translate(-60,-70)");
+                hButton_box.setAttribute("id", id + '.hButton');
+                let hButton = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                hButton.setAttribute("d", "M864 96a64 64 0 0 1 64 64v704a64 64 0 0 1-64 64H160a64 64 0 0 1-64-64V160a64 64 0 0 1 64-64h704zM448 544H256l-3.744 0.224a32 32 0 0 0-28.032 28.032L224 576l0.224 3.744a32 32 0 0 0 28.032 28.032L256 608h114.72l-131.84 131.872a32 32 0 0 0-2.688 42.24l2.656 3.04a32 32 0 0 0 42.24 2.656l3.04-2.656L416 653.216V768l0.224 3.744a32 32 0 0 0 63.552 0L480 768v-192l-0.224-3.744a32 32 0 0 0-28.032-28.032L448 544z m128-320a32 32 0 0 0-31.776 28.256L544 256v192l0.224 3.744a32 32 0 0 0 28.032 28.032L576 480h192l3.744-0.224a32 32 0 0 0 28.032-28.032L800 448l-0.224-3.744a32 32 0 0 0-28.032-28.032L768 416h-114.784l131.936-131.872a32 32 0 0 0 2.656-42.24l-2.656-3.04a32 32 0 0 0-42.24-2.656l-3.04 2.656L608 370.72V256l-0.224-3.744A32 32 0 0 0 576 224z")
+                hButton_box.setAttribute("class", 'vis-picture-hButton');
+                hButton_box.append(hButton);
+                hButton_box.addEventListener("click", () => this.MinimizeHandler(id));
+                hButton_box.setAttribute("fill", '#6a9af1');
+                canvas.append(hButton_box);
+            });
+        }
     }
 }
 
