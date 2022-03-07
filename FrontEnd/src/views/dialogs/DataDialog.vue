@@ -23,7 +23,7 @@
                 :default-sort = "{prop: 'date', order: 'descending'}"
                 @row-dblclick="dataTableRowDBClick"
                 @row-click="dataTableRowClick"
-                :data="tabularDatasetList"
+                :data="tabularDataObjList"
                 max-height="170"
                 border
                 stripe
@@ -36,13 +36,13 @@
                 </el-table-column>
                 <el-table-column
                   property="row"
-                  label="row"
+                  label="Row"
                   sortable
                   >
                 </el-table-column>
                 <el-table-column
                   property="column"
-                  label="column"
+                  label="Column"
                   sortable
                   show-overflow-tooltip>
                 </el-table-column>
@@ -80,7 +80,7 @@
        fileList: [],
        selectedTabularDataName: null,
        tempSelection: null,
-       tabularDatasetList: sysDatasetObj.tabularDatasetList
+       tabularDataObjList: sysDatasetObj.tabularDataObjList
       } 
     },
     watch: {
@@ -134,32 +134,36 @@
             console.log('upload file ok')
         },
         onBeforeUpload: function(file) {
-            // let self = this
-            // const isJSON = file.type === 'application/json';
-            // const isLt2M = file.size / 1024 / 1024 < 2;
-            // let fileNameArray = this.getExistedFileNameArray()
-            // let notExisted = (fileNameArray.indexOf(file.name) === -1)
-            // if (!isJSON) {
-            //   this.$message.error('The uploaded file must be JSON format!');
-            //   return
-            // }
-            // if (!isLt2M) {
-            //   this.$message.error('The file size can not exceed 2MB!');
-            //   return
-            // }
-            // if (!notExisted) {
-            //   this.$message.error('The file name is existed!');   
-            //   return 
-            // }
-            // var reader = new FileReader();
-            // reader.readAsText(file, 'utf-8');
-            // reader.onload = function(e) {
-                
-            // }
-            // return (isJSON && isLt2M && notExisted);
+            let self = this
+            console.log('file', file)
+            const isJSON = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            let fileNameArray = this.getExistedFileNameArray()
+            let notExisted = (fileNameArray.indexOf(file.name) === -1)
+            if (!isJSON) {
+              this.$message.error('The uploaded file must be JSON format!');
+              return
+            }
+            if (!isLt2M) {
+              this.$message.error('The file size can not exceed 2MB!');
+              return
+            }
+            if (!notExisted) {
+              this.$message.error('The file name is existed!');   
+              return 
+            }
+            var reader = new FileReader();
+            reader.readAsText(file, 'utf-8');
+            reader.onload = function(evt) {
+               let fileString = evt.target.result // content
+               console.log('fileString', fileString)
+            }
+            return (isJSON && isLt2M && notExisted);
         },
         getExistedFileNameArray: function() {
+            // TODO
             let fileNameArray = []
+            return fileNameArray
         },
         handlePreview: function(file) {
         },
@@ -170,7 +174,7 @@
         handleRemove: function() {
         },
         handleDelete: function(index, row) {
-            this.tabularDatasetList.splice(index, 1)
+            this.tabularDataObjList.splice(index, 1)
             let dataObj = {
                 username: row.username,
                 filename: row.filename,
@@ -183,16 +187,16 @@
             this.promptMessage(resData.type, resData.message)
         },
         setCurrent(fileName) {
-            for (let i = 0; i < this.tabularDatasetList.length; i++) {
-                let treeDataObj = this.tabularDatasetList[i]
+            for (let i = 0; i < this.tabularDataObjList.length; i++) {
+                let treeDataObj = this.tabularDataObjList[i]
                 if (treeDataObj.fileName === fileName) {
-                    let row = this.tabularDatasetList[i]
+                    let row = this.tabularDataObjList[i]
                     this.$refs.treeDataTable.setCurrentRow(row);
                 }
             }
         },
         updateSelectedTreeDatasetName: function (selectedFileName) {
-            this.$emit('updateSelectedTreeDatasetName', selectedFileName)
+            sysDatasetObj.updateSelectedTabularDataset(selectedFileName)
         },
         promptMessage: function(type, message) {
             this.$message({

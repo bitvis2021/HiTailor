@@ -24,7 +24,7 @@ export function get_pos_for_transmission(top, bottom, left, right, markWidth, ma
     return pos
 }
 
-function get_data_from_chosen(top, bottom, left, right, headerRange, valueDistribution, seq2num) {
+export function get_data_from_chosen(top, bottom, left, right, headerRange, valueDistribution, seq2num) {
     var res=[]
     for (var i=top; i<=bottom; i++) {
         for (var j=left; j<=right; j++) {

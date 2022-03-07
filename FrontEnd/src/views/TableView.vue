@@ -13,7 +13,7 @@
 
     <div class="toolbar" v-if="isHeaderFixed">
       <el-row>
-        <el-col :lg="18" :xl="14">
+        <el-col :lg="20" :xl="16">
           <span class="toolbar-label">Transformation</span>
           <button v-if="isCurrFlat"
             type="primary" plain size="small" 
@@ -21,22 +21,22 @@
             @click="transform_unfold()" > 
             Unfold
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="transform_fold()" > 
             Fold
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat" 
             class="button"
             @click="transform_transpose()" > 
             Transpose
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="handle_transform_swap('FALL 2001', false)" > 
             Swap
           </button>
-          <button type="primary" plain size="small" 
+          <button type="primary" plain size="small" v-if="!isCurrFlat" 
             class="button"
             @click="handle_transform_2stacked_button()" > 
             ToStacked
@@ -46,14 +46,12 @@
             @click="handle_transform_2linear('HUMANITIES', 0)" > 
             ToLinear
           </button> -->
-
-          <el-dropdown @command="handle_transform_2linear_dropdown">
+          <el-dropdown @command="handle_transform_2linear_dropdown"  v-if="!isCurrFlat">
             <div class="drop-down-button">
               <span class="el-dropdown-link">
                 ToLinear<i class="el-icon-arrow-down el-icon--right"></i>
               </span>
             </div>
-
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="sum">Sum</el-dropdown-item>
               <el-dropdown-item command="avg">Average</el-dropdown-item>
@@ -61,27 +59,46 @@
               <el-dropdown-item command="min">Min</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-
-          <button type="primary" plain size="small" 
+          <!-- <button type="primary" plain size="small" 
             class="button"
             @click="transform_derive()" > 
             Derive
-          </button>
-          <button type="primary" plain size="small" 
+          </button> -->
+          <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="transform_merge()" > 
             Merge
           </button>
-          <span class="toolbar-vertical-separator" />
-          <span class="toolbar-label">Recommendation  Priority</span>
-        </el-col> 
 
-        <el-col :lg="6" :xl="6">
-          <div class="priority-slider"> 
-            <el-slider v-model="prioritySliderValue" range show-stops :max="5"></el-slider> 
+          <div class="recommend-element">
+            <span class="toolbar-vertical-separator" />
+            <span class="toolbar-label">Recommendation</span>
+            <span class="toolbar-label" style="color:#3e87cc">Direction</span>
+            <el-select v-model="directionSelectValue" multiple placeholder="Select" size="mini" style="width=155px">
+              <el-option key="row" label="row" value="row" />
+              <el-option key="column" label="column" value="column" />
+            </el-select>
+            <span class="toolbar-label" style="color:#3e87cc">Priority</span>
           </div>
         </el-col>
+
+        <el-col :lg="2" :xl="3" class="recommend-element">
+          <div class="priority-slider"> 
+            <el-slider v-model="prioritySliderValue" range show-stops :max="directionSelectValue.length==2 ? 5 : (directionSelectValue.length==0 ? 0 : 2)"></el-slider> 
+          </div>
+        </el-col>
+
+        <el-col :lg="2" :xl="2" class="recommend-element">
+          <el-button id="recommend-apply-button" type="primary" icon="el-icon-check" size="mini" plain style="margin-top:6px" circle
+            @click="confirm_recommendation()">
+          </el-button>
+          <el-button id="recommend-apply-button" type="danger" icon="el-icon-close" size="mini" plain style="margin-top:6px" circle
+            @click="cancel_recommendation()">
+          </el-button>
+        </el-col>
+
       </el-row> 
+        
     </div>
 
     <div class="table-view-svg-container" @mousedown="handle_click_on_blank()">
@@ -371,7 +388,7 @@
     import { mapState, mapMutations } from 'vuex';
     import { get_column_header, cal_header_range, get_row_header, get_cell_sequence} from './table/CreateModel.js'
     import { get_reference_node, cal_recommendation_by_one_reference, cal_recommendation_by_two_references} from './table/GetRecommendation.js'
-    import { get_unit_data_for_transmission, get_data_for_transmission, get_pos_for_transmission} from './table/GetSendingData.js'
+    import { get_unit_data_for_transmission, get_data_for_transmission, get_pos_for_transmission, get_data_from_chosen} from './table/GetSendingData.js'
     import { reduce } from 'vega-lite/build/src/encoding';
 
 export default {
@@ -389,7 +406,7 @@ export default {
       markLinePadding: 8,
       cellMin: 15,
 
-      tabularDatasetList: null,
+      selectedTabularData: null,
       rowDistributionList: [],  // Record the start and end of each cell for each row
       dataValueList: [],
 
@@ -451,8 +468,11 @@ export default {
       visRerenderPrePos: {x:0, y:0},
       visRerenderAfterPos: {x:0, y:0},
 
+      isChoosingUnit: false,
+
       recommendData: [[], [], [], [], []],
-      prioritySliderValue:[0, 5]
+      prioritySliderValue:[0, 5],
+      directionSelectValue: ["row", "column"]
     }
   },
 
@@ -626,6 +646,7 @@ export default {
       }
     },
     handle_mouse_down_mask(event) {
+      this.clear_selected_header()
       this.cal_mouse_over_cell(event.offsetX, event.offsetY)
 
       this.selectByMark.row = false
@@ -723,7 +744,15 @@ export default {
       
       if (this.mouseDownMaskState && this.isHeaderFixed) {
         if (this.selectedArea.top > this.headerRange.bottom && this.selectedArea.left > this.headerRange.right) {
-          this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
+          if (this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left == this.selectedArea.right)  {// single unit recommend here
+            this.isChoosingUnit = true
+            this.show_recommend_element(true)
+            this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
+          }
+          else {
+            this.isChoosingUnit = false
+            this.hide_recommend_element()
+          }
           this.transmit_chosen_to_vis(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right)
         }
         this.mouseDownMaskState = false
@@ -791,19 +820,51 @@ export default {
       }
     },
 
-    clear_selected_cell() {
+    clear_selected_cell(clearRecommend=false) {
       this.selectedCell = {cstart:null, cend:null, rstart:null, rend:null}
       this.selectedArea = {top:null, left:null, bottom:null, right:null}
       this.selectedMark = {index:null, type:null}
       this.selectByMark = {row:false, column:false}
 
       // cancel recommend
-      d3.selectAll(".recommend-helper").remove()
+      if (clearRecommend) {
+        d3.selectAll(".recommend-helper").remove()
+      }
     },
     clear_selected_header() {
       this.selectedHeader = null
       d3.select("#interaction-helper").remove()
       d3.select("#interaction-helper-line").remove()
+    },
+    clear_recommendation_area() {
+      d3.selectAll(".recommend-helper").remove()
+      this.recommendData = null
+    },
+    hide_recommend_element() {
+      d3.selectAll(".recommend-element").style("visibility", "hidden")
+    },
+    show_recommend_element(notShowButton=false) {
+      this.directionSelectValue = ["row", "column"]
+      d3.selectAll(".recommend-element").style("visibility", "visible")
+      // if (notShowButton) {
+      //   d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
+      // }
+    },
+    cancel_recommendation() {
+      this.clear_selected_cell()
+      this.clear_recommendation_area()
+      this.hide_recommend_element()
+    },
+    confirm_recommendation() {
+      if (this.isChoosingUnit) {
+        this.transmit_unit_recommendation_to_vis()
+      }
+      else {
+        this.transmit_recommendation_to_vis()
+      }
+      this.hide_recommend_element()
+      this.clear_recommendation_area()
+      this.clear_selected_cell()
     },
 
     handle_transform_swap(name, isSwapUp) {
@@ -830,28 +891,102 @@ export default {
     handle_transform_2stacked_button() {
       if (this.selectedHeader == null)  return
       var name = this.selectedHeader.name
-      var times = this.selectedHeader.times
-      var distributionInfo = this.headerDistribution.get(name)
-      if (distributionInfo.isRowHeader) {
-        this.transform_2stacked(name, this.rowHeader, times, true)
-      }
-      else {
-        this.transform_2stacked(name, this.colHeader, times, false)
-      }
-      this.clear_selected_header()
-    },
-    handle_transform_2linear_dropdown(command) {
-      if (this.selectedHeader == null)  return
-      var name = this.selectedHeader.name, times = this.selectedHeader.times
+      // var times = this.selectedHeader.times
       var distributionInfo = this.headerDistribution.get(name)
       var layer = distributionInfo.layer
       var isRow = distributionInfo.isRowHeader 
       var header = isRow ? this.rowHeader: this.colHeader
-      var headerInfo = header[layer].get(name)
-      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
-        isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
-      else {  // already linear
-        return
+
+      for (var [key, headerInfo] of header[layer]) {
+        var ranges = headerInfo.range
+        for (var times=0; times<ranges.length; times++) {
+          if (isRow) {
+            this.transform_2stacked(key, this.rowHeader, times, true)
+            for (var item of this.num2header) {
+              if (this.headerDistribution.get(item[1].value).isRowHeader) {
+                this.cal_row_header_position(item[1].value, item[1].times)
+              }
+            }
+            this.cal_range_list(this.markRowHeightList, "mark height")
+            this.cal_range_list(this.rowHeightList, "height")
+          }
+          else {
+            this.transform_2stacked(key, this.colHeader, times, false)
+            for (var item of this.num2header) {
+              if (!this.headerDistribution.get(item[1].value).isRowHeader) {
+                this.cal_column_header_position(item[1].value, item[1].times)
+              }
+            }
+            this.cal_range_list(this.markColumnWidthList, "mark width")
+            this.cal_range_list(this.columnWidthList, "width")
+
+          }
+          
+          // recalculate value-cell position
+          for (var item of this.num2seq) {
+            this.cal_value_cell_position(item[1].seq)
+          }
+        }
+      }
+      this.clear_selected_header()
+      // if (distributionInfo.isRowHeader) {
+      //   this.transform_2stacked(name, this.rowHeader, times, true)
+      // }
+      // else {
+      //   this.transform_2stacked(name, this.colHeader, times, false)
+      // }
+      // this.clear_selected_header()
+    },
+    handle_transform_2linear_dropdown(command) {
+      if (this.selectedHeader == null)  return
+      var name = this.selectedHeader.name
+      // var times = this.selectedHeader.times
+      var distributionInfo = this.headerDistribution.get(name)
+      var layer = distributionInfo.layer
+      var isRow = distributionInfo.isRowHeader 
+      var header = isRow ? this.rowHeader: this.colHeader
+      // var headerInfo = header[layer].get(name)
+      // if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
+      //   isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
+      // else {  // already linear
+      //   return
+      // }
+
+      for (var [key, headerInfo] of header[layer]) {
+        var ranges = headerInfo.range
+        for (var times=0; times<ranges.length; times++) {
+          if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  { // is stacked
+            if (isRow) {
+              this.transform_2linear(key, this.rowHeader, times, isRow, command)
+              for (var item of this.num2header) {
+                if (this.headerDistribution.get(item[1].value).isRowHeader) {
+                  this.cal_row_header_position(item[1].value, item[1].times)
+                }
+              }
+              this.cal_range_list(this.markRowHeightList, "mark height")
+              this.cal_range_list(this.rowHeightList, "height")
+            }
+            else {
+              this.transform_2linear(key, this.colHeader, times, isRow, command)
+              for (var item of this.num2header) {
+                if (!this.headerDistribution.get(item[1].value).isRowHeader) {
+                  this.cal_column_header_position(item[1].value, item[1].times)
+                }
+              }
+              this.cal_range_list(this.markColumnWidthList, "mark width")
+              this.cal_range_list(this.columnWidthList, "width")
+
+            }
+            
+            // recalculate value-cell position
+            for (var item of this.num2seq) {
+              this.cal_value_cell_position(item[1].seq)
+            }
+          }
+          else {  // already linear todo change operator
+            continue
+          }
+        }
       }
       this.clear_selected_header()
     },
@@ -861,7 +996,7 @@ export default {
       this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
-        this.flatData = this.get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1)
+        this.flatData = get_data_from_chosen(this.headerRange.bottom+1, this.rowHeightList.length-1, this.headerRange.right+1, this.columnWidthList.length-1, this.headerRange, this.valueDistribution, this.seq2num)
         if (this.flatAttrName == null) {
           this.flatAttrName = []
           for (var i=0; i<this.flatData[0].length; i++) {
@@ -1302,7 +1437,7 @@ export default {
               res = min
               break
           }
-          // res = res.toFixed(1)
+
           this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
           this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
         }
@@ -1329,17 +1464,6 @@ export default {
           }
           arrseq.splice(flag, 0, newChild)
           seq = new Set(arrseq)
-
-          // // calculate sum
-          // var res = 0          
-          // for (var j=range.start; j<=range.end; j++) {
-          //   var curSeq = this.valueDistribution.get([i,j].toString())
-          //   var v = this.seq2num.get(curSeq).value
-          //   res += Number(v)
-          // } 
-          // res = res.toFixed(1)
-          // this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
-          // this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
 
           var res, tmpdata = []
           var sum = 0, count = 0, avg, min, max      
@@ -1368,7 +1492,6 @@ export default {
               res = min
               break
           }
-          // res = res.toFixed(1)
           this.num2seq.set(this.valueIndex, {"value":res, "seq":seq})
           this.seq2num.set(seq, {"value":res,"num":this.valueIndex++})
         }
@@ -1448,20 +1571,35 @@ export default {
       console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
 
-      // single unit, send recommendation too
-      if (top==bottom && left==right) {
-        this.transmit_unit_recommendation_to_vis()
-      }
+      // // single unit, send recommendation too
+      // if (top==bottom && left==right) {
+      //   this.transmit_unit_recommendation_to_vis()
+      // }
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
       var data = this.recommendData
+
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
+      var direction = this.directionSelectValue
+      var typeArray
+        if (direction.length == 2) {
+          typeArray=[0, 1, 2]
+        }
+        else if (direction.length == 0) {
+          typeArray=[]
+        }
+        else {
+          if (direction[0] == "row") typeArray=[0]
+          else if (direction[0] == "column") typeArray=[1]
+        }
+
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          var area = data[i][j]
+          if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+          var area = data[i][j].area
           var top = area.top+this.headerRange.bottom+1
           var bottom = area.bottom+this.headerRange.bottom+1
           var left = area.left+this.headerRange.right+1
@@ -1482,12 +1620,27 @@ export default {
     transmit_unit_recommendation_to_vis() {
       var dataArray = []
       var data = this.recommendData
+      
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
+      var direction = this.directionSelectValue
+      var typeArray
+        if (direction.length == 2) {
+          typeArray=[0, 1, 2]
+        }
+        else if (direction.length == 0) {
+          typeArray=[]
+        }
+        else {
+          if (direction[0] == "row") typeArray=[0]
+          else if (direction[0] == "column") typeArray=[1]
+        }
+
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          var area = data[i][j]
+          if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+          var area = data[i][j].area
           var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
 
           var top = area.top+this.headerRange.bottom+1
@@ -1520,38 +1673,43 @@ export default {
       // only use colRefer(same row)
       if (colRefer.length != 0) {
         cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri, 
-          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue)
+          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue)
       }
       
       // only use rowRefer(same column)
       if (rowRefer.length != 0) {
         cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri, 
-          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue)
+          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue)
       }
 
       // use colRefer & rowRefer
       if (colRefer.length!=0 && rowRefer.length!=0) {
         // priority 3 = 1 + 1
         var pri3 = cal_recommendation_by_two_references(pri, 0, 0, 3, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue) 
         this.recommendData[2] = pri3
 
         // priority 4 = 1 + 2 = 2 + 1
         var prii = cal_recommendation_by_two_references(pri, 0, 1, 4, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
-        var pri4 = prii.concat(cal_recommendation_by_two_references(pri, 1, 0, 4, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) )
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) 
+        var pri4 = prii.concat(cal_recommendation_by_two_references(pri, 1, 0, 4, this.markWidth, this.markHeight, 
+          this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) )
         this.recommendData[3] = pri4
 
         // priority 5 = 2 + 2
         var pri5 = cal_recommendation_by_two_references(pri, 1, 1, 5, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue) 
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+          this.prioritySliderValue, this.directionSelectValue) 
         this.recommendData[4] = pri5
       }
     },
 
     before_header_interaction(id, isRowHeader, name, times, layer) {
       if (this.selectedArea.top!=null) {
-        this.clear_selected_cell()
+        this.clear_selected_cell(true)
         return
       }
 
@@ -1702,39 +1860,98 @@ export default {
         handler: function(data) {
           var prefix = "#recommend-helper-", name = ""
           var min=data[0], max=data[1]
+          var direct = this.directionSelectValue
 
-          for (var i=0; i<min; i++) {
-            name = prefix + i
-            d3.selectAll(name).style("visibility", "hidden")
+          var typeArray
+          if (direct.length == 2) {
+            typeArray=[0, 1, 2]
+          }
+          else if (direct.length == 0) {
+            typeArray=[]
+          }
+          else {
+            if (direct[0] == "row") typeArray=[0]
+            else if (direct[0] == "column") typeArray=[1]
+          }
+
+          for (var j=0; j<typeArray.length; j++) {
+            var type = typeArray[j]
+            for (var i=0; i<min; i++) {
+              name = prefix + i + "-" + type
+              d3.selectAll(name).style("visibility", "hidden")
+            }
+
+            for (var i=min; i<=max; i++) {
+              name = prefix + i +"-" + type
+              d3.selectAll(name).style("visibility", "visible")
+            }
+
+            for (var i=max+1; i<=5; i++) {
+              name = prefix + i + "-" + type
+              d3.selectAll(name).style("visibility", "hidden")
+            }
+          }
+          
+          // if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
+          //   this.transmit_unit_recommendation_to_vis()
+          // }
+        }
+      },
+      directionSelectValue: {
+        deep: true,
+        handler: function(data) {
+          var prefix = "#recommend-helper-", name = ""
+          var pri = this.prioritySliderValue
+          var min=pri[0], max=pri[1]
+
+          var show, hide
+          if (data.length == 2) {
+            show=[0, 1, 2]
+            hide=[]
+          }
+          else if (data.length == 0) {
+            show=[]
+            hide=[0, 1, 2]
+          }
+          else {
+            if (data[0] == "row") {
+              show=[0]
+              hide=[1, 2]
+
+            }
+            else if (data[0] == "column") {
+              show=[1]
+              hide=[0, 2]
+            }
           }
 
           for (var i=min; i<=max; i++) {
-            name = prefix + i
-            d3.selectAll(name).style("visibility", "visible")
-          }
+            for (var j=0; j<show.length; j++) {
+              var type = show[j]
+              name = prefix + i +"-" + type
+              d3.selectAll(name).style("visibility", "visible")
+            }
 
-          for (var i=max+1; i<=5; i++) {
-            name = prefix + i
-            d3.selectAll(name).style("visibility", "hidden")
-          }
-          
-          if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
-            this.transmit_unit_recommendation_to_vis()
+            for (var j=0; j<hide.length; j++) {
+              var type = hide[j]
+              name = prefix + i +"-" + type
+              d3.selectAll(name).style("visibility", "hidden")
+            }
           }
         }
-      }
-      
+      }      
   },
 
   beforeMount: function() {
-    this.tabularDatasetList = sysDatasetObj.tabularDatasetList 
+    this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"]
+    console.log('selectedTabularData', this.selectedTabularData)
     this.headerDistribution = new Map
     this.valueDistribution = new Map
     this.num2header = new Map
     this.header2num = new Map
 
     // set column width to be the same
-    var row = this.tabularDatasetList[0]
+    var row = this.selectedTabularData[0]
     var item
     for (item in row) {
       var lengthList = row[item].length, len
@@ -1744,18 +1961,18 @@ export default {
       }
     }
   
-    var rcount = this.tabularDatasetList.length
+    var rcount = this.selectedTabularData.length
     for (var i=0; i<rcount; i++) {
       this.rowHeightList.push(this.cellHeight)
       this.markRowHeightList.push(this.cellHeight)
     }
 
     var rindex
-    for (rindex in this.tabularDatasetList) {
+    for (rindex in this.selectedTabularData) {
       var cindex
       var r = [], rvalue = []
-      for (cindex in this.tabularDatasetList[rindex]) {
-        var item = this.tabularDatasetList[rindex][cindex]
+      for (cindex in this.selectedTabularData[rindex]) {
+        var item = this.selectedTabularData[rindex][cindex]
         var range = {start:item.start, end:item.end}
         r.push(range)
         rvalue.push(item.value)
@@ -1766,15 +1983,15 @@ export default {
 
     // automatically fix header
     // range-right
-    for (var i=0; i<this.tabularDatasetList[0].length; i++) {
-      if (this.tabularDatasetList[0][i].value!='None' && this.tabularDatasetList[0][i].value!='' && this.tabularDatasetList[0][i].value!=' ') {
-        this.headerRange.right = this.tabularDatasetList[0][i].start-1
+    for (var i=0; i<this.selectedTabularData[0].length; i++) {
+      if (this.selectedTabularData[0][i].value!='None' && this.selectedTabularData[0][i].value!='' && this.selectedTabularData[0][i].value!=' ') {
+        this.headerRange.right = this.selectedTabularData[0][i].start-1
         break
       }
     }
     // range-bottom
-    for (var i=0; i<this.tabularDatasetList.length; i++) {
-      if (this.tabularDatasetList[i][0].value!='None' && this.tabularDatasetList[i][0].value!='' && this.tabularDatasetList[i][0].value!=' ') {
+    for (var i=0; i<this.selectedTabularData.length; i++) {
+      if (this.selectedTabularData[i][0].value!='None' && this.selectedTabularData[i][0].value!='' && this.selectedTabularData[i][0].value!=' ') {
         this.headerRange.bottom =i-1
         break
       }
@@ -1809,7 +2026,8 @@ export default {
   },
 
   mounted: function() {
-    console.log('this.tabularDatasetList', this.tabularDatasetList)
+    this.hide_recommend_element()
+    console.log('this.selectedTabularData', this.selectedTabularData)
     console.log('this.columnWidthList',this.columnWidthList)
     console.log("this.rowHeightList", this.rowHeightList)
     console.log("this.rowDistributionList", this.rowDistributionList)
@@ -1818,12 +2036,13 @@ export default {
     console.log("this.dataValueList", this.dataValueList)
     
     this.$bus.$on("apply-config", () => {
-      console.log("send recommendation data")
       if (!(this.selectedArea.left==this.selectedArea.right && this.selectedArea.top==this.selectedArea.bottom)) {
-        this.transmit_recommendation_to_vis()
+        // this.transmit_recommendation_to_vis()
         console.log("not single unit")
+        this.show_recommend_element()
+        this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
       }
-      this.clear_selected_cell()
+      this.clear_selected_cell(false)
     })
 
     this.$bus.$on("select-canvas", () => {
@@ -1995,7 +2214,7 @@ export default {
       border: none;
       cursor: pointer;
       user-select: none;
-      margin-right:@padding;
+      // margin-right:@padding;
       height: @transform-button-height;
       margin-top:4.5px;
     }
@@ -2012,7 +2231,9 @@ export default {
       font-family: Tahoma, Arial;
       color: #3e87cc;
       cursor: pointer;
-      margin-right:@padding;
+      // margin-right:@padding;
+      padding-left: 6px;
+      padding-right: 6px;
     }
     .toolbar-vertical-separator {
       border-left: 1px solid #cecece;
@@ -2022,15 +2243,38 @@ export default {
       width: 4px;
       user-select: none;
     }
+    .recommend-element{
+      display: inline;
+    }
+
+    // direction select
+    /deep/.el-input__suffix {
+      transition: 0s;
+
+    }
+    /deep/.el-input.el-input--mini.el-input--suffix {
+      width: 155px;
+    }
+    /deep/.el-select.el-select--mini {
+      margin-right: 15px;
+    }
+
+    // priority slider
     .priority-slider{
       margin-left: @padding;
+      margin-top: 2px;
       position:relative;
-      width:60%;
-      height:100%;
+      width:80%;
     }  
     /deep/ .el-slider__bar{
-        background: #6ba8e2;
+      background: #6ba8e2;
     }  
+    /deep/.el-slider__button {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transition: 0s;
+    }
   }
   
   .table-view-svg-container {

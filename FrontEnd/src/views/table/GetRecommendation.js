@@ -118,7 +118,7 @@ export function get_reference_node(header, start, end, isRow, hasTransposed) {
     return res
 }
 
-export function cal_recommendation_by_one_reference(refer, top, bottom, left, right, header, isRow, res, recommendData, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue) {
+export function cal_recommendation_by_one_reference(refer, top, bottom, left, right, header, isRow, res, recommendData, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue) {
     var layer = refer[0].layer
     var hasLinear = refer[0].hasLinear
     var isLinear = refer[0].isLinear
@@ -144,8 +144,11 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
 
                     var tmp = {pos: pos, priority: priority}
                     res[priority-1].row.push(tmp)
-                    recommendData[priority-1].push(pos)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+                    
+                    var type = 1
+                    var ttmp = {area: pos, type: type}
+                    recommendData[priority-1].push(ttmp)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, type)
                 }
                 else {
                     pos.top = top
@@ -159,8 +162,11 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
                     pos.right = ranges[i].end
                     var tmp = {pos: pos, priority: priority}
                     res[priority-1].column.push(tmp)
-                    recommendData[priority-1].push(pos)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+
+                    var type = 0
+                    var ttmp = {area: pos, type: type}
+                    recommendData[priority-1].push(ttmp)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, type)
                 }
             }
         }
@@ -211,8 +217,11 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
 
                 var tmp = {pos: pos, priority: priority}
                 res[priority-1].row.push(tmp)
-                recommendData[priority-1].push(pos)
-                draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+
+                var type = 1
+                var ttmp = {area: pos, type: type}
+                recommendData[priority-1].push(ttmp)
+                draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, type)
             }
             else {
                 pos.top = top
@@ -222,14 +231,17 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
 
                 var tmp = {pos: pos, priority: priority}
                 res[priority-1].column.push(tmp)
-                recommendData[priority-1].push(pos)
-                draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+
+                var type = 0
+                var ttmp = {area: pos, type: type}
+                recommendData[priority-1].push(ttmp)
+                draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, type)
             }
         }
     }
 }
 
-export function cal_recommendation_by_two_references(prilist, rpri, cpri, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue) {
+export function cal_recommendation_by_two_references(prilist, rpri, cpri, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue) {
     var res = []
     for (var i=0; i<prilist[rpri].row.length; i++) {
       for (var j=0; j<prilist[cpri].column.length; j++) {
@@ -239,14 +251,16 @@ export function cal_recommendation_by_two_references(prilist, rpri, cpri, priori
         pos.left = prilist[cpri].column[j].pos.left
         pos.right = prilist[cpri].column[j].pos.right
 
-        res.push(pos)
-        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue)
+        var type = 2
+        var tmp = {area: pos, type: type}
+        res.push(tmp)
+        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, type)
       }
     }
     return res
 }
 
-function draw_recommendation_area(top, bottom, left, right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue) {
+function draw_recommendation_area(top, bottom, left, right, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, type) {
     var color
     switch(priority) {  // choose color by priority
       case 1:
@@ -266,7 +280,7 @@ function draw_recommendation_area(top, bottom, left, right, priority, markWidth,
         break
     }
     var area = d3.select("#recommendation-area-container")
-    area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority).datum(priority)
+    area.append("rect").attr("class", "recommend-helper").attr("id", "recommend-helper-"+priority+"-"+type).datum({priority:priority, type:type})
         .attr("x", markWidth + widthRangeList[left+headerRange.right+1])
         .attr("y", markHeight + heightRangeList[top+headerRange.bottom+1])
         .attr("width", widthRangeList[right+1+headerRange.right+1] - widthRangeList[left+headerRange.right+1])
@@ -276,8 +290,13 @@ function draw_recommendation_area(top, bottom, left, right, priority, markWidth,
         .style("fill", color)
         .style("fill-opacity", "40%")
         .style("visibility", function(d) { 
-          if (d >= prioritySliderValue[0] && d <= prioritySliderValue[1])       
-            return "visible"
+          if (d.priority >= prioritySliderValue[0] && d.priority <= prioritySliderValue[1]) {
+            if (type==0&&directionSelectValue.includes("row") || type==1&&directionSelectValue.includes("column") || type==2&&directionSelectValue.length==2)
+                return "visible"
+            else {
+                return "hidden" 
+            }
+          }      
           else {
             return "hidden" 
           }
