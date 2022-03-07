@@ -74,17 +74,14 @@ VisDatabase.prototype.SelectHandler = function (id) {
         }
 
         if (this.database[id].status == status.clear) {
-            // this.SelectCanvas(id);
-            // this.bus.$emit("select-canvas", id);
-
             for (let i = 0; i < this.GetGroupMembers(id).length; i++) {
                 const otherID = this.GetGroupMembers(id)[i];
 
                 this.SelectCanvas(otherID);
             }
-            if (this.database[id].type === 'vega') {
-                this.bus.$emit("select-canvas", id);
-            }
+
+            this.bus.$emit("select-canvas", id);
+
             this.AddCloseButton(id);
         }
         else if (this.database[id].status == status.select) {
@@ -319,14 +316,14 @@ let status = {
     select: 'select'
 }
 
-function visMetaData(id, x, y, height, width, vegaTemplate, visData_arr, metaData_obj) {
+function visMetaData(id, x, y, height, width, vegaTemplate, visData_obj, metaData_obj) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.height = height;
     this.width = width;
     this.vegaTemplate = vegaTemplate;
-    this.visData = visData_arr
+    this.visData = visData_obj
     this.metaData = metaData_obj
     this.status = status.clear;
 }
@@ -353,7 +350,7 @@ VisDatabase.prototype.GetTemplate = function (id) {
 // table id==table-view-svg
 // vis generator==gen-chart
 
-VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj, visData_arr, metaData_obj) {
+VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, template_obj, visData_obj, metaData_obj) {
     // 1. set json
     // 2. append canvas
     // 3. add canvas object to database
@@ -362,17 +359,17 @@ VisDatabase.prototype.GenFig = function (height_num, width_num, x_num, y_num, te
     let canvas_id = this.GenID();
 
     // add to db
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_arr, metaData_obj);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, template_obj, visData_obj, metaData_obj);
     this.database[canvas_id] = metaData;
     this.database[canvas_id].type = 'vega';
     this.RenderCanvas(canvas_id);
     return canvas_id;
 }
 
-VisDatabase.prototype.GenUnit = function (height_num, width_num, x_num, y_num, dom_obj) {
+VisDatabase.prototype.GenUnit = function (height_num, width_num, x_num, y_num, dom_obj, data) {
 
     let canvas_id = this.GenID();
-    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, null, null, null);
+    let metaData = new visMetaData(canvas_id, x_num, y_num, height_num, width_num, null, data, null);
     this.database[canvas_id] = metaData;
     this.database[canvas_id].type = 'unit';
 

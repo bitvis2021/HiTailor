@@ -14,18 +14,17 @@
         ></el-button>
       </el-row>
 
-      <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
+      <div v-show="showUnitPanel">
+        <unit-view :currentUnit="currentUnit" :fig="figID"></unit-view>
+        <br />
+      </div>
       <templates-view
         v-if="showTemplates"
         v-on:select-template="SelectTemplate"
         :templates="this.templates"
       ></templates-view>
-
       <div v-else>
-        <div v-if="showUnitPanel">
-          <unit-view :visData_arr="unitData_arr"></unit-view>
-          <br />
-        </div>
+        <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
         <div v-if="showPanelView">
           <div id="chart"></div>
           <panel-view
@@ -103,7 +102,6 @@ export default {
 
       dialog_removeAll: false,
       currentGroupID: "",
-      unitData_arr: [],
     };
   },
   computed: {
@@ -234,6 +232,7 @@ export default {
       if (metaData.x.range == 1 && metaData.y.range == 1) {
         this.currentUnit.position = position;
         this.currentUnit.value = JSON.parse(visData).at(0)["value"];
+        this.OpenUnitView();
       } else {
         this.OpenTemplateView();
       }
@@ -252,25 +251,22 @@ export default {
     // User click vis. Restore previous context.
     this.$bus.$on("select-canvas", (id) => {
       this.figID = id;
-      this.currentTemplate = this.VisDB.GetTemplate(id);
-      this.visData = this.VisDB.database[id].visData;
-      this.metaData = this.VisDB.database[id].metaData;
-      console.log("restore data", this.visData, this.metaData);
-      this.OpenPanelView();
+      if (this.VisDB.database[id].type === "vega") {
+        this.currentTemplate = this.VisDB.GetTemplate(id);
+        this.visData = this.VisDB.database[id].visData;
+        this.metaData = this.VisDB.database[id].metaData;
+        console.log("restore data", this.visData, this.metaData);
+        this.OpenPanelView();
+      } else {
+        console.log("open Unit");
+        this.OpenUnitView();
+      }
     });
 
     // User close a canvas that belongs to a group
     this.$bus.$on("remove-groupCanvas", (group_id) => {
       this.dialog_removeAll = true;
       this.currentGroupID = group_id;
-    });
-
-    // Recommend data
-    this.$bus.$on("visualize-recommendUnit", (data) => {
-      data.push(this.currentUnit);
-      this.unitData_arr = data;
-
-      this.OpenUnitView();
     });
 
     // resize function
@@ -298,7 +294,6 @@ export default {
     this.$bus.$off("select-canvas");
 
     this.$bus.$off("remove-groupCanvas");
-    this.$bus.$off("visualize-recommendUnit");
   },
 };
 </script>

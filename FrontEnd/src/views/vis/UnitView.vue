@@ -164,10 +164,9 @@ import { UnitCompiler } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
-  props: ["visData_arr"],
+  props: ["currentUnit", "figID"],
   data() {
     return {
-      currentID: "",
       shapes: [
         { value: "circle", label: "circle" },
         { value: "square", label: "square" },
@@ -193,6 +192,8 @@ export default {
       enabledEncodings: [{ name: "size" }, { name: "opacity" }],
       align: "middle",
       VisDB: new VisDatabase(this.$bus),
+      currentID: this.figID,
+      visData_arr: [],
     };
   },
   methods: {
@@ -280,9 +281,9 @@ export default {
       this.PreviewUnitConfig();
     },
     Apply2Vis() {
-      let visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
-      let groupId;
-      if (this.currentID == "") {
+      if (!this.currentID || this.currentID == "") {
+        let visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
+        let groupId;
         for (let i = 0; i < visData.length; i++) {
           let position = visData[i].position;
           let dom = visData[i].dom;
@@ -291,22 +292,44 @@ export default {
             position.width,
             position.x,
             position.y,
-            dom
+            dom,
+            visData[i].originValue
           );
           groupId = this.VisDB.AddGroupMember(groupId, this.currentID);
         }
       } else {
         let group = this.VisDB.GetGroupMembers(this.currentID);
+        let data_arr = [];
+
         for (let i = 0; i < group.length; i++) {
-          const id = group[i];
+          let db = this.VisDB.database[group[i]];
+          if (!!db) {
+            let config = {};
+            config.value = db.visData;
+            config.id = db.id;
+            config.position = {
+              x: db.x,
+              y: db.y,
+              height: db.height,
+              width: db.width,
+            };
+            data_arr.push(config);
+          }
+        }
+        console.log("enter new", group, data_arr);
+
+        let visData = UnitCompiler.GetUnits(data_arr, this.GetConfig());
+        for (let i = 0; i < visData.length; i++) {
           let position = visData[i].position;
+          let dom = visData[i].dom;
+          let id = visData[i].id;
           this.VisDB.RerenderCanvas(
             id,
             position.x,
             position.y,
             position.height,
             position.width,
-            visData[i].dom
+            dom
           );
         }
       }
@@ -314,8 +337,17 @@ export default {
   },
   mounted() {
     this.PreviewUnitConfig();
+    // Recommend data
+    this.$bus.$on("visualize-recommendUnit", (data) => {
+      console.log("new data come");
+      data.push(this.currentUnit);
+      this.visData_arr = data;
+    });
   },
-  beforeDestroy() {},
+  beforeDestroy() {
+    // Recommend data
+    this.$bus.$off("visualize-recommendUnit");
+  },
 };
 </script>
 <style lang="less">

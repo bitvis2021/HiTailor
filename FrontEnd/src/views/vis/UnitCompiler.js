@@ -2,7 +2,13 @@
 export function UnitCompiler() {
 
 }
-
+/*
+data array:
+{
+	value
+	position
+}
+*/
 UnitCompiler.GetUnits = function (data_array, config) {
 	let [max, min] = findMaxMin(data_array);
 
@@ -68,7 +74,6 @@ UnitCompiler.GetUnits = function (data_array, config) {
 			frameHeight: data_array[i].position.height,
 			frameWidth: data_array[i].position.width,
 		}
-		console.log(d3.interpolateTurbo(data_array[i].value));
 		data_array[i].dom = this.GetUnitDom(generateConfig);
 	}
 	return data_array;
