@@ -334,15 +334,14 @@ export default {
       this.visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
       if (!!this.ID && this.ID !== "") {
         for (let i = 0; i < this.visData.length; i++) {
-          let position = this.visData[i].position;
-          let dom = this.visData[i].dom;
+          let db=this.VisDB.database[this.visData[i].id];
           this.VisDB.RerenderCanvas(
             this.visData[i].id,
-            position.x,
-            position.y,
-            position.height,
-            position.width,
-            dom
+            db.x,
+            db.y,
+            db.height,
+            db.width,
+            this.visData[i].dom
           );
         }
       } else {
