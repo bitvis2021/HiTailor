@@ -245,6 +245,9 @@ VisDatabase.prototype.RerenderCanvas = function (id, x, y, height, width, newDom
     if (this.GetCanvas(id) != null) {
         document.getElementById(id).remove();
     }
+    if (!!document.getElementById(id + ".button")) {
+        document.getElementById(id + ".button").remove();
+    }
 
     this.RenderCanvas(id);
 }
