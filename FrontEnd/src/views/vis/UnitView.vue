@@ -309,6 +309,8 @@ export default {
           groupId = this.VisDB.AddGroupMember(groupId, currentID);
         }
       }
+
+      this.$bus.$emit("apply-config");
     },
   },
   mounted() {

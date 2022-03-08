@@ -762,7 +762,8 @@ export default {
     //   this.clear_selected_cell()
     // },
     handle_click_on_blank() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
+      this.hide_recommend_element()
     },
     handle_mouse_over_mark(index, type) {
       if (this.mouseDownState || this.mouseDownMarkState || this.mouseDownMarkLineState)  return
@@ -842,13 +843,17 @@ export default {
     },
     hide_recommend_element() {
       d3.selectAll(".recommend-element").style("visibility", "hidden")
+      d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
     },
     show_recommend_element(notShowButton=false) {
       this.directionSelectValue = ["row", "column"]
       d3.selectAll(".recommend-element").style("visibility", "visible")
-      // if (notShowButton) {
-      //   d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
-      // }
+      if (notShowButton) {
+        d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
+      }
+      else {
+        d3.selectAll("#recommend-apply-button").style("visibility", "visible")
+      }
     },
     cancel_recommendation() {
       this.clear_selected_cell()
@@ -856,12 +861,12 @@ export default {
       this.hide_recommend_element()
     },
     confirm_recommendation() {
-      if (this.isChoosingUnit) {
-        this.transmit_unit_recommendation_to_vis()
-      }
-      else {
+      // if (this.isChoosingUnit) {
+      //   this.transmit_unit_recommendation_to_vis()
+      // }
+      // else {
         this.transmit_recommendation_to_vis()
-      }
+      // }
       this.hide_recommend_element()
       this.clear_recommendation_area()
       this.clear_selected_cell()
@@ -1571,10 +1576,10 @@ export default {
       console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
 
-      // // single unit, send recommendation too
-      // if (top==bottom && left==right) {
-      //   this.transmit_unit_recommendation_to_vis()
-      // }
+      // single unit, send recommendation too
+      if (top==bottom && left==right) {
+        this.transmit_unit_recommendation_to_vis()
+      }
     },
     transmit_recommendation_to_vis() {
       var dataArray = []
@@ -1710,6 +1715,7 @@ export default {
     before_header_interaction(id, isRowHeader, name, times, layer) {
       if (this.selectedArea.top!=null) {
         this.clear_selected_cell(true)
+        this.hide_recommend_element()
         return
       }
 
@@ -1892,9 +1898,9 @@ export default {
             }
           }
           
-          // if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
-          //   this.transmit_unit_recommendation_to_vis()
-          // }
+          if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
+            this.transmit_unit_recommendation_to_vis()
+          }
         }
       },
       directionSelectValue: {
@@ -2041,8 +2047,12 @@ export default {
         console.log("not single unit")
         this.show_recommend_element()
         this.cal_recommendation_data(this.selectedArea.top-this.headerRange.bottom-1, this.selectedArea.bottom-this.headerRange.bottom-1, this.selectedArea.left-this.headerRange.right-1, this.selectedArea.right-this.headerRange.right-1)
+        this.clear_selected_cell(false)
       }
-      this.clear_selected_cell(false)
+      else {
+        this.hide_recommend_element()
+        this.clear_selected_cell(true)
+      }
     })
 
     this.$bus.$on("select-canvas", () => {
