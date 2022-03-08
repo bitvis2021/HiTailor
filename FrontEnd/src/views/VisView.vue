@@ -8,21 +8,28 @@
 
     <div id="vis-view">
       <!-- return buttons -->
-      <el-row type="flex" justify="start" style="margin-left: 5px">
+      <el-row
+        v-if="!showUnitPanel && !showTemplates"
+        type="flex"
+        justify="start"
+        style="margin-left: 5px"
+      >
         <el-button @click="ClickReturnButton" type="text" size="medium"
           ><i class="el-icon-back"></i
         ></el-button>
       </el-row>
 
       <div v-if="showUnitPanel">
-        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
         <br />
+        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
       </div>
-      <templates-view
-        v-else-if="showTemplates"
-        v-on:select-template="SelectTemplate"
-        :templates="this.templates"
-      ></templates-view>
+      <div v-else-if="showTemplates">
+        <br />
+        <templates-view
+          v-on:select-template="SelectTemplate"
+          :templates="this.templates"
+        ></templates-view>
+      </div>
       <div v-else>
         <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
         <div v-if="showPanelView">
