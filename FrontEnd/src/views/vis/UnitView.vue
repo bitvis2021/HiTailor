@@ -120,7 +120,18 @@
           <div class="property-text">color:</div>
           <el-color-picker v-model="color" @change="PreviewUnitConfig">
           </el-color-picker>
+          <div class="color-legend" v-show="showColorLegend">
+             <div style="margin-top:-20px">
+              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px'>legend</span>
+             </div>
+             <svg id="color-seq" width="100" height="20" ></svg>
+             <div style="margin-top:-10px">
+              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px'>min</span>
+              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px;margin-left:60px'>max</span>
+             </div>
+          </div>
         </el-row>
+
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">size:</div>
@@ -130,7 +141,7 @@
               :step="0.01"
               :min="0"
               :max="3"
-              @change="PreviewUnitConfig"
+              @input="PreviewUnitConfig"
             ></el-slider>
           </div>
         </el-row>
@@ -139,19 +150,69 @@
           <div class="property-text">align:</div>
           <el-radio-group
             v-model="align"
-            size="small"
+            size="medium"
             @change="PreviewUnitConfig"
           >
-            <el-row type="flex" justify="space-around">
-              <el-radio-button label="top"></el-radio-button>
-            </el-row>
-            <el-radio-button label="left"></el-radio-button>
-            <el-radio-button label="middle"></el-radio-button>
-            <el-radio-button label="right"></el-radio-button>
-
-            <el-row type="flex" justify="space-around">
-              <el-radio-button label="bottom"></el-radio-button>
-            </el-row>
+            <div style="text-align: center; position: absolute; left: 112px">
+              <el-radio-button label="top" size="mini">
+                <svg class="icon" width="12px" height="12px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#515151" d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M778.664 170.664H245.336c-41.18 0-74.672 33.492-74.672 74.672v149.328c0 41.18 33.492 74.672 74.672 74.672h533.328c41.18 0 74.672-33.492 74.672-74.672v-149.328c0-41.18-33.492-74.672-74.672-74.672z m0 0" /></svg></el-radio-button>
+            </div>
+            <div style="text-align: center; position: absolute; top: 40px">
+              <el-radio-button label="left" size="mini"
+                ><svg class="icon" width="12px" height="12px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#515151" d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M394.664 170.664h-149.328c-41.18 0-74.672 33.492-74.672 74.672v533.328c0 41.18 33.492 74.672 74.672 74.672h149.328c41.18 0 74.672-33.492 74.672-74.672V245.336c0-41.18-33.492-74.672-74.672-74.672z m0 0" /></svg></i
+              ></el-radio-button>
+              <el-radio-button label="middle" size="mini"
+                ><svg
+                  class="icon"
+                  width="12px"
+                  height="12px"
+                  viewBox="0 0 1024 1024"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="#515151"
+                    d="M42.664 341.336c23.594 0 42.672-19.08 42.672-42.672V128c0-23.554 19.11-42.664 42.664-42.664h170.664c23.594 0 42.672-19.08 42.672-42.672S322.256 0 298.664 0H128C57.43 0 0 57.43 0 128v170.664c0 23.594 19.07 42.672 42.664 42.672z m0 0M981.336 682.664c-23.594 0-42.672 19.08-42.672 42.672V896c0 23.554-19.11 42.664-42.664 42.664h-170.664c-23.594 0-42.672 19.08-42.672 42.672S701.744 1024 725.336 1024H896c70.57 0 128-57.43 128-128v-170.664c0-23.594-19.07-42.672-42.664-42.672z m0 0M298.664 938.664H128c-23.554 0-42.664-19.11-42.664-42.664v-170.664c0-23.594-19.08-42.672-42.672-42.672S0 701.744 0 725.336V896c0 70.57 57.43 128 128 128h170.664c23.594 0 42.672-19.07 42.672-42.664s-19.08-42.672-42.672-42.672z m0 0M896 0h-170.664c-23.594 0-42.672 19.07-42.672 42.664s19.08 42.672 42.672 42.672H896c23.554 0 42.664 19.11 42.664 42.664v170.664c0 23.594 19.08 42.672 42.672 42.672S1024 322.256 1024 298.664V128c0-70.57-57.43-128-128-128z m0 0M213.336 330.664v362.672c0 64.726 52.6 117.328 117.328 117.328h362.672c64.726 0 117.328-52.6 117.328-117.328V330.664c0-64.726-52.6-117.328-117.328-117.328H330.664c-64.726 0-117.328 52.6-117.328 117.328z m0 0"
+                  /></svg
+              ></el-radio-button>
+              <el-radio-button label="right" size="mini"
+                ><svg
+                  class="icon"
+                  width="12px"
+                  height="12px"
+                  viewBox="0 0 1024 1024"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="#515151"
+                    d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M778.664 170.664h-149.328c-41.18 0-74.672 33.492-74.672 74.672v533.328c0 41.18 33.492 74.672 74.672 74.672h149.328c41.18 0 74.672-33.492 74.672-74.672V245.336c0-41.18-33.492-74.672-74.672-74.672z m0 0"
+                  /></svg
+              ></el-radio-button>
+            </div>
+            <div
+              style="
+                text-align: center;
+                position: absolute;
+                top: 80px;
+                left: 112px;
+              "
+            >
+              <el-radio-button label="bottom" size="mini"
+                ><svg
+                  class="icon"
+                  width="12px"
+                  height="12px"
+                  viewBox="0 0 1024 1024"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="#515151"
+                    d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.11 42.664-42.664 42.664H128c-23.554 0-42.664-19.11-42.664-42.664V128c0-23.554 19.11-42.664 42.664-42.664h768c23.554 0 42.664 19.11 42.664 42.664z m0 0M778.664 554.664H245.336c-41.18 0-74.672 33.492-74.672 74.672v149.328c0 41.18 33.492 74.672 74.672 74.672h533.328c41.18 0 74.672-33.492 74.672-74.672v-149.328c0-41.18-33.492-74.672-74.672-74.672z m0 0"
+                  /></svg
+              ></el-radio-button>
+            </div>
           </el-radio-group>
         </el-row>
       </div>
@@ -160,7 +221,7 @@
 </template>
 <script>
 import { VisDatabase } from "./VisDatabase";
-import { UnitCompiler } from "./UnitCompiler";
+import { UnitCompiler, getColorFunction } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
@@ -192,6 +253,9 @@ export default {
       enabledEncodings: [{ name: "size" }, { name: "opacity" }],
       align: "middle",
       VisDB: new VisDatabase(this.$bus),
+      ID: this.figID,
+      visData: this.visData_arr,
+      showColorLegend: false,
     };
   },
   methods: {
@@ -216,7 +280,7 @@ export default {
       config.xOffset = 0;
       config.yOffset = 0;
       config.frameHeight = 400;
-      config.fnameWidth = 700;
+      config.frameWidth = 700;
 
       if (config.encodings.size) {
         config.size = height * this.relativeSize;
@@ -239,6 +303,12 @@ export default {
 
       if (config.encodings.opacity) {
         config.opacity = 0.8;
+      }
+
+      if (config.encodings.color) {
+        this.ShowMappedColor();
+      } else {
+        this.showColorLegend = false;
       }
 
       let preview = UnitCompiler.GetUnitDom(config);
@@ -278,35 +348,67 @@ export default {
       this.enabledEncodings.push(tag);
       this.PreviewUnitConfig();
     },
+    ShowMappedColor() {
+      this.showColorLegend = true;
+      let interpolator = getColorFunction(this.color);
+      let id = "color-seq";
+      console.log("corlsdfsdf", this.color, interpolator);
+
+      d3.select("#" + id)
+        .selectAll("*")
+        .remove();
+
+      let data = Array.from(Array(100).keys());
+      let cScale = d3
+        .scaleSequential()
+        .interpolator(interpolator)
+        .domain([0, 99]);
+      let xScale = d3.scaleLinear().domain([0, 99]).range([0, 100]);
+      d3.select("#" + id)
+        .selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", (d) => Math.floor(xScale(d)))
+        .attr("y", 0)
+        .attr("height", 20)
+        .attr("width", (d) => {
+          if (d == 99) {
+            return 6;
+          }
+          return Math.floor(xScale(d + 1)) - Math.floor(xScale(d)) + 1;
+        })
+        .attr("fill", (d) => cScale(d));
+    },
     Apply2Vis() {
-      let visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
-      if (!!this.figID && this.figID !== "") {
-        for (let i = 0; i < visData.length; i++) {
-          let position = visData[i].position;
-          let dom = visData[i].dom;
+      this.visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
+      if (!!this.ID && this.ID !== "") {
+        for (let i = 0; i < this.visData.length; i++) {
+          let db = this.VisDB.database[this.visData[i].id];
           this.VisDB.RerenderCanvas(
-            this.visData_arr[i].id,
-            position.x,
-            position.y,
-            position.height,
-            position.width,
-            dom
+            this.visData[i].id,
+            db.x,
+            db.y,
+            db.height,
+            db.width,
+            this.visData[i].dom
           );
         }
       } else {
         let groupId;
-        for (let i = 0; i < visData.length; i++) {
-          let position = visData[i].position;
-          let dom = visData[i].dom;
-          let currentID = this.VisDB.GenUnit(
+        for (let i = 0; i < this.visData.length; i++) {
+          let position = this.visData[i].position;
+          let dom = this.visData[i].dom;
+          this.ID = this.VisDB.GenUnit(
             position.height,
             position.width,
             position.x,
             position.y,
             dom,
-            visData[i].originValue
+            this.visData[i].originValue
           );
-          groupId = this.VisDB.AddGroupMember(groupId, currentID);
+          this.visData[i].id = this.ID;
+          groupId = this.VisDB.AddGroupMember(groupId, this.ID);
         }
       }
 
@@ -315,10 +417,14 @@ export default {
   },
   mounted() {
     this.PreviewUnitConfig();
+    this.$bus.$on("visualize-recommendUnit", () => {
+      this.ID = "";
+    });
     // Recommend data
   },
   beforeDestroy() {
     // Recommend data
+    this.$bus.$off("visualize-recommendUnit");
   },
 };
 </script>
@@ -397,6 +503,11 @@ export default {
     flex-wrap: wrap;
     margin-right: 5px;
     margin-left: 5px;
+  }
+  .color-legend {
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-bottom: -10px;
   }
 }
 </style>

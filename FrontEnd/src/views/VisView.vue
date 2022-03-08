@@ -8,21 +8,28 @@
 
     <div id="vis-view">
       <!-- return buttons -->
-      <el-row type="flex" justify="start" style="margin-left: 5px">
+      <el-row
+        v-if="!showUnitPanel && !showTemplates"
+        type="flex"
+        justify="start"
+        style="margin-left: 5px"
+      >
         <el-button @click="ClickReturnButton" type="text" size="medium"
           ><i class="el-icon-back"></i
         ></el-button>
       </el-row>
 
-      <div v-if="showUnitPanel&&unitData_arr.length>1">
-        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
+      <div v-if="showUnitPanel">
         <br />
+        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
       </div>
-      <templates-view
-        v-else-if="showTemplates"
-        v-on:select-template="SelectTemplate"
-        :templates="this.templates"
-      ></templates-view>
+      <div v-else-if="showTemplates">
+        <br />
+        <templates-view
+          v-on:select-template="SelectTemplate"
+          :templates="this.templates"
+        ></templates-view>
+      </div>
       <div v-else>
         <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
         <div v-if="showPanelView">
@@ -233,6 +240,7 @@ export default {
       if (metaData.x.range == 1 && metaData.y.range == 1) {
         this.currentUnit.position = position;
         this.currentUnit.value = JSON.parse(visData).at(0)["value"];
+        this.OpenUnitView();
       } else {
         this.OpenTemplateView();
       }
@@ -406,6 +414,16 @@ export default {
   &:hover {
     fill: rgb(153, 195, 250);
   }
+}
+.property-text {
+  font-size: 14px;
+  line-height: 15px;
+  margin-top: 7px;
+  margin-right: 10px;
+  padding-right: 10px;
+  margin-left: 5px;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  color: #606266;
 }
 </style>
 

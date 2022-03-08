@@ -207,17 +207,6 @@ export default {
 };
 </script>
 <style lang="less">
-.property-text {
-  font-size: 14px;
-  line-height: 15px;
-  margin-top: 7px;
-  margin-right: 10px;
-  padding-right: 10px;
-  margin-left: 5px;
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  color: #606266;
-}
-
 .encoding-card {
   border-style: none !important;
   padding: 10px 10px 0px 10px;
