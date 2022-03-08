@@ -84,7 +84,10 @@
 
         <el-col :lg="2" :xl="3" class="recommend-element">
           <div class="priority-slider"> 
-            <el-slider v-model="prioritySliderValue" range show-stops :max="directionSelectValue.length==2 ? 5 : (directionSelectValue.length==0 ? 0 : 2)"></el-slider> 
+            <!-- <el-slider v-model="prioritySliderValue" range show-stops :max="directionSelectValue.length==2 ? 5 : (directionSelectValue.length==0 ? 0 : 2)"></el-slider>  -->
+            <el-slider v-model="prioritySliderValue" range show-stops 
+              :min="directionSelectValue.length==0 ? 0 : 1" 
+              :max="directionSelectValue.length==0 ? 0 : (directionSelectValue.length==2 ? 5 : 3)"></el-slider>
           </div>
         </el-col>
 
@@ -470,7 +473,9 @@ export default {
 
       isChoosingUnit: false,
 
-      recommendData: [[], [], [], [], []],
+      recommendDataBoth: [[], [], [], [], []],
+      recommendDataRow: [[], [], []],
+      recommendDataCol: [[], [], []],
       prioritySliderValue:[0, 5],
       directionSelectValue: ["row", "column"]
     }
@@ -665,8 +670,7 @@ export default {
       this.mouseDownState = true
       this.mouseDownMaskState = true
 
-      // cancel recommend
-      d3.selectAll(".recommend-helper").remove()
+      this.clear_recommendation_area()
       this.$bus.$emit('select-cell')
     },
     handle_mouse_down_selected(event) {
@@ -829,7 +833,7 @@ export default {
 
       // cancel recommend
       if (clearRecommend) {
-        d3.selectAll(".recommend-helper").remove()
+        this.clear_recommendation_area()
       }
     },
     clear_selected_header() {
@@ -838,8 +842,14 @@ export default {
       d3.select("#interaction-helper-line").remove()
     },
     clear_recommendation_area() {
-      d3.selectAll(".recommend-helper").remove()
-      this.recommendData = null
+      d3.selectAll(".recommend-helper-both").remove()
+      d3.selectAll(".recommend-helper-row").remove()
+      d3.selectAll(".recommend-helper-col").remove()
+    },
+    hide_recommendation_area() {
+      d3.selectAll(".recommend-helper-both").style("visibility", "hidden")
+      d3.selectAll(".recommend-helper-row").style("visibility", "hidden")
+      d3.selectAll(".recommend-helper-col").style("visibility", "hidden")
     },
     hide_recommend_element() {
       d3.selectAll(".recommend-element").style("visibility", "hidden")
@@ -861,12 +871,12 @@ export default {
       this.hide_recommend_element()
     },
     confirm_recommendation() {
-      // if (this.isChoosingUnit) {
-      //   this.transmit_unit_recommendation_to_vis()
-      // }
-      // else {
+      if (this.isChoosingUnit) {
+        this.transmit_unit_recommendation_to_vis()
+      }
+      else {
         this.transmit_recommendation_to_vis()
-      // }
+      }
       this.hide_recommend_element()
       this.clear_recommendation_area()
       this.clear_selected_cell()
@@ -1582,29 +1592,37 @@ export default {
       }
     },
     transmit_recommendation_to_vis() {
-      var dataArray = []
-      var data = this.recommendData
-
+      var dataArray = [], data
+      if (this.directionSelectValue.length == 2) {
+        data = this.recommendDataBoth
+      }
+      else if (this.directionSelectValue[0] == "row") {
+        data = this.recommendDataRow
+      }
+      else {
+        data = this.recommendDataCol
+      }
+      
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
-      var direction = this.directionSelectValue
-      var typeArray
-        if (direction.length == 2) {
-          typeArray=[0, 1, 2]
-        }
-        else if (direction.length == 0) {
-          typeArray=[]
-        }
-        else {
-          if (direction[0] == "row") typeArray=[0]
-          else if (direction[0] == "column") typeArray=[1]
-        }
+      // var direction = this.directionSelectValue
+      // var typeArray
+      //   if (direction.length == 2) {
+      //     typeArray=[0, 1, 2]
+      //   }
+      //   else if (direction.length == 0) {
+      //     typeArray=[]
+      //   }
+      //   else {
+      //     if (direction[0] == "row") typeArray=[0]
+      //     else if (direction[0] == "column") typeArray=[1]
+      //   }
 
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
-          var area = data[i][j].area
+          // if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+          var area = data[i][j]
           var top = area.top+this.headerRange.bottom+1
           var bottom = area.bottom+this.headerRange.bottom+1
           var left = area.left+this.headerRange.right+1
@@ -1623,29 +1641,37 @@ export default {
       this.$bus.$emit('visualize-recommendData', dataArray)
     },
     transmit_unit_recommendation_to_vis() {
-      var dataArray = []
-      var data = this.recommendData
+      var dataArray = [], data
+      if (this.directionSelectValue.length == 2) {
+        data = this.recommendDataBoth
+      }
+      else if (this.directionSelectValue[0] == "row") {
+        data = this.recommendDataRow
+      }
+      else {
+        data = this.recommendDataCol
+      }
       
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
 
-      var direction = this.directionSelectValue
-      var typeArray
-        if (direction.length == 2) {
-          typeArray=[0, 1, 2]
-        }
-        else if (direction.length == 0) {
-          typeArray=[]
-        }
-        else {
-          if (direction[0] == "row") typeArray=[0]
-          else if (direction[0] == "column") typeArray=[1]
-        }
+      // var direction = this.directionSelectValue
+      // var typeArray
+      //   if (direction.length == 2) {
+      //     typeArray=[0, 1, 2]
+      //   }
+      //   else if (direction.length == 0) {
+      //     typeArray=[]
+      //   }
+      //   else {
+      //     if (direction[0] == "row") typeArray=[0]
+      //     else if (direction[0] == "column") typeArray=[1]
+      //   }
 
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
-          var area = data[i][j].area
+          // if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+          var area = data[i][j]
           var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
 
           var top = area.top+this.headerRange.bottom+1
@@ -1664,7 +1690,9 @@ export default {
       this.$bus.$emit('visualize-recommendUnit', dataArray)
     },
     cal_recommendation_data(top, bottom, left, right) {
-      this.recommendData = [[], [], [], [], []]
+      this.recommendDataBoth = [[], [], [], [], []]
+      this.recommendDataRow = [[], [], []]
+      this.recommendDataCol = [[], [], []]
       var colRefer = get_reference_node(this.colHeader, left, right, false, this.hasTransposed)
       var rowRefer = get_reference_node(this.rowHeader, top, bottom, true, this.hasTransposed)
       console.log("colRefer", colRefer)
@@ -1674,41 +1702,51 @@ export default {
         return
       }
 
-      var pri = [{row:[], column:[]}, {row:[], column:[]}]
-      // only use colRefer(same row)
+      var headerPriority = [{row:[], column:[]}, {row:[], column:[]}]
+
+      // BOTH priority1(row:p0, col:p1) && priority2(row:p0, col:p2)
+      // COL priority2(row:p0, col:p1) && priority3(row:p0, col:p2)
+      // ROW priority1(row:p0, col:p1; row:p0, col:p2)
       if (colRefer.length != 0) {
-        cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, pri, 
-          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+        cal_recommendation_by_one_reference(colRefer, top, bottom, left, right, this.colHeader, false, headerPriority, 
+          this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
           this.prioritySliderValue, this.directionSelectValue)
       }
       
-      // only use rowRefer(same column)
+      // BOTH priority1(row:p1, col:p0) && priority2(row:p2, col:p0)
+      // ROW priority2(row:p1, col:p0) && priority3(row:p2, col:p0)
+      // COL priority1(row:p1, col:p0; row:p2, col:p0)
       if (rowRefer.length != 0) {
-        cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, pri, 
-          this.recommendData, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
+        cal_recommendation_by_one_reference(rowRefer, top, bottom, left, right, this.rowHeader, true, headerPriority, 
+          this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol, this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
           this.prioritySliderValue, this.directionSelectValue)
       }
 
-      // use colRefer & rowRefer
       if (colRefer.length!=0 && rowRefer.length!=0) {
-        // priority 3 = 1 + 1
-        var pri3 = cal_recommendation_by_two_references(pri, 0, 0, 3, 
+        // BOTH priority3(row:p1, col:p1)
+        // ROW priority2
+        // COL priority2
+        cal_recommendation_by_two_references(headerPriority, 0, 0, 3, 2, 2, this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol, 
           this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
-          this.prioritySliderValue, this.directionSelectValue) 
-        this.recommendData[2] = pri3
+          this.prioritySliderValue, this.directionSelectValue, ) 
 
-        // priority 4 = 1 + 2 = 2 + 1
-        var prii = cal_recommendation_by_two_references(pri, 0, 1, 4, 
+        // BOTH priority4(row:p1, col:p2) 
+        // ROW priority2
+        // COL priority3
+        cal_recommendation_by_two_references(headerPriority, 0, 1, 4, 2, 3, this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol,
           this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) 
-        var pri4 = prii.concat(cal_recommendation_by_two_references(pri, 1, 0, 4, this.markWidth, this.markHeight, 
-          this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) )
-        this.recommendData[3] = pri4
+        
+        // BOTH priority4(row:p2, col:p1)  
+        // ROW priority3
+        // COL priority2
+        cal_recommendation_by_two_references(headerPriority, 1, 0, 4, 3, 2, this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol,
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue)
 
-        // priority 5 = 2 + 2
-        var pri5 = cal_recommendation_by_two_references(pri, 1, 1, 5, 
-          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, 
-          this.prioritySliderValue, this.directionSelectValue) 
-        this.recommendData[4] = pri5
+        // BOTH priority5(row:p2, col:p2)
+        // ROW priority3
+        // COL priority3
+        cal_recommendation_by_two_references(headerPriority, 1, 1, 5, 3, 3, this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol,
+          this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) 
       }
     },
 
@@ -1823,129 +1861,97 @@ export default {
   },
 
   watch: {
-      displayMode: function() {
-      },
-      // Remember to use "!this.widthChangeSignal" or "!this.heightChangeSignal" when changing width or height
-      widthChangeSignal: function() {
-        this.cal_range_list(this.columnWidthList, "width")
-      },
-      heightChangeSignal: function() {
-        this.cal_range_list(this.rowHeightList, "height")
-      },
-      markWidthChangeSignal: function() {
-        this.cal_range_list(this.markColumnWidthList, "mark width")
-      },
-      markHeightChangeSignal: function() {
-        this.cal_range_list(this.markRowHeightList, "mark height")
-      },
-      colHeader: function() {
-        for (var i=0; i<this.colHeader.length; i++) {
-          for (var item of this.colHeader[i].values()) {
-            item.range = []
-          }
+    displayMode: function() {
+    },
+    // Remember to use "!this.widthChangeSignal" or "!this.heightChangeSignal" when changing width or height
+    widthChangeSignal: function() {
+      this.cal_range_list(this.columnWidthList, "width")
+    },
+    heightChangeSignal: function() {
+      this.cal_range_list(this.rowHeightList, "height")
+    },
+    markWidthChangeSignal: function() {
+      this.cal_range_list(this.markColumnWidthList, "mark width")
+    },
+    markHeightChangeSignal: function() {
+      this.cal_range_list(this.markRowHeightList, "mark height")
+    },
+    colHeader: function() {
+      for (var i=0; i<this.colHeader.length; i++) {
+        for (var item of this.colHeader[i].values()) {
+          item.range = []
         }
-        cal_header_range(this.colHeader)
-      },
-      rowHeader: function() {
-        for (var i=0; i<this.rowHeader.length; i++) {
-          for (var item of this.rowHeader[i].values()) {
-            item.range = []
-          }
+      }
+      cal_header_range(this.colHeader)
+    },
+    rowHeader: function() {
+      for (var i=0; i<this.rowHeader.length; i++) {
+        for (var item of this.rowHeader[i].values()) {
+          item.range = []
         }
-        cal_header_range(this.rowHeader)
+      }
+      cal_header_range(this.rowHeader)
+    },
+    num2seq: {
+      handler() {
+        console.log(this.num2seq)
       },
-      num2seq: {
-        handler() {
-          console.log(this.num2seq)
-        },
-        deep: true
+      deep: true
 
-      },
-      prioritySliderValue: {
-        deep: true,
-        handler: function(data) {
-          var prefix = "#recommend-helper-", name = ""
-          var min=data[0], max=data[1]
-          var direct = this.directionSelectValue
+    },
+    prioritySliderValue: {
+      deep: true,
+      handler: function(data) {
+        this.hide_recommendation_area()
+        var direct = this.directionSelectValue, min=data[0], max=data[1]
+        var prefix = "#recommend-helper-", name
 
-          var typeArray
-          if (direct.length == 2) {
-            typeArray=[0, 1, 2]
-          }
-          else if (direct.length == 0) {
-            typeArray=[]
-          }
-          else {
-            if (direct[0] == "row") typeArray=[0]
-            else if (direct[0] == "column") typeArray=[1]
-          }
-
-          for (var j=0; j<typeArray.length; j++) {
-            var type = typeArray[j]
-            for (var i=0; i<min; i++) {
-              name = prefix + i + "-" + type
-              d3.selectAll(name).style("visibility", "hidden")
-            }
-
-            for (var i=min; i<=max; i++) {
-              name = prefix + i +"-" + type
-              d3.selectAll(name).style("visibility", "visible")
-            }
-
-            for (var i=max+1; i<=5; i++) {
-              name = prefix + i + "-" + type
-              d3.selectAll(name).style("visibility", "hidden")
-            }
-          }
-          
-          if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
-            this.transmit_unit_recommendation_to_vis()
-          }
+        if (direct.length == 0) {
+          return
         }
-      },
-      directionSelectValue: {
-        deep: true,
-        handler: function(data) {
-          var prefix = "#recommend-helper-", name = ""
-          var pri = this.prioritySliderValue
-          var min=pri[0], max=pri[1]
-
-          var show, hide
-          if (data.length == 2) {
-            show=[0, 1, 2]
-            hide=[]
-          }
-          else if (data.length == 0) {
-            show=[]
-            hide=[0, 1, 2]
-          }
-          else {
-            if (data[0] == "row") {
-              show=[0]
-              hide=[1, 2]
-
-            }
-            else if (data[0] == "column") {
-              show=[1]
-              hide=[0, 2]
-            }
-          }
-
-          for (var i=min; i<=max; i++) {
-            for (var j=0; j<show.length; j++) {
-              var type = show[j]
-              name = prefix + i +"-" + type
-              d3.selectAll(name).style("visibility", "visible")
-            }
-
-            for (var j=0; j<hide.length; j++) {
-              var type = hide[j]
-              name = prefix + i +"-" + type
-              d3.selectAll(name).style("visibility", "hidden")
-            }
-          }
+        else if (direct.length == 2) {
+          prefix += "both"
         }
-      }      
+        else {
+          if (direct[0] == "row") prefix += "row"
+          else if (direct[0] == "column") prefix += "col"
+        }
+
+        for (var i=min; i<=max; i++) {
+          name = prefix + "-" + i
+          d3.selectAll(name).style("visibility", "visible")
+        }
+        
+        if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
+          this.transmit_unit_recommendation_to_vis()
+        }
+      }
+    },
+    directionSelectValue: {
+      deep: true,
+      handler: function(data) {
+        this.hide_recommendation_area()
+        var slider = this.prioritySliderValue
+        var min=slider[0], max=slider[1]
+        var prefix = "#recommend-helper-", name
+        
+        if (data.length == 0) {
+          return
+        }
+        else if (data.length == 2) {
+          prefix += "both"
+        }
+        else {
+          if (data[0] == "row") prefix += "row"
+          else if (data[0] == "column") prefix += "col"
+        }
+
+        for (var i=min; i<=max; i++) {
+          name = prefix + "-" + i
+          d3.selectAll(name).style("visibility", "visible")
+        }
+      }
+    }      
   },
 
   beforeMount: function() {
