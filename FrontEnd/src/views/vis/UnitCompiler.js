@@ -224,6 +224,8 @@ UnitCompiler.GetUnitDom = function (config_obj) {
 		let height = dom.getAttribute("height");
 		let width = dom.getAttribute("width");
 
+		console.log(config_obj);
+
 		if (config_obj.align == "middle") {
 			dom.setAttribute("transform", "translate(" + (config_obj.xOffset - width / 2) + "," + (-height / 2 - config_obj.yOffset) + ")");
 		}

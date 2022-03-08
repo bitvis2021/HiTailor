@@ -216,7 +216,7 @@ export default {
       config.xOffset = 0;
       config.yOffset = 0;
       config.frameHeight = 400;
-      config.fnameWidth = 700;
+      config.frameWidth = 700;
 
       if (config.encodings.size) {
         config.size = height * this.relativeSize;
