@@ -14,7 +14,7 @@
         ></el-button>
       </el-row>
 
-      <div v-if="showUnitPanel&&unitData_arr.length>1">
+      <div v-if="showUnitPanel">
         <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
         <br />
       </div>
@@ -233,6 +233,7 @@ export default {
       if (metaData.x.range == 1 && metaData.y.range == 1) {
         this.currentUnit.position = position;
         this.currentUnit.value = JSON.parse(visData).at(0)["value"];
+        this.OpenUnitView();
       } else {
         this.OpenTemplateView();
       }
@@ -406,6 +407,16 @@ export default {
   &:hover {
     fill: rgb(153, 195, 250);
   }
+}
+.property-text {
+  font-size: 14px;
+  line-height: 15px;
+  margin-top: 7px;
+  margin-right: 10px;
+  padding-right: 10px;
+  margin-left: 5px;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  color: #606266;
 }
 </style>
 

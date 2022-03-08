@@ -79,20 +79,21 @@ UnitCompiler.GetUnits = function (data_array, config) {
 	return data_array;
 }
 
-function getColorFunction(color_hex) {
+export function getColorFunction(color_hex) {
+	// https://observablehq.com/@d3/sequential-scales
 	let colorFunc
 	let rgb = hexToRgb(color_hex);
-	if (!rgb || (rgb.b == rgb.g && rgb.b == rgb.r)) {
+	if (!rgb || (Math.abs(rgb.b - rgb.g) <= 20 && Math.abs(rgb.b - rgb.r) <= 20 && Math.abs(rgb.g - rgb.r) <= 20)) {
 		return d3.interpolateGreys;
 	}
 	if (rgb.b > rgb.r && rgb.b > rgb.g) {
-		colorFunc = d3.interpolateTurbo;
+		colorFunc = d3.interpolateSinebow;
 	}
 	else if (rgb.r > rgb.b && rgb.r > rgb.g) {
-		colorFunc = d3.interpolateWarm;
+		colorFunc = d3.interpolateMagma;
 	}
 	else if (rgb.g > rgb.r && rgb.g > rgb.b) {
-		colorFunc = d3.interpolateGreens;
+		colorFunc = d3.interpolateCool;
 	}
 	return colorFunc;
 }

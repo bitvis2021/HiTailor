@@ -120,7 +120,18 @@
           <div class="property-text">color:</div>
           <el-color-picker v-model="color" @change="PreviewUnitConfig">
           </el-color-picker>
+          <div class="color-legend" v-show="showColorLegend">
+             <div style="margin-top:-20px">
+              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px'>legend</span>
+             </div>
+             <svg id="color-seq" width="100" height="20" ></svg>
+             <div style="margin-top:-10px">
+              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px'>min</span>
+              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px;margin-left:60px'>max</span>
+             </div>
+          </div>
         </el-row>
+
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">size:</div>
@@ -210,7 +221,7 @@
 </template>
 <script>
 import { VisDatabase } from "./VisDatabase";
-import { UnitCompiler } from "./UnitCompiler";
+import { UnitCompiler, getColorFunction } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
@@ -244,6 +255,7 @@ export default {
       VisDB: new VisDatabase(this.$bus),
       ID: this.figID,
       visData: this.visData_arr,
+      showColorLegend: false,
     };
   },
   methods: {
@@ -293,6 +305,12 @@ export default {
         config.opacity = 0.8;
       }
 
+      if (config.encodings.color) {
+        this.ShowMappedColor();
+      } else {
+        this.showColorLegend = false;
+      }
+
       let preview = UnitCompiler.GetUnitDom(config);
 
       preview.setAttribute("transform", "translate(350,200)");
@@ -330,11 +348,43 @@ export default {
       this.enabledEncodings.push(tag);
       this.PreviewUnitConfig();
     },
+    ShowMappedColor() {
+      this.showColorLegend = true;
+      let interpolator = getColorFunction(this.color);
+      let id = "color-seq";
+      console.log("corlsdfsdf", this.color, interpolator);
+
+      d3.select("#" + id)
+        .selectAll("*")
+        .remove();
+
+      let data = Array.from(Array(100).keys());
+      let cScale = d3
+        .scaleSequential()
+        .interpolator(interpolator)
+        .domain([0, 99]);
+      let xScale = d3.scaleLinear().domain([0, 99]).range([0, 100]);
+      d3.select("#" + id)
+        .selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", (d) => Math.floor(xScale(d)))
+        .attr("y", 0)
+        .attr("height", 20)
+        .attr("width", (d) => {
+          if (d == 99) {
+            return 6;
+          }
+          return Math.floor(xScale(d + 1)) - Math.floor(xScale(d)) + 1;
+        })
+        .attr("fill", (d) => cScale(d));
+    },
     Apply2Vis() {
       this.visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
       if (!!this.ID && this.ID !== "") {
         for (let i = 0; i < this.visData.length; i++) {
-          let db=this.VisDB.database[this.visData[i].id];
+          let db = this.VisDB.database[this.visData[i].id];
           this.VisDB.RerenderCanvas(
             this.visData[i].id,
             db.x,
@@ -453,6 +503,11 @@ export default {
     flex-wrap: wrap;
     margin-right: 5px;
     margin-left: 5px;
+  }
+  .color-legend {
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-bottom: -10px;
   }
 }
 </style>
