@@ -175,7 +175,7 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
                         //         this.vegaEncoding[encodingName].type = "nominal";
                         //     }
                         // }
-                        this.FieldSelections.ProcessSelection(property.value, this.vegaEncoding[encodingName]);
+                        this.FieldSelections.CompileSelection(property.value, this.vegaEncoding[encodingName]);
                     }
                 }
                 else {
@@ -258,15 +258,9 @@ EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, pro
 }
 
 export function FieldSelection() {
-    this.XSelect = {
-        selections: []
-    };
-    this.YSelect = {
-        selections: []
-    };
-    this.QSelect = {
-        selections: []
-    };
+    this.XSelections = [];
+    this.YSelections = [];
+    this.QSelections = [];
     this.bindings = {};
     /*
         {
@@ -282,45 +276,45 @@ export function FieldSelection() {
 }
 
 FieldSelection.prototype.AddXSelection = function (selectionName_str, nominalSort_arr) {
-    this.XSelect.selections.push(selectionName_str);
+    this.XSelections.push(selectionName_str);
     this.bindings[selectionName_str] = {};
     this.bindings[selectionName_str].type = "nominal";
     this.bindings[selectionName_str].sort = nominalSort_arr;
 }
 
 FieldSelection.prototype.AddYSelection = function (selectionName_str, nominalSort_arr) {
-    this.YSelect.selections.push(selectionName_str);
+    this.YSelections.push(selectionName_str);
     this.bindings[selectionName_str] = {};
     this.bindings[selectionName_str].type = "nominal";
     this.bindings[selectionName_str].sort = nominalSort_arr;
 }
 
 FieldSelection.prototype.AddQSelection = function (selectionName_str) {
-    this.QSelect.selections.push(selectionName_str);
+    this.QSelections.push(selectionName_str);
     this.bindings[selectionName_str] = {};
     this.bindings[selectionName_str].type = "quantitative";
 }
 
 FieldSelection.prototype.GetXSelections = function () {
-    return this.XSelect.selections;
+    return this.XSelections;
 }
 
 FieldSelection.prototype.GetYSelections = function () {
-    return this.YSelect.selections;
+    return this.YSelections;
 }
 
 FieldSelection.prototype.GetQSelections = function () {
-    return this.QSelect.selections;
+    return this.QSelections;
 }
 
 FieldSelection.prototype.GetXSelection = function (at_num) {
-    if (at_num > this.XSelect.selections.length) {
-        return this.XSelect.selections.at(-1);
+    if (at_num > this.XSelections.length) {
+        return this.XSelections.at(-1);
     }
-    else if (at_num < -this.XSelect.selections.length) {
-        return this.XSelect.selections.at(0);
+    else if (at_num < -this.XSelections.length) {
+        return this.XSelections.at(0);
     }
-    return this.XSelect.selections.at(at_num);
+    return this.XSelections.at(at_num);
 }
 
 FieldSelection.prototype.GetSort = function (selectionName_str) {
@@ -333,57 +327,42 @@ FieldSelection.prototype.GetType = function (selectionName_str) {
 
 
 FieldSelection.prototype.GetYSelection = function (at_num) {
-    if (at_num > this.YSelect.selections.length) {
-        return this.YSelect.selections.at(-1);
+    if (at_num > this.YSelections.length) {
+        return this.YSelections.at(-1);
     }
-    else if (at_num < -this.YSelect.selections.length) {
-        return this.YSelect.selections.at(0);
+    else if (at_num < -this.YSelections.length) {
+        return this.YSelections.at(0);
     }
-    return this.YSelect.selections.at(at_num);
+    return this.YSelections.at(at_num);
 }
 
 FieldSelection.prototype.GetQSelection = function (at_num) {
-    if (at_num > this.QSelect.selections.length) {
-        return this.QSelect.selections.at(-1);
+    if (at_num > this.QSelections.length) {
+        return this.QSelections.at(-1);
     }
-    else if (at_num < -this.QSelect.selections.length) {
-        return this.QSelect.selections.at(0);
+    else if (at_num < -this.QSelections.length) {
+        return this.QSelections.at(0);
     }
-    return this.QSelect.selections.at(at_num);
+    return this.QSelections.at(at_num);
 }
 
 FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
     encoding_obj['test'] = value_str;
 }
 
-FieldSelection.prototype.GetMappedValue = function (sourceSelection_str, source_FieldSelection) {
-    let find = source_FieldSelection.QSelect.indexOf(sourceSelection_str);
+FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelection) {
+    let find = source_FieldSelection.GetQSelections().indexOf(value_str);
     if (find != -1) {
         return this.GetQSelection(find);
     }
-    find = sourceSelection_str.XSelect.indexOf(sourceSelection_str);
+    find = source_FieldSelection.GetXSelections().indexOf(value_str);
     if (find != -1) {
         return this.GetXSelection(find);
     }
-    find = sourceSelection_str.YSelect.indexOf(sourceSelection_str);
+    find = source_FieldSelection.GetYSelections().indexOf(value_str);
     if (find != -1) {
         return this.GetYSelection(find);
     }
-}
-
-
-EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
-
-    let ans = new FieldSelection();
-
-    metaData_obj.x.headers.forEach(element => {
-        ans.AddXSelection(element.name, element.sort);
-    });
-    metaData_obj.y.headers.forEach(element => {
-        ans.AddYSelection(element.name, element.sort);
-    });
-    ans.AddQSelection('value');
-    return ans;
 }
 
 

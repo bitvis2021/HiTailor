@@ -437,7 +437,7 @@ VisDatabase.prototype.GenRecommendFigs = function (recommendData_array, currentT
             position.width,
             position.x,
             position.y,
-            GetTemplate(currentTemplate.name, metaData, visData),
+            currentTemplate.ReuseTemplate(metaData, visData),
             visData,
             metaData
         );

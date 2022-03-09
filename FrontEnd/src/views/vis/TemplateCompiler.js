@@ -31,7 +31,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     let picture = '';
     let vegaConfig = {};
 
-    let selections_cell = EncodingCompiler.GetSelectionsFromMetaData(metaData_obj);
+    let selections_cell = GetSelectionsFromMetaData(metaData_obj);
 
     // vertical
     let visData_vertical = GetObjData(visData_arr, metaData_obj, 'vertical');
@@ -267,7 +267,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                         }
                     }
         
-                    let groupedSelections = EncodingCompiler.GetSelectionsFromMetaData(groupedBarchartMetaData);
+                    let groupedSelections = GetSelectionsFromMetaData(groupedBarchartMetaData);
                     console.log("selectionsssss", groupedBarchartMetaData);
                     vegaConfig = {
                         data: { values: groupedBarchartData },
@@ -498,6 +498,20 @@ function GetObjectSelections(visDataObj_arr) {
     return selections;
 }
 
+
+function GetSelectionsFromMetaData(metaData_obj) {
+    let ans = new FieldSelection();
+
+    metaData_obj.x.headers.forEach(element => {
+        ans.AddXSelection(element.name, element.sort);
+    });
+    metaData_obj.y.headers.forEach(element => {
+        ans.AddYSelection(element.name, element.sort);
+    });
+    ans.AddQSelection('value');
+    return ans;
+}
+
 function GetObjData(visData_arr, metaData_obj, direction_str) {
     // atom col: column header sort == x range
     let atom_col_key, atom_row_key;
@@ -589,6 +603,7 @@ Templates.prototype.GetTemplates = function () {
     return ans;
 }
 
+// for cell data
 export function VegaTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
     this.name = tempName_str;
     this.vegaConfig = vegaConfig_obj;
@@ -637,8 +652,18 @@ VegaTemplate.prototype.GetSelections = function () {
     return this.selections;
 }
 
-VegaTemplate.prototype.ReuseTemplate = function (sourceTemplate_VegaTemplate) {
+VegaTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    new_vegaLite.data.values = newVisData_obj;
+    let new_selections = GetSelectionsFromMetaData(newMetaData_obj);
 
+    for (const channel in new_vegaLite.encoding) {
+        if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
+            new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
+        }
+    }
+    console.log('new vegalite', new_vegaLite);
+    return new VegaTemplate(this.name, new_vegaLite, new_selections, this.picture);
 }
 
 // override get vegalite function
