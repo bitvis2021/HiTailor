@@ -1214,7 +1214,7 @@ export default {
       // re-calculate header numbers
       // up layer
       for (var item of header[upLayerNum]) {
-        var i=this.headerDistribution.get(item[0]).count
+        var i=this.header2num.get(item[0]).length
         var targetlen = item[1].parent.length
         if (i > targetlen) {
           // remove redundancy
@@ -1236,7 +1236,7 @@ export default {
       }
       // down layer
       for (var item of header[downLayerNum]) {
-        var i=this.headerDistribution.get(item[0]).count
+        var i=this.header2num.get(item[0]).length
         var targetlen = item[1].parent.length
         if (i > targetlen) {
           // remove redundancy
@@ -1424,7 +1424,7 @@ export default {
             sum += Number(v)
             count += 1
           }
-          sum = sum.toFixed(1)
+          sum = Number(sum).toFixed(1)
           avg = Number(sum / count).toFixed(1)
           max = Math.max.apply(null,tmpdata)
           min = Math.min.apply(null,tmpdata)
@@ -1577,9 +1577,9 @@ export default {
           reference = oriHeader[upLayerNum].get(item).children[0]
           refernum = oriHeader[upLayerNum].get(item).children.length
         }
-        if (refernum != oriHeader[upLayerNum].get(item).children.length) {
-          return  // not fully-conn, can't change
-        }
+        // if (refernum != oriHeader[upLayerNum].get(item).children.length) {
+        //   return  // not fully-conn, can't change
+        // }
         for (var i=0; i<oriHeader[upLayerNum].get(item).children.length; i++) {
           if (JSON.stringify(reference) != JSON.stringify(oriHeader[upLayerNum].get(item).children[i])) {
             return  // not fully-conn, can't change
@@ -1607,22 +1607,21 @@ export default {
       } 
       
       // change header & headerDistribution
-      var cobj = new Object
-      cobj["range"] = {start:null, end:null}
-			cobj["cellNum"] = 1
-			cobj["children"] = []
-			cobj["parent"] = newParent
-			cobj["isFullyConn"] = true
-
       var newLayer = new Map
       for (var i=0; i<newChildren.length; i++) {
         var name = newChildren[i]
         this.headerDistribution.set(name, {isRowHeader:!isRow, layer:newLayerNum, count:childrenCount})
+        var cobj = new Object
+        cobj["range"] = {start:null, end:null}
+        cobj["cellNum"] = 1
+        cobj["children"] = []
+        cobj["parent"] = newParent
+        cobj["isFullyConn"] = true
         newLayer.set(name, cobj)
       }
       newHeader.push(newLayer)
 
-      // delete children
+      // delete children of oriheader
       for (var [key, value] of oriHeader[currLayerNum-1]) {
         value.children = []
         value.cellNum = 1
@@ -1630,68 +1629,51 @@ export default {
       oriHeader.splice(currLayerNum, 1)
 
       console.log("origin", oriHeader)
-      console.log("new", newHeader) // range cellnum 都不对
+      console.log("new", newHeader) 
 
-      // 这里也不对
+      // re-calculate header rect nums
+      for (var [key, value] of newHeader[newHeader.length-1]) {
+        var i=this.header2num.get(key).length
+        var targetlen = this.headerDistribution.get(key).count
+        if (i > targetlen) {
+          // remove redundancy
+          for (var j=targetlen; j<i-1; j++) {
+            var rmindex = this.header2num.get(key).pop()
+            this.num2header.delete(rmindex)
+          }
+        }
+        else {
+          // add new
+          for (i; i<targetlen; i++) {
+            this.num2header.set(this.newHeaderIndex, {"value":key, "times":i})
+            var tmpindex = this.header2num.get(key)
+            tmpindex.push(this.newHeaderIndex++)
+          }
+        }
+      }
+
+      // change header range & height/width list
       if (isRow) {
-        this.markRowHeightList = this.set_list_length(this.markRowHeightList, this.markRowHeightList.length+1, this.cellHeight)
-        this.send_change_height_signal()
+        var longer = [this.markColumnWidthList.length - (this.headerRange.right+1)] * newChildrenNum + (this.headerRange.right)
+        var shorter = [this.markRowHeightList.length - (this.headerRange.bottom+1)] / newChildrenNum + (this.headerRange.bottom+2)
+        this.markRowHeightList = this.set_list_length(this.markRowHeightList, shorter, this.cellHeight)
+        this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, longer, this.cellWidth)
+
+        this.headerRange.bottom += 1
+        this.headerRange.right -= 1
       }
       else {
-        this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, this.markColumnWidthList.length+1, this.cellWidth)
-        this.send_change_width_signal()       
+        var shorter = [this.markColumnWidthList.length - (this.headerRange.right+1)] / newChildrenNum + (this.headerRange.right+2)
+        var longer = [this.markRowHeightList.length - (this.headerRange.bottom+1)] * newChildrenNum + (this.headerRange.bottom)
+
+        this.markRowHeightList = this.set_list_length(this.markRowHeightList, longer, this.cellHeight)
+        this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, shorter, this.cellWidth)     
+        this.headerRange.bottom -= 1
+        this.headerRange.right += 1
       }
+      this.send_change_height_signal()
+      this.send_change_width_signal()
 
-
-      /////////////////////////////////////////////////////
-
-      // // re-calculate header numbers
-      // // up layer
-      // for (var item of header[upLayerNum]) {
-      //   var i=this.headerDistribution.get(item[0]).count
-      //   var targetlen = item[1].parent.length
-      //   if (i > targetlen) {
-      //     // remove redundancy
-      //     for (var j=targetlen; j<i-1; j++) {
-      //       var rmindex = this.header2num.get(item[0]).pop()
-      //       this.num2header.delete(rmindex)
-      //     }
-      //   }
-      //   else {
-      //     // add new
-      //     for (i; i<targetlen; i++) {
-      //       this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
-      //       var tmpindex = JSON.parse(JSON.stringify(this.header2num.get(item[0])))
-      //       tmpindex.push(this.newHeaderIndex++)
-      //       this.header2num.set(item[0], tmpindex)
-      //     }
-      //   }
-      //   this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
-      // }
-      // // down layer
-      // for (var item of header[downLayerNum]) {
-      //   var i=this.headerDistribution.get(item[0]).count
-      //   var targetlen = item[1].parent.length
-      //   if (i > targetlen) {
-      //     // remove redundancy
-      //     for (var j=targetlen; j<i; j++) {
-      //       var rmindex = this.header2num.get(item[0]).pop()
-      //       this.num2header.delete(rmindex)
-      //     }
-      //   }
-      //   else {
-      //     // add new
-      //     for (i; i<targetlen; i++) {
-      //       this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
-      //       var tmpindex = JSON.parse(JSON.stringify(this.header2num.get(item[0])))
-      //       tmpindex.push(this.newHeaderIndex++)
-      //       this.header2num.set(item[0], tmpindex)
-      //     }
-      //   }
-      //   this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
-      // }
-
-      
     },
     get_new_parent_list(key, value, layer, header, newParent, ordList) {
       var ordinal
@@ -1953,35 +1935,50 @@ export default {
         const drag = d3.drag()
           .on('drag', function (d) {
             guideline.style("stroke-width", "2px")
-              .attr("x1", self.markWidth+self.widthRangeList[self.headerRange.right+1])
-              .attr("x2", self.markWidth+self.widthRangeList[self.widthRangeList.length-1])
-            d3.select(this).attr("transform", `translate(0, ${d.y})`)
-
-            if (d.dy > 0) {
-              var guidelayer = layer+1 > self.headerRange.bottom ? self.headerRange.bottom : layer+1
-              guideline.attr("y1", self.markHeight+self.heightRangeList[guidelayer+1])
-                .attr("y2", self.markHeight+self.heightRangeList[guidelayer+1])
-            }
-            else if (d.dy < 0) {
-              var guidelayer = layer-1 < 0 ? 0 : layer-1
-              guideline.attr("y1", self.markHeight+self.heightRangeList[guidelayer])
-                .attr("y2", self.markHeight+self.heightRangeList[guidelayer])
-            }
-          })
-          .on('end', function (d) {
-            if (d.y > 0) {
-              self.transform_swap(name, self.colHeader, false, false)
-            }
-            else if (d.y < 0) {
-              self.transform_swap(name, self.colHeader, true, false)
+            d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`)
+            
+            if (d.y >0 && d.x < 0 && layer==self.headerRange.bottom) {
+              guideline.attr("x1", self.markWidth+self.widthRangeList[self.headerRange.right+1])
+                .attr("x2", self.markWidth+self.widthRangeList[self.headerRange.right+1])
+                .attr("y1", self.markHeight+self.heightRangeList[self.headerRange.bottom+1])
+                .attr("y2", self.markHeight+self.heightRangeList[self.heightRangeList.length-1])
             }
             else {
-              // self.handle_transform_linear_or_stacked(name, times, 'avg')
+              guideline.attr("x1", self.markWidth+self.widthRangeList[self.headerRange.right+1])
+                .attr("x2", self.markWidth+self.widthRangeList[self.widthRangeList.length-1])
+              if (d.dy < 0) {
+                var guidelayer = layer-1 < 0 ? 0 : layer-1
+                guideline.attr("y1", self.markHeight+self.heightRangeList[guidelayer])
+                  .attr("y2", self.markHeight+self.heightRangeList[guidelayer])
+              }
+              else {
+                var guidelayer = layer+1 > self.headerRange.bottom ? self.headerRange.bottom : layer+1
+                guideline.attr("y1", self.markHeight+self.heightRangeList[guidelayer+1])
+                  .attr("y2", self.markHeight+self.heightRangeList[guidelayer+1])
+              }
             }
+            
+          })
+          .on('end', function (d) {
+            if (d.y >0 && d.x < 0 && layer==self.headerRange.bottom) {
+              self.transform_unnamed(name, self.colHeader, self.rowHeader, false)
+            }
+            else {
+              if (d.y > 0) {
+                self.transform_swap(name, self.colHeader, false, false)
+              }
+              else if (d.y < 0) {
+                self.transform_swap(name, self.colHeader, true, false)
+              }
+              else {
+                // self.handle_transform_linear_or_stacked(name, times, 'avg')
+              }
+            }
+              
             d3.select(this).remove()
             d3.select("#interaction-helper-line").remove()
           })
-        helper.datum({y:0, dy:0}).call(drag)
+        helper.datum({y:0, dy:0, x:0, dx:0}).call(drag)
       }
       else {
         const drag = d3.drag()
@@ -1989,32 +1986,46 @@ export default {
             guideline.style("stroke-width", "2px")
               .attr("y1", self.markHeight+self.heightRangeList[self.headerRange.bottom+1])
               .attr("y2", self.markHeight+self.heightRangeList[self.heightRangeList.length-1])
-            d3.select(this).attr("transform", `translate(${d.x}, 0)`) 
-            if (d.dx > 0) {
-              var guidelayer = layer+1 > self.headerRange.right ? self.headerRange.right : layer+1
-              guideline.attr("x1", self.markWidth+self.widthRangeList[guidelayer+1])
-                .attr("x2", self.markWidth+self.widthRangeList[guidelayer+1])
+            d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`) 
+
+            if (d.x > 0 && d.y < 0 && layer==self.headerRange.right) {
+              guideline.attr("x1", self.markWidth+self.widthRangeList[self.headerRange.right+1])
+                .attr("x2", self.markWidth+self.widthRangeList[self.widthRangeList.length-1])
+                .attr("y1", self.markHeight+self.heightRangeList[self.headerRange.bottom+1])
+                .attr("y2", self.markHeight+self.heightRangeList[self.headerRange.bottom+1])
             }
-            else if (d.dx < 0) {
-              var guidelayer = layer-1 < 0 ? 0 : layer-1
-              guideline.attr("x1", self.markWidth+self.widthRangeList[guidelayer])
-                .attr("x2", self.markWidth+self.widthRangeList[guidelayer])
+            else {
+              if (d.dx < 0) {
+                var guidelayer = layer-1 < 0 ? 0 : layer-1
+                guideline.attr("x1", self.markWidth+self.widthRangeList[guidelayer])
+                  .attr("x2", self.markWidth+self.widthRangeList[guidelayer])
+              }
+              else {
+                var guidelayer = layer+1 > self.headerRange.right ? self.headerRange.right : layer+1
+                guideline.attr("x1", self.markWidth+self.widthRangeList[guidelayer+1])
+                  .attr("x2", self.markWidth+self.widthRangeList[guidelayer+1])
+              }
             }
           })
           .on('end', function (d) {
-            if (d.x > 0) {
-              self.transform_swap(name, self.rowHeader, false, true)
-            }
-            else if (d.x < 0) {
-              self.transform_swap(name, self.rowHeader, true, true)
+            if (d.x > 0 && d.y < 0 && layer==self.headerRange.right) {
+              self.transform_unnamed(name, self.rowHeader, self.colHeader, true)
             }
             else {
-              // self.handle_transform_linear_or_stacked(name, times, 'sum')
+              if (d.x > 0) {
+                self.transform_swap(name, self.rowHeader, false, true)
+              }
+              else if (d.x < 0) {
+                self.transform_swap(name, self.rowHeader, true, true)
+              }
+              else {
+                // self.handle_transform_linear_or_stacked(name, times, 'sum')
+              }
             }
             d3.select(this).remove()
             d3.select("#interaction-helper-line").remove()
           })
-        helper.datum({x:0, dx:0}).call(drag)
+        helper.datum({x:0, dx:0, y:0, dy:0}).call(drag)
       }    
     }
   },
