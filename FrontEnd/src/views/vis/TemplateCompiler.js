@@ -108,37 +108,53 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             console.log("bar char range", metaData_obj.x.range);
             // simple bar chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-                picture = './templates/simple bar chart.png'
-                vegaConfig = {
-                    mark: "bar",
-                    data: { values: visData_arr },
-                    encoding: {
-                        x: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                        y: { field: selections_cell.GetQSelection(0), type: 'quantitative' },
-                        color: { field: selections_cell.GetXSelection(0), type: "nominal" },
+                if (is_horizon) {
+                    picture = './templates/simple bar chart.png'
+                    vegaConfig = {
+                        mark: "bar",
+                        data: { values: visData_arr },
+                        encoding: {
+                            x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                            y: { field: selections_cell.GetQSelection(0), type: 'quantitative' },
+                            color: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        }
                     }
-                }
-                if (!is_horizon) {
-                    [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                } else {
                     picture = './templates/simple bar chart y.png'
+                    vegaConfig = {
+                        mark: "bar",
+                        data: { values: visData_arr },
+                        encoding: {
+                            x: { field: selections_cell.GetQSelection(0), type: 'quantitative' },
+                            y: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                            color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        }
+                    }
                 }
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             // aggregate
             else {
-                vegaConfig = {
-                    mark: "bar",
-                    data: { values: visData_arr },
-                    encoding: {
-                        x: { field: selections_cell.GetXSelection(-1), type: "nominal" },
-                        y: { aggregate: "sum", field: selections_cell.GetQSelection(0) }
-                    }
-                }
                 if (is_horizon) {
+                    vegaConfig = {
+                        mark: "bar",
+                        data: { values: visData_arr },
+                        encoding: {
+                            x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                            y: { aggregate: "sum", field: selections_cell.GetQSelection(0) }
+                        }
+                    }
                     picture = './templates/bar chart.png'
                 }
                 else {
-                    [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
+                    vegaConfig = {
+                        mark: "bar",
+                        data: { values: visData_arr },
+                        encoding: {
+                            y: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                            x: { aggregate: "sum", field: selections_cell.GetQSelection(0) }
+                        }
+                    }
                     picture = './templates/bar chart y.png'
                 }
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
