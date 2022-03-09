@@ -124,8 +124,18 @@ VisDatabase.prototype.MinimizeHandler = function (id) {
     mButton_box.addEventListener("click", (e) => { e.stopPropagation(); this.MaximizeHandler(id); });
     mButton_box.setAttribute("class", 'vis-picture-mButton');
     mButton_box.setAttribute("id", id + '.mButton');
-    mButton_box.append(mButton_window);
 
+    let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("height", 21);
+    background.setAttribute("width", 21);
+    background.setAttribute("transform", "translate(-1.5,-1.5)");
+    background.setAttribute("rx", 2);
+    background.setAttribute("stroke", 'rgb(221,223,229)');
+    background.setAttribute("stroke-width", '1');
+    background.setAttribute("style", "fill:white");
+
+    mButton_box.append(background);
+    mButton_box.append(mButton_window);
 
     mButton_box.setAttribute("transform", "translate(" + (this.database[id].width - 20) + "," + 1 + ")");
 
@@ -157,11 +167,21 @@ VisDatabase.prototype.AddHiddenButton = function (id) {
     hButton_window.append(hButton);
     hButton_window.setAttribute("fill", '#6a9af1');
 
+    let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("height", 21);
+    background.setAttribute("width", 21);
+    background.setAttribute("transform", "translate(-1.5,-1.5)");
+    background.setAttribute("rx", 2);
+    background.setAttribute("stroke", 'rgb(221,223,229)');
+    background.setAttribute("stroke-width", '1');
+    background.setAttribute("style", "fill:white");
+
     let hButton_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
     hButton_box.setAttribute("id", id + '.hButton');
     hButton_box.addEventListener("click", (e) => { e.stopPropagation(); this.MinimizeHandler(id); });
     hButton_box.setAttribute("class", 'vis-picture-hButton');
-    hButton_box.append(hButton_window)
+    hButton_box.append(background);
+    hButton_box.append(hButton_window);
 
     hButton_box.setAttribute("transform", "translate(" + (this.database[id].width - 20) + "," + 1 + ")");
 
@@ -447,6 +467,16 @@ VisDatabase.prototype.GenRecommendFigs = function (recommendData_array, currentT
     return group_id;
 }
 
+VisDatabase.prototype.ModifyGroupFigs = function (id, currentTemplate_obj) {
+    let members = this.GetGroupMembers(id);
+    members.forEach(mID => {
+        if (mID != id) {
+            this.database[mID].vegaTemplate = currentTemplate_obj.ReuseTemplate(this.database[mID].metaData, this.database[mID].visData);
+            this.RerenderCanvas(mID);
+        }
+    });
+}
+
 VisDatabase.prototype.RegisterBus = function (bus_vmObj) {
     this.bus = bus_vmObj;
 }
@@ -516,7 +546,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     }
     else {
         let chartJson = JSON.parse(JSON.stringify(this.GetVegaLite(id, height - 0.3, width - 0.3)));
-        console.log("rendering", chartJson);
 
         let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
         let background = document.createElementNS("http://www.w3.org/2000/svg", "rect");

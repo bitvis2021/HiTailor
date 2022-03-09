@@ -46,14 +46,14 @@
 
     <!-- remove group canvas -->
     <el-dialog
-      title="Batch remove"
-      :visible.sync="dialog_removeAll"
+      title="Batch Operation"
+      :visible.sync="showBatchDialog"
       width="30%"
     >
-      <span>Do you want remove other figures which belong this group?</span>
+      <span>{{ dialogText }}</span>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialog_removeAll = false">No</el-button>
-        <el-button type="primary" @click="BatchRemove">Yes</el-button>
+        <el-button @click="showBatchDialog = false">No</el-button>
+        <el-button type="primary" @click="BatchOperate">Yes</el-button>
       </span>
     </el-dialog>
   </div>
@@ -102,7 +102,12 @@ export default {
       VisDB: new VisDatabase(this.$bus),
       figID: "",
 
-      dialog_removeAll: false,
+      showBatchDialog: false,
+      dialogTexts: {
+        remove: "Do you want remove other figures which belong this group?",
+        reconf: "Do you want config other figures which belong this group?",
+      },
+      dialogText: "",
       currentGroupID: "",
 
       unitData_arr: [],
@@ -188,14 +193,22 @@ export default {
       } else {
         this.VisDB.SetTemplate(this.figID, this.currentTemplate);
         this.VisDB.RerenderCanvas(this.figID);
+        if (this.VisDB.GetGroupMembers(this.figID).length > 1) {
+          this.dialogText = this.dialogTexts.reconf;
+          this.showBatchDialog = true;
+        }
       }
 
       this.$bus.$emit("apply-config");
     },
 
-    BatchRemove() {
-      this.dialog_removeAll = false;
-      this.VisDB.DeleteGroup(this.currentGroupID);
+    BatchOperate() {
+      this.showBatchDialog = false;
+      if (this.dialogText == this.dialogTexts.remove) {
+        this.VisDB.DeleteGroup(this.currentGroupID);
+      } else if (this.dialogText == this.dialogTexts.reconf) {
+        this.VisDB.ModifyGroupFigs(this.figID, this.currentTemplate);
+      }
     },
   },
   mounted() {
@@ -266,6 +279,7 @@ export default {
     // User click vis. Restore previous context.
     this.$bus.$on("select-canvas", (id) => {
       this.figID = id;
+      this.currentGroupID = this.VisDB.GetGroupID(this.figID);
       if (this.VisDB.database[id].type === "vega") {
         this.currentTemplate = this.VisDB.GetTemplate(id);
         this.visData = this.VisDB.database[id].visData;
@@ -296,9 +310,9 @@ export default {
     });
 
     // User close a canvas that belongs to a group
-    this.$bus.$on("remove-groupCanvas", (group_id) => {
-      this.dialog_removeAll = true;
-      this.currentGroupID = group_id;
+    this.$bus.$on("remove-groupCanvas", () => {
+      this.showBatchDialog = true;
+      this.dialogText = this.dialogTexts.remove;
     });
 
     // resize function

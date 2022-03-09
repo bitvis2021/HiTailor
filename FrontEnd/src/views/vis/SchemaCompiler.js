@@ -165,16 +165,6 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
                     // use is number to judge
                     // special situation
                     if (property.name == 'field') {
-                        // if (property.value == 'value') {
-                        //     this.vegaEncoding[encodingName].type = "quantitative";
-                        //     this.vegaEncoding[encodingName].sort = undefined;
-                        // }
-                        // else {
-                        //     if (this.sortBindings != undefined && this.sortBindings.hasOwnProperty(property.value)) {
-                        //         this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
-                        //         this.vegaEncoding[encodingName].type = "nominal";
-                        //     }
-                        // }
                         this.FieldSelections.CompileSelection(property.value, this.vegaEncoding[encodingName]);
                     }
                 }
@@ -347,7 +337,9 @@ FieldSelection.prototype.GetQSelection = function (at_num) {
 }
 
 FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
-    encoding_obj['test'] = value_str;
+    encoding_obj['type'] = this.GetType(value_str);
+    encoding_obj['sort'] = this.GetSort(value_str);
+    // type and sort support
 }
 
 FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelection) {
