@@ -1,31 +1,28 @@
 // 总感觉可以面向对象重构一波
-function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
+function EncodingCompiler(VegaEncoding_obj, FieldSelections_obj) {
     // this.positionChannel={
     //     field
     // }
     this.vegaEncoding = VegaEncoding_obj;
-    this.ECSelections = ECSelections_obj;
-    this.sortBindings = Object.assign(this.ECSelections.xSelect.bindings, this.ECSelections.ySelect.bindings)
+    this.FieldSelections = FieldSelections_obj;
     function propertyConfig(selection_str) {
         if (selection_str == 'xField') return {
             name: 'field',
-            type: 'select',
-            // selections: this.ECSelections.xSelect.selections.concat(['value']),
-            selections: this.ECSelections.xSelect.selections,
+            type: 'group select',
+            selections: { x: this.FieldSelections.GetXSelections(), quantitative: this.FieldSelections.GetQSelections() },
             value: ''
         }
         else if (selection_str == 'yField') return {
             name: 'field',
-            type: 'select',
-            value: '',
-            selections: this.ECSelections.ySelect.selections
-            // selections: this.ECSelections.ySelect.selections.concat(['value'])
+            type: 'group select',
+            selections: { y: this.FieldSelections.GetYSelections(), quantitative: this.FieldSelections.GetQSelections() },
+            value: ''
         }
         else if (selection_str == 'allField') return {
             name: 'field',
             type: 'group select',
             value: '',
-            selections: { x: this.ECSelections.xSelect.selections, y: this.ECSelections.ySelect.selections },
+            selections: { x: this.FieldSelections.GetXSelections(), y: this.FieldSelections.GetYSelections(), quantitative: this.FieldSelections.GetQSelections() },
         }
         else if (selection_str == 'aggregate') return {
             name: 'aggregate',
@@ -40,7 +37,7 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
             selections: ['linear', 'pow', 'sqrt', 'symlog', 'log'],
         }
     }
-    // make it can use this.ECSelections
+    // make it can use this.FieldSelections
     propertyConfig = propertyConfig.bind(this);
 
     this.supportedEncodings = {
@@ -168,16 +165,17 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
                     // use is number to judge
                     // special situation
                     if (property.name == 'field') {
-                        if (property.value == 'value') {
-                            this.vegaEncoding[encodingName].type = "quantitative";
-                            this.vegaEncoding[encodingName].sort = undefined;
-                        }
-                        else {
-                            if (this.sortBindings != undefined && this.sortBindings.hasOwnProperty(property.value)) {
-                                this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
-                                this.vegaEncoding[encodingName].type = "nominal";
-                            }
-                        }
+                        // if (property.value == 'value') {
+                        //     this.vegaEncoding[encodingName].type = "quantitative";
+                        //     this.vegaEncoding[encodingName].sort = undefined;
+                        // }
+                        // else {
+                        //     if (this.sortBindings != undefined && this.sortBindings.hasOwnProperty(property.value)) {
+                        //         this.vegaEncoding[encodingName].sort = this.sortBindings[property.value];
+                        //         this.vegaEncoding[encodingName].type = "nominal";
+                        //     }
+                        // }
+                        this.FieldSelections.ProcessSelection(property.value, this.vegaEncoding[encodingName]);
                     }
                 }
                 else {
@@ -260,67 +258,123 @@ EncodingCompiler.prototype.DeletPropertyOnVega = function (encodingName_str, pro
 }
 
 export function FieldSelection() {
-    this.xSelect = {
-        selections: [],
-        bindings: {}
+    this.XSelect = {
+        selections: []
     };
-    this.ySelect = {
-        selections: [],
-        bindings: {}
-    }
+    this.YSelect = {
+        selections: []
+    };
+    this.QSelect = {
+        selections: []
+    };
+    this.bindings = {};
+    /*
+        {
+            selectionName:{
+                sequence:num,
+               type:"", 
+                sort:[],
+            },
+            selectionName2:{},
+            ...
+        }
+    */
 }
 
-FieldSelection.prototype.SetXSelections = function (selection_arr, bindings_obj) {
-    this.xSelect.selections = selection_arr;
-    if (bindings_obj == undefined) {
-        this.xSelect.bindings = {};
-    }
-    else {
-        this.xSelect.bindings = bindings_obj;
-    }
+FieldSelection.prototype.AddXSelection = function (selectionName_str, nominalSort_arr) {
+    this.XSelect.selections.push(selectionName_str);
+    this.bindings[selectionName_str].type = "nominal";
+    this.bindings[selectionName_str].sort = nominalSort_arr;
 }
 
-FieldSelection.prototype.AddXSelection = function (selectionName_str) {
-    this.xSelect.selections.push(selectionName_str);
+FieldSelection.prototype.AddYSelection = function (selectionName_str, nominalSort_arr) {
+    this.YSelect.selections.push(selectionName_str);
+    this.bindings[selectionName_str].type = "nominal";
+    this.bindings[selectionName_str].sort = nominalSort_arr;
 }
 
-FieldSelection.prototype.AddYSelection = function (selectionName_str) {
-    this.ySelect.selections.push(selectionName_str);
-}
-
-FieldSelection.prototype.SetYSelections = function (selection_arr, bindings_obj) {
-    this.ySelect.selections = selection_arr;
-    if (bindings_obj == undefined) {
-        this.ySelect.bindings = {};
-    }
-    else {
-        this.ySelect.bindings = bindings_obj;
-    }
+FieldSelection.prototype.AddQSelection = function (selectionName_str) {
+    this.QSelect.selections.push(selectionName_str);
+    this.bindings[selectionName_str].type = "quantitative";
 }
 
 FieldSelection.prototype.GetXSelections = function () {
-    return this.xSelect.selections;
+    return this.XSelect.selections;
 }
-
 
 FieldSelection.prototype.GetYSelections = function () {
-    return this.ySelect.selections;
+    return this.YSelect.selections;
 }
+
+FieldSelection.prototype.GetQSelections = function () {
+    return this.QSelect.selections;
+}
+
+FieldSelection.prototype.GetXSelection = function (at_num) {
+    if (at_num > this.XSelect.selections.length) {
+        return this.XSelect.selections.at(-1);
+    }
+    else if (at_num < -this.XSelect.selections.length) {
+        return this.XSelect.selections.at(0);
+    }
+    return this.XSelect.selections.at(at_num);
+}
+
+FieldSelection.prototype.GetYSelection = function (at_num) {
+    if (at_num > this.YSelect.selections.length) {
+        return this.YSelect.selections.at(-1);
+    }
+    else if (at_num < -this.YSelect.selections.length) {
+        return this.YSelect.selections.at(0);
+    }
+    return this.YSelect.selections.at(at_num);
+}
+
+FieldSelection.prototype.GetQSelection = function (at_num) {
+    if (at_num > this.XSelect.selections.length) {
+        return this.XSelect.selections.at(-1);
+    }
+    else if (at_num < -this.XSelect.selections.length) {
+        return this.XSelect.selections.at(0);
+    }
+    return this.XSelect.selections.at(at_num);
+}
+
+FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
+    encoding_obj['test'] = value_str;
+}
+
+FieldSelection.prototype.GetMappedValue = function (sourceSelection_str, source_FieldSelection) {
+    let find = source_FieldSelection.QSelect.indexOf(sourceSelection_str);
+    if (find != -1) {
+        return this.GetQSelection(find);
+    }
+    find = sourceSelection_str.XSelect.indexOf(sourceSelection_str);
+    if (find != -1) {
+        return this.GetXSelection(find);
+    }
+    find = sourceSelection_str.YSelect.indexOf(sourceSelection_str);
+    if (find != -1) {
+        return this.GetYSelection(find);
+    }
+}
+
 
 EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
 
     let ans = new FieldSelection();
 
     metaData_obj.x.headers.forEach(element => {
-        ans.xSelect.selections.push(element.name);
-        ans.xSelect.bindings[element.name] = element.sort;
+        ans.XSelect.selections.push(element.name);
+        ans.XSelect.bindings[element.name] = element.sort;
     });
     metaData_obj.y.headers.forEach(element => {
-        ans.ySelect.selections.push(element.name);
-        ans.ySelect.bindings[element.name] = element.sort;
+        ans.YSelect.selections.push(element.name);
+        ans.YSelect.bindings[element.name] = element.sort;
     });
     return ans;
 }
+
 
 export { EncodingCompiler };
 

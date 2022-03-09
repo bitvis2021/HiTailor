@@ -147,9 +147,7 @@ export default {
     };
   },
   methods: {
-    InitialUpper(word) {
-      return word.toUpperCase()[0] + word.slice(1);
-    },
+    // refresh config
     ApplyConfig() {
       this.encoding = this.EC.GetVegaConfig(this.schema);
       this.$emit("apply-config", this.encoding);
