@@ -66,8 +66,8 @@
           </button> -->
           <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
-            @click="transform_merge()" > 
-            Merge
+            @click="transform_unnamed('SSH', colHeader, rowHeader, false)" > 
+            test
           </button>
 
           <div class="recommend-element">
@@ -871,10 +871,7 @@ export default {
       this.hide_recommend_element()
     },
     confirm_recommendation() {
-      if (this.isChoosingUnit) {
-        this.transmit_unit_recommendation_to_vis()
-      }
-      else {
+      if (!this.isChoosingUnit) {
         this.transmit_recommendation_to_vis()
       }
       this.hide_recommend_element()
@@ -990,7 +987,6 @@ export default {
               }
               this.cal_range_list(this.markColumnWidthList, "mark width")
               this.cal_range_list(this.columnWidthList, "width")
-
             }
             
             // recalculate value-cell position
@@ -1143,10 +1139,6 @@ export default {
       // if (differ) { 
       //   return
       // }
-      
-
-      // if it's linear, change to stacked
-      // var linearChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
 
       var new1st = Array.from(header[upLayerNum])[0][1].parent
       var new2nd = Array.from(header[upLayerNum])[0][1].children[0]
@@ -1342,7 +1334,6 @@ export default {
       else {
         this.headerDistribution.set(movingChild, hinfo)
       }
-      
       
       //modify num2seq/seq2num
       for (var item of this.seq2num) {
@@ -1571,10 +1562,156 @@ export default {
       this.$bus.$emit("change-header")
 
     },
-    transform_merge() {
+    transform_unnamed(name, oriHeader, newHeader, isRow) {
       this.clear_selected_cell()
       this.$bus.$emit("change-header")
+      var distributionInfo = this.headerDistribution.get(name)        
+      var currLayerNum = distributionInfo.layer
+      if (currLayerNum != oriHeader.length-1 || currLayerNum==0)  return // only support the last layer
+      var upLayerNum = currLayerNum-1
 
+      // check if it's able to transform 
+      var reference = null, refernum = null
+      for (var item of oriHeader[upLayerNum].keys()) {
+        if (reference == null) {
+          reference = oriHeader[upLayerNum].get(item).children[0]
+          refernum = oriHeader[upLayerNum].get(item).children.length
+        }
+        if (refernum != oriHeader[upLayerNum].get(item).children.length) {
+          return  // not fully-conn, can't change
+        }
+        for (var i=0; i<oriHeader[upLayerNum].get(item).children.length; i++) {
+          if (JSON.stringify(reference) != JSON.stringify(oriHeader[upLayerNum].get(item).children[i])) {
+            return  // not fully-conn, can't change
+          }
+        }       
+      }
+
+      var newChildren = Array.from(oriHeader[upLayerNum])[0][1].children[0]
+      var newChildrenNum = newChildren.length
+
+      // get new parent list
+      var newParent = [], ordList = new Map
+      for (var [key, value] of newHeader[0]) {
+        this.get_new_parent_list(key, value, 0, newHeader, newParent, ordList) 
+      }
+
+      // add children for newheader's pre last layer
+      var newLayerNum = newHeader.length, childrenCount = 0
+      for (var [key, value] of newHeader[newLayerNum-1]) {
+        for (var i=0; i<value.range.length; i++) {
+          value.children.push(newChildren)
+          value.cellNum = newChildrenNum
+          childrenCount += 1
+        }
+      } 
+      
+      // change header & headerDistribution
+      var cobj = new Object
+      cobj["range"] = {start:null, end:null}
+			cobj["cellNum"] = 1
+			cobj["children"] = []
+			cobj["parent"] = newParent
+			cobj["isFullyConn"] = true
+
+      var newLayer = new Map
+      for (var i=0; i<newChildren.length; i++) {
+        var name = newChildren[i]
+        this.headerDistribution.set(name, {isRowHeader:!isRow, layer:newLayerNum, count:childrenCount})
+        newLayer.set(name, cobj)
+      }
+      newHeader.push(newLayer)
+
+      // delete children
+      for (var [key, value] of oriHeader[currLayerNum-1]) {
+        value.children = []
+        value.cellNum = 1
+      }
+      oriHeader.splice(currLayerNum, 1)
+
+      console.log("origin", oriHeader)
+      console.log("new", newHeader) // range cellnum 都不对
+
+      // 这里也不对
+      if (isRow) {
+        this.markRowHeightList = this.set_list_length(this.markRowHeightList, this.markRowHeightList.length+1, this.cellHeight)
+        this.send_change_height_signal()
+      }
+      else {
+        this.markColumnWidthList = this.set_list_length(this.markColumnWidthList, this.markColumnWidthList.length+1, this.cellWidth)
+        this.send_change_width_signal()       
+      }
+
+
+      /////////////////////////////////////////////////////
+
+      // // re-calculate header numbers
+      // // up layer
+      // for (var item of header[upLayerNum]) {
+      //   var i=this.headerDistribution.get(item[0]).count
+      //   var targetlen = item[1].parent.length
+      //   if (i > targetlen) {
+      //     // remove redundancy
+      //     for (var j=targetlen; j<i-1; j++) {
+      //       var rmindex = this.header2num.get(item[0]).pop()
+      //       this.num2header.delete(rmindex)
+      //     }
+      //   }
+      //   else {
+      //     // add new
+      //     for (i; i<targetlen; i++) {
+      //       this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
+      //       var tmpindex = JSON.parse(JSON.stringify(this.header2num.get(item[0])))
+      //       tmpindex.push(this.newHeaderIndex++)
+      //       this.header2num.set(item[0], tmpindex)
+      //     }
+      //   }
+      //   this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
+      // }
+      // // down layer
+      // for (var item of header[downLayerNum]) {
+      //   var i=this.headerDistribution.get(item[0]).count
+      //   var targetlen = item[1].parent.length
+      //   if (i > targetlen) {
+      //     // remove redundancy
+      //     for (var j=targetlen; j<i; j++) {
+      //       var rmindex = this.header2num.get(item[0]).pop()
+      //       this.num2header.delete(rmindex)
+      //     }
+      //   }
+      //   else {
+      //     // add new
+      //     for (i; i<targetlen; i++) {
+      //       this.num2header.set(this.newHeaderIndex, {"value":item[0], "times":i})
+      //       var tmpindex = JSON.parse(JSON.stringify(this.header2num.get(item[0])))
+      //       tmpindex.push(this.newHeaderIndex++)
+      //       this.header2num.set(item[0], tmpindex)
+      //     }
+      //   }
+      //   this.headerDistribution.get(item[0]).count = item[1].parent.length==0 ? 1 : item[1].parent.length
+      // }
+
+      
+    },
+    get_new_parent_list(key, value, layer, header, newParent, ordList) {
+      var ordinal
+      if (ordList.has(key)) {
+        ordinal = ordList.get(key)
+        ordList.set(key, ordinal+1)
+      }
+      else {
+        ordinal = 0
+        ordList.set(key, 1)
+      }
+      if (layer == header.length-1) { // last layer
+        newParent.push({name:key, ordinal:ordinal})
+        return
+      }
+
+      for (var i=0; i<value.children[ordinal].length; i++) {
+        var name = value.children[ordinal][i]
+        this.get_new_parent_list(name, header[layer+1].get(name), layer+1, header, newParent, ordList)
+      }
     },
 
     transmit_chosen_to_vis(top, bottom, left, right) {
@@ -1583,13 +1720,13 @@ export default {
         this.headerDistribution, this.colHeader, this.rowHeader)
       var pos = get_pos_for_transmission(top, bottom, left, right, 
         this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
-      console.log('select-data-to-send', metadata)
       this.$bus.$emit('visualize-selectedData', pos, jsdata, metadata)
 
-      // single unit, send recommendation too
-      if (top==bottom && left==right) {
-        this.transmit_unit_recommendation_to_vis()
-      }
+      // // single unit, send recommendation too
+      // if (top==bottom && left==right) {
+      //   this.transmit_unit_recommendation_to_vis()
+      //   // this.transmit_unit_recommendation_to_vis(pos, this.directionSelectValue)
+      // }
     },
     transmit_recommendation_to_vis() {
       var dataArray = [], data
@@ -1605,19 +1742,6 @@ export default {
       
       var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
       if (min==0) min = 1
-
-      // var direction = this.directionSelectValue
-      // var typeArray
-      //   if (direction.length == 2) {
-      //     typeArray=[0, 1, 2]
-      //   }
-      //   else if (direction.length == 0) {
-      //     typeArray=[]
-      //   }
-      //   else {
-      //     if (direction[0] == "row") typeArray=[0]
-      //     else if (direction[0] == "column") typeArray=[1]
-      //   }
 
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
@@ -1641,36 +1765,32 @@ export default {
       this.$bus.$emit('visualize-recommendData', dataArray)
     },
     transmit_unit_recommendation_to_vis() {
-      var dataArray = [], data
+      console.log("transmit unit recommendation!!!!!")
+      var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
+      if (min==0) min = 1
+
+      var data
       if (this.directionSelectValue.length == 2) {
         data = this.recommendDataBoth
       }
       else if (this.directionSelectValue[0] == "row") {
         data = this.recommendDataRow
+        max = max > 3 ? 3 : max
+      }
+      else if (this.directionSelectValue[0] == "column") {
+        data = this.recommendDataCol
+        max = max > 3 ? 3 : max
       }
       else {
-        data = this.recommendDataCol
+        return
       }
       
-      var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
-      if (min==0) min = 1
+      var selectedPos = get_pos_for_transmission(this.selectedArea.top, this.selectedArea.bottom, this.selectedArea.left, this.selectedArea.right,
+        this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
 
-      // var direction = this.directionSelectValue
-      // var typeArray
-      //   if (direction.length == 2) {
-      //     typeArray=[0, 1, 2]
-      //   }
-      //   else if (direction.length == 0) {
-      //     typeArray=[]
-      //   }
-      //   else {
-      //     if (direction[0] == "row") typeArray=[0]
-      //     else if (direction[0] == "column") typeArray=[1]
-      //   }
-
+      var vis = []
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
-          // if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
           var area = data[i][j]
           var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
 
@@ -1682,13 +1802,52 @@ export default {
             this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
 
           var obj = {position: pos, value: value, priority: i+1}
-          dataArray.push(obj)
+          vis.push(obj)
         }
       }
+      var visdata = JSON.stringify(vis)
 
-      console.log("unit-recommend-data-to-send", dataArray)
-      this.$bus.$emit('visualize-recommendUnit', dataArray)
+      var meta = {"x": {"range": 1}, "y": {"range": 1}}
+      var metadata = JSON.stringify(meta)
+
+      this.$bus.$emit('visualize-selectedData', selectedPos, visdata, metadata)
     },
+    // transmit_unit_recommendation_to_vis() {
+    //   var dataArray = [], data
+    //   if (this.directionSelectValue.length == 2) {
+    //     data = this.recommendDataBoth
+    //   }
+    //   else if (this.directionSelectValue[0] == "row") {
+    //     data = this.recommendDataRow
+    //   }
+    //   else {
+    //     data = this.recommendDataCol
+    //   }
+      
+    //   var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
+    //   if (min==0) min = 1
+
+    //   for (var i=min-1; i<=max-1; i++) {
+    //     for (var j=0; j<data[i].length; j++) {
+    //       // if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+    //       var area = data[i][j]
+    //       var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
+
+    //       var top = area.top+this.headerRange.bottom+1
+    //       var bottom = area.bottom+this.headerRange.bottom+1
+    //       var left = area.left+this.headerRange.right+1
+    //       var right = area.right+this.headerRange.right+1
+    //       var pos = get_pos_for_transmission(top, bottom, left, right,
+    //         this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
+
+    //       var obj = {position: pos, value: value, priority: i+1}
+    //       dataArray.push(obj)
+    //     }
+    //   }
+
+    //   console.log("unit-recommend-data-to-send", dataArray)
+    //   this.$bus.$emit('visualize-recommendUnit', dataArray)
+    // },
     cal_recommendation_data(top, bottom, left, right) {
       this.recommendDataBoth = [[], [], [], [], []]
       this.recommendDataRow = [[], [], []]
@@ -1944,11 +2103,16 @@ export default {
         else {
           if (data[0] == "row") prefix += "row"
           else if (data[0] == "column") prefix += "col"
+          max = max > 3 ? 3 : max
         }
 
         for (var i=min; i<=max; i++) {
           name = prefix + "-" + i
           d3.selectAll(name).style("visibility", "visible")
+        }
+
+        if (this.selectedArea.top!=null && this.selectedArea.top==this.selectedArea.bottom && this.selectedArea.left==this.selectedArea.right) {
+          this.transmit_unit_recommendation_to_vis()
         }
       }
     }      
