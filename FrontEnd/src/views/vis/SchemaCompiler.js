@@ -283,18 +283,21 @@ export function FieldSelection() {
 
 FieldSelection.prototype.AddXSelection = function (selectionName_str, nominalSort_arr) {
     this.XSelect.selections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
     this.bindings[selectionName_str].type = "nominal";
     this.bindings[selectionName_str].sort = nominalSort_arr;
 }
 
 FieldSelection.prototype.AddYSelection = function (selectionName_str, nominalSort_arr) {
     this.YSelect.selections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
     this.bindings[selectionName_str].type = "nominal";
     this.bindings[selectionName_str].sort = nominalSort_arr;
 }
 
 FieldSelection.prototype.AddQSelection = function (selectionName_str) {
     this.QSelect.selections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
     this.bindings[selectionName_str].type = "quantitative";
 }
 
@@ -320,6 +323,15 @@ FieldSelection.prototype.GetXSelection = function (at_num) {
     return this.XSelect.selections.at(at_num);
 }
 
+FieldSelection.prototype.GetSort = function (selectionName_str) {
+    return this.bindings[selectionName_str].sort;
+}
+
+FieldSelection.prototype.GetType = function (selectionName_str) {
+    return this.bindings[selectionName_str].type;
+}
+
+
 FieldSelection.prototype.GetYSelection = function (at_num) {
     if (at_num > this.YSelect.selections.length) {
         return this.YSelect.selections.at(-1);
@@ -331,13 +343,13 @@ FieldSelection.prototype.GetYSelection = function (at_num) {
 }
 
 FieldSelection.prototype.GetQSelection = function (at_num) {
-    if (at_num > this.XSelect.selections.length) {
-        return this.XSelect.selections.at(-1);
+    if (at_num > this.QSelect.selections.length) {
+        return this.QSelect.selections.at(-1);
     }
-    else if (at_num < -this.XSelect.selections.length) {
-        return this.XSelect.selections.at(0);
+    else if (at_num < -this.QSelect.selections.length) {
+        return this.QSelect.selections.at(0);
     }
-    return this.XSelect.selections.at(at_num);
+    return this.QSelect.selections.at(at_num);
 }
 
 FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
@@ -365,13 +377,12 @@ EncodingCompiler.GetSelectionsFromMetaData = function (metaData_obj) {
     let ans = new FieldSelection();
 
     metaData_obj.x.headers.forEach(element => {
-        ans.XSelect.selections.push(element.name);
-        ans.XSelect.bindings[element.name] = element.sort;
+        ans.AddXSelection(element.name, element.sort);
     });
     metaData_obj.y.headers.forEach(element => {
-        ans.YSelect.selections.push(element.name);
-        ans.YSelect.bindings[element.name] = element.sort;
+        ans.AddYSelection(element.name, element.sort);
     });
+    ans.AddQSelection('value');
     return ans;
 }
 
