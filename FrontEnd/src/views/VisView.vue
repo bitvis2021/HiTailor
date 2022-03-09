@@ -64,11 +64,7 @@ import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import UnitView from "./vis/UnitView.vue";
-import {
-  GetTemplates,
-  VegaTemplate,
-  GetTemplate,
-} from "./vis/TemplateCompiler";
+import { GetTemplates, VegaTemplate } from "./vis/TemplateCompiler";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
 // visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
@@ -83,6 +79,12 @@ export default {
   computed: {
     VegaConfigNoData() {
       return { mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding };
+    },
+    vegaConfig() {
+      return this.currentTemplate.GetVegaConfig();
+    },
+    ECSelections() {
+      return this.currentTemplate.GetSelections();
     },
   },
   data() {
@@ -117,15 +119,6 @@ export default {
         value: 0,
       },
     };
-  },
-  computed: {
-    // user visible config
-    vegaConfig() {
-      return this.currentTemplate.GetVegaConfig();
-    },
-    ECSelections() {
-      return this.currentTemplate.GetSelections();
-    },
   },
   methods: {
     ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
@@ -282,10 +275,12 @@ export default {
       this.figID = id;
       this.currentGroupID = this.VisDB.GetGroupID(this.figID);
       if (this.VisDB.database[id].type === "vega") {
-        console.log("restore data")
+        console.log("restore data");
         this.currentTemplate = this.VisDB.GetTemplate(id);
         this.visData = this.VisDB.database[id].visData;
         this.metaData = this.VisDB.database[id].metaData;
+        console.log(this.currentTemplate);
+        this.showPanelView = false;
         this.OpenPanelView();
       } else {
         console.log("open Unit");

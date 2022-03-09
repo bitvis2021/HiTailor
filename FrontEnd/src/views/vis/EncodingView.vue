@@ -147,7 +147,8 @@ export default {
   },
   watch: {
     config() {
-      alert("change!");
+      this.EC = new EncodingCompiler(this.config, this.selections);
+      this.schema = this.EC.GetSchema();
     },
   },
   methods: {
