@@ -23,6 +23,7 @@ export let supportedTemplate = {
     NQ_Histogram_Scatterplot: "2D Histogram Scatterplot",
     NQ_Histogram_Heatmap: "2D Histogram Heatmap",
     NQ_PieChart: "Pie Chart",
+    NQ_RadialPlot: "Radio Plot",
 }
 
 // factory model
@@ -388,6 +389,43 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
 
             }
+        case supportedTemplate.NQ_RadialPlot:
+            if (is_horizon) {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_horizon
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative", "stack": true },
+                        "radius": {
+                            "field": selections_horizon.GetXSelections().at(0),
+                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+                        },
+                        "color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
+                    }
+                }
+                return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/pie chart.png');
+            }
+            else {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_vertical
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative", "stack": true },
+                        "radius": {
+                            "field": selections_vertical.GetYSelections().at(0),
+                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+                        },
+                        "color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
+                    }
+                }
+                return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/pie chart.png');
+            }
         default:
             break;
     }
@@ -438,6 +476,7 @@ export function GetTemplates(metaData_obj, visData_arr) {
 
         let Q2Chart = [
             supportedTemplate.NQ_PieChart,
+            supportedTemplate.NQ_RadialPlot,
             supportedTemplate.NQor2Q_Simple_Line_Chart,
             supportedTemplate.Q2_Horizon_Graph,
             supportedTemplate.Q2_Scatter_plot,

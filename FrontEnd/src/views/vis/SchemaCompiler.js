@@ -43,7 +43,7 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
     // make it can use this.ECSelections
     propertyConfig = propertyConfig.bind(this);
 
-    this.encodings = {
+    this.supportedEncodings = {
         // select / group select
         x: {
             field: 'xField',
@@ -91,16 +91,20 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
         theta: {
             field: 'xField',
             'scale type': 'scale type'
+        },
+        radius: {
+            field: 'xField',
+            'scale type': 'scale type'
         }
     }
 
-    for (const channel in this.encodings) {
-        if (Object.hasOwnProperty.call(this.encodings, channel)) {
-            this.encodings[channel] = this.encodings[channel];
-            for (const property in this.encodings[channel]) {
-                if (Object.hasOwnProperty.call(this.encodings[channel], property)) {
-                    let propertyName = this.encodings[channel][property];
-                    this.encodings[channel][property] = propertyConfig(propertyName);
+    for (const channel in this.supportedEncodings) {
+        if (Object.hasOwnProperty.call(this.supportedEncodings, channel)) {
+            this.supportedEncodings[channel] = this.supportedEncodings[channel];
+            for (const property in this.supportedEncodings[channel]) {
+                if (Object.hasOwnProperty.call(this.supportedEncodings[channel], property)) {
+                    let propertyName = this.supportedEncodings[channel][property];
+                    this.supportedEncodings[channel][property] = propertyConfig(propertyName);
 
                 }
             }
@@ -108,9 +112,9 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
     }
 
     this.addProperties = {};
-    for (const key in this.encodings) {
-        if (Object.hasOwnProperty.call(this.encodings, key)) {
-            const element = this.encodings[key];
+    for (const key in this.supportedEncodings) {
+        if (Object.hasOwnProperty.call(this.supportedEncodings, key)) {
+            const element = this.supportedEncodings[key];
             this.addProperties[key] = [];
             for (const property in element) {
                 this.addProperties[key].push(property);
@@ -123,18 +127,22 @@ function EncodingCompiler(VegaEncoding_obj, ECSelections_obj) {
 EncodingCompiler.prototype.GetSchema = function () {
     let ans = {}
     for (const key in this.vegaEncoding) {
-        if (this.encodings.hasOwnProperty(key)) {
+        if (this.supportedEncodings.hasOwnProperty(key)) {
 
             if (Object.hasOwnProperty.call(this.vegaEncoding, key)) {
                 const encoding = this.vegaEncoding[key];
-                let supportProperty = this.encodings[key];
-                ans[key] = []
+                let supportProperty = this.supportedEncodings[key];
+                ans[key] = [];
                 for (const propertyName in encoding) {
                     if (Object.hasOwnProperty.call(encoding, propertyName)) {
                         const propertyValue = encoding[propertyName];
                         if (supportProperty.hasOwnProperty(propertyName)) {
                             supportProperty[propertyName].value = propertyValue;
-                            ans[key].push(supportProperty[propertyName])
+                            ans[key].push(supportProperty[propertyName]);
+                        }
+                        else if (propertyName == 'scale' && propertyValue.hasOwnProperty("type")) {
+                            supportProperty['scale type'].value = propertyValue.type;
+                            ans[key].push(supportProperty['scale type']);
                         }
                     }
                 }
@@ -191,19 +199,19 @@ EncodingCompiler.prototype.GetVegaConfig = function (schema_obj) {
 
 EncodingCompiler.prototype.GetNewEncoding = function (encodingName) {
     this.vegaEncoding[encodingName] = { field: '' };
-    if (this.encodings.hasOwnProperty(encodingName)) {
+    if (this.supportedEncodings.hasOwnProperty(encodingName)) {
         let ans = [];
-        ans.push(this.encodings[encodingName]['field'])
+        ans.push(this.supportedEncodings[encodingName]['field'])
         return ans;
     }
     return undefined
 }
 
 EncodingCompiler.prototype.GetNewProperty = function (encodingName, propertyName) {
-    if (this.encodings.hasOwnProperty(encodingName)) {
-        return JSON.parse(JSON.stringify(this.encodings[encodingName][propertyName]));
+    if (this.supportedEncodings.hasOwnProperty(encodingName)) {
+        return JSON.parse(JSON.stringify(this.supportedEncodings[encodingName][propertyName]));
     }
-    this.vegaEncoding[encodingName][propertyName] = this.encodings[encodingName][propertyName].value;
+    this.vegaEncoding[encodingName][propertyName] = this.supportedEncodings[encodingName][propertyName].value;
     return undefined
 }
 
@@ -222,7 +230,7 @@ EncodingCompiler.prototype.GetProperties = function (schema_obj, encoding_str) {
 
 EncodingCompiler.prototype.GetEncodings = function (schema_obj) {
     let ans = [];
-    for (const key in this.encodings) {
+    for (const key in this.supportedEncodings) {
         ans.push(key);
     }
     for (const key in schema_obj) {
