@@ -327,10 +327,10 @@ FieldSelection.prototype.GetYSelection = function (at_num) {
 }
 
 FieldSelection.prototype.GetQSelection = function (at_num) {
-    if (at_num > this.QSelections.length) {
+    if (at_num >= this.QSelections.length) {
         return this.QSelections.at(-1);
     }
-    else if (at_num < -this.QSelections.length) {
+    else if (at_num <= -this.QSelections.length) {
         return this.QSelections.at(0);
     }
     return this.QSelections.at(at_num);
@@ -345,6 +345,7 @@ FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
 FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelection) {
     let find = source_FieldSelection.GetQSelections().indexOf(value_str);
     if (find != -1) {
+        console.log("mapped", find);
         return this.GetQSelection(find);
     }
     find = source_FieldSelection.GetXSelections().indexOf(value_str);

@@ -56,54 +56,54 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
         point_template.name = templateName_str;
         point_template.img = './templates/scatterplot.png';
         console.log("new tmeola", point_template);
-        return point_template;
+        return point_template;*/
 
-    case supportedTemplate.NQor2Q_Simple_Line_Chart:
-        let line_template;
+        case supportedTemplate.NQor2Q_Simple_Line_Chart:
+            let line_template;
 
-        // simple line chart
-        if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-            selections_cell = selections_cell;
-            selections_cell.SetYSelections(['value']);
-            picture = './templates/line chart.png'
-            vegaConfig = {
-                mark: "line",
-                data: { values: visData_arr },
-                encoding: {
-                    x: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                    y: { field: selections_cell.GetQSelection(0), type: 'quantitative' },
-                }
-            }
-            line_template = new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
-        }
-        else {
-            if (is_horizon) {
+            // simple line chart
+            if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
+                selections_cell = selections_cell;
+                selections_cell.SetYSelections(['value']);
                 picture = './templates/line chart.png'
                 vegaConfig = {
                     mark: "line",
-                    data: { values: visData_horizon },
+                    data: { values: visData_arr },
                     encoding: {
-                        x: { field: selections_horizon.GetXSelections().at(0), type: "quantitative" },
-                        y: { field: selections_horizon.GetXSelections().at(1), type: 'quantitative' },
+                        x: { field: selections_cell.GetXSelection(0), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), type: 'quantitative' },
                     }
                 }
-                line_template = new Q2Template(templateName_str, vegaConfig, selections_horizon, picture);
+                line_template = new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             else {
-                picture = './templates/line chart.png'
-                vegaConfig = {
-                    mark: "line",
-                    data: { values: visData_vertical },
-                    encoding: {
-                        x: { field: selections_vertical.GetYSelections().at(0), type: "quantitative" },
-                        y: { field: selections_vertical.GetXSelections().at(1), type: 'quantitative' },
+                if (is_horizon) {
+                    picture = './templates/line chart.png'
+                    vegaConfig = {
+                        mark: "line",
+                        data: { values: visData_horizon },
+                        encoding: {
+                            x: { field: selections_horizon.GetQSelection(0), type: "quantitative" },
+                            y: { field: selections_horizon.GetQSelection(1), type: 'quantitative' },
+                        }
                     }
+                    line_template = new ObjTemplate(templateName_str, vegaConfig, selections_horizon, picture, true);
                 }
-                line_template = new Q2Template(templateName_str, vegaConfig, selections_vertical, picture);
+                else {
+                    picture = './templates/line chart.png'
+                    vegaConfig = {
+                        mark: "line",
+                        data: { values: visData_vertical },
+                        encoding: {
+                            x: { field: selections_vertical.GetQSelection(0), type: "quantitative" },
+                            y: { field: selections_vertical.GetQSelection(1), type: 'quantitative' },
+                        }
+                    }
+                    line_template = new ObjTemplate(templateName_str, vegaConfig, selections_vertical, picture, false);
+                }
             }
-        }
-        return line_template;
-        */
+            return line_template;
+
         case supportedTemplate.ANQorNQ_Bar_Chart:
             console.log("bar char range", metaData_obj.x.range);
             // simple bar chart
@@ -683,28 +683,37 @@ VegaTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj
 }
 
 // override get vegalite function
-function Q2Template(tempName_str, vegaConfig_obj, selections_obj, previewPic_str) {
+function ObjTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_str, is_horizon) {
+    this.is_horizon = !!is_horizon;
     VegaTemplate.call(this, tempName_str, vegaConfig_obj, selections_obj, previewPic_str);
 }
-Q2Template.prototype = new VegaTemplate();
-Q2Template.prototype.GetVegaLite = function (height, width) {
-    if (this.vegaConfig.encoding.x.field.substring(0, 3) == "col" || this.vegaConfig.encoding.x.field.substring(0, 3) == "row") {
-        this.vegaConfig.encoding.x.type = "nominal";
-    }
-    else {
-        this.vegaConfig.encoding.x.type = "quantitative";
-    }
-    if (this.vegaConfig.encoding.y.field.substring(0, 3) == "col" || this.vegaConfig.encoding.y.field.substring(0, 3) == "row") {
-        this.vegaConfig.encoding.y.type = "nominal";
-    }
-    else {
-        this.vegaConfig.encoding.y.type = "quantitative";
-    }
+ObjTemplate.prototype = new VegaTemplate();
+ObjTemplate.prototype.GetVegaLite = function (height, width) {
     this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
 
     return this.vegaConfig;
+}
+
+ObjTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    let new_data
+    if (this.is_horizon) {
+        new_data = GetObjData(newVisData_obj, newMetaData_obj, 'horizon');
+    }
+    else {
+        new_data = GetObjData(newVisData_obj, newMetaData_obj, 'vertical');
+    }
+    let new_selections = GetObjectSelections(new_data);
+    new_vegaLite.data.values = new_data;
+
+    for (const channel in new_vegaLite.encoding) {
+        if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
+            new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
+        }
+    }
+    return new ObjTemplate(this.name, new_vegaLite, new_selections, this.picture, this.is_horizon);
 }
 
 function GetHeaders(channel_obj) {

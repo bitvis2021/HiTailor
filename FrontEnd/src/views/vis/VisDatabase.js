@@ -81,15 +81,15 @@ VisDatabase.prototype.SelectHandler = function (id) {
             }
 
             this.bus.$emit("select-canvas", id);
-
+            
             this.AddCloseButton(id);
         }
         else if (this.database[id].status == status.select) {
             // this.CancelSelection(id);
-
+            
             for (let i = 0; i < this.GetGroupMembers(id).length; i++) {
                 const otherID = this.GetGroupMembers(id)[i];
-
+                
                 this.CancelSelection(otherID);
             }
         }

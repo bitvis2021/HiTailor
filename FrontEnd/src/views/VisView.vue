@@ -89,6 +89,7 @@ export default {
     return {
       showTemplates: false,
       showUnitPanel: false,
+      showPanelView: false,
 
       visData: {}, // data from visualize selected data
       metaData: {},
@@ -281,10 +282,10 @@ export default {
       this.figID = id;
       this.currentGroupID = this.VisDB.GetGroupID(this.figID);
       if (this.VisDB.database[id].type === "vega") {
+        console.log("restore data")
         this.currentTemplate = this.VisDB.GetTemplate(id);
         this.visData = this.VisDB.database[id].visData;
         this.metaData = this.VisDB.database[id].metaData;
-        console.log("restore data", this.visData, this.metaData);
         this.OpenPanelView();
       } else {
         console.log("open Unit");

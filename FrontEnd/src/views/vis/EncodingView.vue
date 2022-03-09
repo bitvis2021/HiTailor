@@ -132,8 +132,7 @@ export default {
   name: "EncodingView",
   props: ["config", "selections"],
   components: {},
-  created() {
-  },
+  created() {},
   mounted() {
     // this.EC = new EncodingCompiler(this.config, this.selections);
     this.schema = this.EC.GetSchema();
@@ -145,6 +144,11 @@ export default {
       schema: {},
       addProperties: {},
     };
+  },
+  watch: {
+    config() {
+      alert("change!");
+    },
   },
   methods: {
     // refresh config
