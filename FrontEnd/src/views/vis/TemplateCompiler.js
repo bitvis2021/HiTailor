@@ -505,17 +505,26 @@ export function GetTemplates(metaData_obj, visData_arr) {
 
 function GetObjectSelections(visDataObj_arr) {
     let selections = new FieldSelection();
-
-    for (const key in visDataObj_arr[0]) {
-        if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
-            if (key.substring(0, 3) == 'row') {
-                selections.AddXSelection(key);
+    let sort = {};
+    for (let i = 0; i < visDataObj_arr.length; i++) {
+        const element = visDataObj_arr[i];
+        for (const key in visDataObj_arr[i]) {
+            if (key.substring(0, 3) == 'row' || key.substring(0, 3) == 'col') {
+                if (!sort[key]) {
+                    sort[key] = [];
+                }
+                sort[key].push(element[key]);
             }
-            else if (key.substring(0, 3) == 'col') {
-                selections.AddXSelection(key);
-            }
-            else {
-                selections.AddQSelection(key);
+            if (i == visDataObj_arr.length - 1) {
+                if (key.substring(0, 3) == 'row') {
+                    selections.AddXSelection(key, sort[key]);
+                }
+                else if (key.substring(0, 3) == 'col') {
+                    selections.AddYSelection(key, sort[key]);
+                }
+                else {
+                    selections.AddQSelection(key);
+                }
             }
         }
     }
