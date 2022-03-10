@@ -1,5 +1,4 @@
-import { vega } from 'vega-embed';
-import { EncodingCompiler, FieldSelection } from './SchemaCompiler'
+import { FieldSelection } from './SchemaCompiler'
 // Reconsitution temp2vega
 // Target: decouple vis 
 // select area (metadata/visData) -> templates -> template (vegaConfig) -> panel (tweaked config) -> vis
@@ -48,23 +47,20 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     }
 
     switch (templateName_str) {
-        /*
-    case supportedTemplate.Q2_Scatter_plot:
-        // just reuse line chart            
-        let point_template = GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, direction);
-        point_template.vegaConfig.mark = "point";
-        point_template.name = templateName_str;
-        point_template.img = './templates/scatterplot.png';
-        console.log("new tmeola", point_template);
-        return point_template;*/
+        case supportedTemplate.Q2_Scatter_plot:
+            // just reuse line chart            
+            let point_template = GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, direction);
+            point_template.vegaConfig.mark = "point";
+            point_template.name = templateName_str;
+            point_template.img = './templates/scatterplot.png';
+            console.log("new tmeola", point_template);
+            return point_template;
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
             let line_template;
 
             // simple line chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-                selections_cell = selections_cell;
-                selections_cell.SetYSelections(['value']);
                 picture = './templates/line chart.png'
                 vegaConfig = {
                     mark: "line",
@@ -159,274 +155,286 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 }
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
+        case supportedTemplate.NQ_Strip_Plot:
+            if (is_horizon) {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "tick",
+                    encoding: {
+                        y: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        x: { field: selections_cell.GetQSelection(0), type: "quantitative" }
+                    }
+                }
+                picture = './templates/strip plot.png';
+            }
+            else {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "tick",
+                    encoding: {
+                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), type: "quantitative" }
+                    }
+                }
+                picture = './templates/strip plot y.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+
+        case supportedTemplate.NQ_Box_Plot:
+            if (is_horizon) {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: {
+                        "type": "boxplot",
+                        "extent": "min-max"
+                    },
+                    encoding: {
+                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), type: "quantitative" },
+                        color: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                    }
+                }
+                picture = './templates/box plot.png';
+            } else {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: {
+                        "type": "boxplot",
+                        "extent": "min-max"
+                    },
+                    encoding: {
+                        y: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        x: { field: selections_cell.GetQSelection(0), type: "quantitative" },
+                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                    }
+                }
+                picture = './templates/box plot y.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+        case supportedTemplate.ANQN_Stacked_Bar_Chart:
+            if (is_horizon) {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "bar",
+                    encoding: {
+                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), aggregate: "sum" },
+                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                    }
+                }
+                picture = './templates/stacked bar chart.png';
+            } else {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "bar",
+                    encoding: {
+                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), aggregate: "sum" },
+                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                    }
+                }
+                picture = './templates/stacked bar chart y.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+        case supportedTemplate.ANQN_Multi_Series_Line_Chart:
+            if (is_horizon) {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "line",
+                    encoding: {
+                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), type: "quantitative" },
+                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                    }
+                }
+                picture = './templates/multi line chart.png';
+                return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+            }
+            break;
         /*
-                case supportedTemplate.NQ_Strip_Plot:
-                    selections_cell.AddYSelection(selections_cell.GetQSelection(0));
-                    selections_cell.AddXSelection(selections_cell.GetQSelection(0));
-                    if (is_horizon) {
-                        vegaConfig = {
-                            data: { values: visData_arr },
-                            mark: "tick",
-                            encoding: {
-                                y: { field: defaultValY.name, type: "nominal", sort: defaultValY.sort },
-                                x: { field: selections_cell.GetQSelection(0), type: "quantitative" }
-                            }
-                        }
-                        picture = './templates/strip plot.png';
+        case supportedTemplate.NNQ_grouped_bar_chart:
+
+            let spilitSubstring = function (str) {
+                let find = str.indexOf(" > ");
+                if (find > -1) {
+                    return str.substring(find + " > ".length);
+                }
+                return str;
+            }
+
+            let groupedBarchartData = JSON.parse(JSON.stringify(visData_arr));
+            for (let i = 0; i < groupedBarchartData.length; i++) {
+                const element = groupedBarchartData[i];
+                for (const key in element) {
+                    if (Object.hasOwnProperty.call(element, key)) {
+                        const value = element[key];
+                        // split string
+                        element[key] = spilitSubstring(value);
                     }
-                    else {
-                        vegaConfig = {
-                            data: { values: visData_arr },
-                            mark: "tick",
-                            encoding: {
-                                x: { field: defaultValX.name, type: "nominal", sort: defaultValX.sort },
-                                y: { field: selections_cell.GetQSelection(0), type: "quantitative" }
-                            }
-                        }
-                        picture = './templates/strip plot y.png';
+                }
+            }
+            let groupedBarchartMetaData = JSON.parse(JSON.stringify(metaData_obj));
+            for (let i = 0; i < groupedBarchartMetaData.x.headers.length; i++) {
+                groupedBarchartMetaData.x.headers[i].name = spilitSubstring(groupedBarchartMetaData.x.headers[i].name);
+                for (let j = 0; j < groupedBarchartMetaData.x.headers[i].sort.length; j++) {
+                    groupedBarchartMetaData.x.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.x.headers[i].sort[j]);
+                }
+            }
+            for (let i = 0; i < groupedBarchartMetaData.y.headers.length; i++) {
+                groupedBarchartMetaData.y.headers[i].name = spilitSubstring(groupedBarchartMetaData.y.headers[i].name);
+                for (let j = 0; j < groupedBarchartMetaData.y.headers[i].sort.length; j++) {
+                    groupedBarchartMetaData.y.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.y.headers[i].sort[j]);
+                }
+            }
+
+            let groupedSelections = GetSelectionsFromMetaData(groupedBarchartMetaData);
+            vegaConfig = {
+                data: { values: groupedBarchartData },
+                mark: "bar",
+                encoding: {
+                }
+            }
+            if (is_horizon) {
+                let defaultX2 = groupedBarchartMetaData.x.headers.at(0);
+                let defaultX1 = groupedBarchartMetaData.x.headers.at(-1);
+                vegaConfig.encoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
+                vegaConfig.encoding.y = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
+                vegaConfig.encoding.xOffset = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
+                vegaConfig.encoding.color = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
+                return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart.png');
+            }
+            else {
+                let defaultY1 = groupedBarchartMetaData.y.headers.at(0);
+                let defaultY2 = groupedBarchartMetaData.y.headers.at(-1);
+                vegaConfig.encoding.x = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
+                vegaConfig.encoding.y = { field: defaultY2.name, type: "nominal", sort: defaultY2.sort };
+                vegaConfig.encoding.yOffset = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
+                vegaConfig.encoding.color = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
+                return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart y.png');
+            }
+            */
+        case supportedTemplate.NQ_Ranged_Dot_Plot:
+            // TODO: add point support
+            if (is_horizon) {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "line",
+                    encoding: {
+                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        y: { field: selections_cell.GetQSelection(0), type: "quantitative" },
                     }
-                    return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
-        
-                case supportedTemplate.NQ_Box_Plot:
-                    selections_cell.AddYSelection(selections_cell.GetQSelection(0));
-                    selections_cell.AddXSelection(selections_cell.GetQSelection(0));
-                    vegaConfig = {
-                        data: { values: visData_arr },
-                        mark: {
-                            "type": "boxplot",
-                            "extent": "min-max"
-                        },
-                        encoding: {
-                            x: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                            y: { field: selections_cell.GetQSelection(0), type: "quantitative" },
-                            color: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                        }
+                }
+                vegaConfig.encoding.detail = vegaConfig.encoding.x;
+                picture = './templates/ranged dot plot y.png';
+            } else {
+                vegaConfig = {
+                    data: { values: visData_arr },
+                    mark: "line",
+                    encoding: {
+                        y: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        x: { field: selections_cell.GetQSelection(0), type: "quantitative" },
                     }
-                    if (is_horizon) {
-                        picture = './templates/box plot.png';
-                    } else {
-                        [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                        picture = './templates/box plot y.png';
-                    }
-                    return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
-        
-                case supportedTemplate.ANQN_Stacked_Bar_Chart:
-                    selections_cell.AddYSelection(selections_cell.GetQSelection(0));
-                    selections_cell.AddXSelection(selections_cell.GetQSelection(0));
-                    vegaConfig = {
-                        data: { values: visData_arr },
-                        mark: "bar",
-                        encoding: {
-                            x: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                            y: { field: selections_cell.GetQSelection(0), aggregate: "sum" },
-                        }
-                    }
-                    if (is_horizon) {
-                        picture = './templates/stacked bar chart.png';
-                        vegaConfig.encoding.color = { field: defaultValY.name, type: "nominal", sort: defaultValY.sort };
-                    } else {
-                        [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                        vegaConfig.encoding.color = { field: defaultValX.name, type: "nominal", sort: defaultValX.sort };
-                        picture = './templates/stacked bar chart y.png';
-                    }
-                    return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
-        
-                case supportedTemplate.ANQN_Multi_Series_Line_Chart:
-                    if (is_horizon) {
-                        selections_cell.AddYSelection(selections_cell.GetQSelection(0));
-                        selections_cell.AddXSelection(selections_cell.GetQSelection(0));
-                        vegaConfig = {
-                            data: { values: visData_arr },
-                            mark: "line",
-                            encoding: {
-                                x: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                                y: { field: selections_cell.GetQSelection(0), type: "quantitative" },
-                                color: { field: defaultValY.name, type: "nominal", sort: defaultValY.sort }
-                            }
-                        }
-                        picture = './templates/multi line chart.png';
-                        return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
-                    }
-                    break;
-                case supportedTemplate.NNQ_grouped_bar_chart:
-        
-                    let spilitSubstring = function (str) {
-                        let find = str.indexOf(" > ");
-                        if (find > -1) {
-                            return str.substring(find + " > ".length);
-                        }
-                        return str;
-                    }
-        
-                    let groupedBarchartData = JSON.parse(JSON.stringify(visData_arr));
-                    for (let i = 0; i < groupedBarchartData.length; i++) {
-                        const element = groupedBarchartData[i];
-                        for (const key in element) {
-                            if (Object.hasOwnProperty.call(element, key)) {
-                                const value = element[key];
-                                // split string
-                                element[key] = spilitSubstring(value);
-                            }
-                        }
-                    }
-                    let groupedBarchartMetaData = JSON.parse(JSON.stringify(metaData_obj));
-                    for (let i = 0; i < groupedBarchartMetaData.x.headers.length; i++) {
-                        groupedBarchartMetaData.x.headers[i].name = spilitSubstring(groupedBarchartMetaData.x.headers[i].name);
-                        for (let j = 0; j < groupedBarchartMetaData.x.headers[i].sort.length; j++) {
-                            groupedBarchartMetaData.x.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.x.headers[i].sort[j]);
-                        }
-                    }
-                    for (let i = 0; i < groupedBarchartMetaData.y.headers.length; i++) {
-                        groupedBarchartMetaData.y.headers[i].name = spilitSubstring(groupedBarchartMetaData.y.headers[i].name);
-                        for (let j = 0; j < groupedBarchartMetaData.y.headers[i].sort.length; j++) {
-                            groupedBarchartMetaData.y.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.y.headers[i].sort[j]);
-                        }
-                    }
-        
-                    let groupedSelections = GetSelectionsFromMetaData(groupedBarchartMetaData);
-                    console.log("selectionsssss", groupedBarchartMetaData);
-                    vegaConfig = {
-                        data: { values: groupedBarchartData },
-                        mark: "bar",
-                        encoding: {
-                        }
-                    }
-                    if (is_horizon) {
-                        let defaultX2 = groupedBarchartMetaData.x.headers.at(0);
-                        let defaultX1 = groupedBarchartMetaData.x.headers.at(-1);
-                        vegaConfig.encoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
-                        vegaConfig.encoding.y = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
-                        vegaConfig.encoding.xOffset = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
-                        vegaConfig.encoding.color = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
-                        return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart.png');
-                    }
-                    else {
-                        let defaultY1 = groupedBarchartMetaData.y.headers.at(0);
-                        let defaultY2 = groupedBarchartMetaData.y.headers.at(-1);
-                        vegaConfig.encoding.x = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
-                        vegaConfig.encoding.y = { field: defaultY2.name, type: "nominal", sort: defaultY2.sort };
-                        vegaConfig.encoding.yOffset = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
-                        vegaConfig.encoding.color = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
-                        return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart y.png');
-                    }
-        
-                case supportedTemplate.NQ_Ranged_Dot_Plot:
-                    // TODO: add point support
-                    selections_cell.AddYSelection(selections_cell.GetQSelection(0));
-                    selections_cell.AddXSelection(selections_cell.GetQSelection(0));
-                    vegaConfig = {
-                        data: { values: visData_arr },
-                        mark: "line",
-                        encoding: {
-                            x: { field: selections_cell.GetXSelection(0), type: "nominal" },
-                            y: { field: selections_cell.GetQSelection(0), type: "quantitative" },
-                        }
-                    }
-                    if (is_horizon) {
-                        picture = './templates/ranged dot plot y.png';
-                        vegaConfig.encoding.detail = { field: defaultValX.name, type: "nominal", sort: defaultValX.sort };
-                    } else {
-                        [vegaConfig.encoding.x, vegaConfig.encoding.y] = [vegaConfig.encoding.y, vegaConfig.encoding.x];
-                        vegaConfig.encoding.detail = { field: defaultValY.name, type: "nominal", sort: defaultValY.sort };
-                        picture = './templates/ranged dot plot.png';
-                    }
-                    return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
-        
-                case supportedTemplate.Q2_Horizon_Graph:
-                    if (is_horizon) {
-                        return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
-                    }
-                    break;
-                case supportedTemplate.NQ_Parallel_Coordinate_Plot:
-                    if (is_horizon) {
-                        return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png');
-                    }
-                    else {
-                        return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
-                    }
-        
-                case supportedTemplate.NQ_Histogram_Heatmap:
-                    if (is_horizon) {
-                        return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-                    }
-                    else {
-                        return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-                    }
-                case supportedTemplate.NQ_Histogram_Scatterplot:
-                    if (is_horizon) {
-                        return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-                    }
-                    else {
-                        return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-                    }
-                case supportedTemplate.NQ_PieChart:
-                    if (is_horizon) {
-                        vegaConfig =
-                        {
-                            "data": {
-                                "values": visData_horizon
-                            },
-                            "mark": "arc",
-                            "encoding": {
-                                "theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative" },
-                                "color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
-                            }
-                        }
-                        return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
-                    }
-                    else {
-                        vegaConfig =
-                        {
-                            "data": {
-                                "values": visData_vertical
-                            },
-                            "mark": "arc",
-                            "encoding": {
-                                "theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative" },
-                                "color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
-                            }
-                        }
-                        return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
-        
-                    }
-                case supportedTemplate.NQ_RadialPlot:
-                    if (is_horizon) {
-                        vegaConfig =
-                        {
-                            "data": {
-                                "values": visData_horizon
-                            },
-                            "mark": "arc",
-                            "encoding": {
-                                "theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative", "stack": true },
-                                "radius": {
-                                    "field": selections_horizon.GetXSelections().at(0),
-                                    "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-                                },
-                                "color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
-                            }
-                        }
-                        return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/pie chart.png');
-                    }
-                    else {
-                        vegaConfig =
-                        {
-                            "data": {
-                                "values": visData_vertical
-                            },
-                            "mark": "arc",
-                            "encoding": {
-                                "theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative", "stack": true },
-                                "radius": {
-                                    "field": selections_vertical.GetYSelections().at(0),
-                                    "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-                                },
-                                "color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
-                            }
-                        }
-                        return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/pie chart.png');
-                    }
-                */
+                }
+                vegaConfig.encoding.detail = vegaConfig.encoding.y;
+                picture = './templates/ranged dot plot.png';
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
+        case supportedTemplate.Q2_Horizon_Graph:
+            if (is_horizon) {
+                return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
+            }
+            break;
+        case supportedTemplate.NQ_Parallel_Coordinate_Plot:
+            if (is_horizon) {
+                return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png', true);
+            }
+            else {
+                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', false);
+            }
+        /*
+
+case supportedTemplate.NQ_Histogram_Heatmap:
+if (is_horizon) {
+return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+}
+else {
+return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+}
+case supportedTemplate.NQ_Histogram_Scatterplot:
+if (is_horizon) {
+return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+}
+else {
+return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+}
+case supportedTemplate.NQ_PieChart:
+if (is_horizon) {
+vegaConfig =
+{
+"data": {
+"values": visData_horizon
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative" },
+"color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
+}
+else {
+vegaConfig =
+{
+"data": {
+"values": visData_vertical
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative" },
+"color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
+ 
+}
+case supportedTemplate.NQ_RadialPlot:
+if (is_horizon) {
+vegaConfig =
+{
+"data": {
+"values": visData_horizon
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative", "stack": true },
+"radius": {
+"field": selections_horizon.GetXSelections().at(0),
+"scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+},
+"color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/pie chart.png');
+}
+else {
+vegaConfig =
+{
+"data": {
+"values": visData_vertical
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative", "stack": true },
+"radius": {
+"field": selections_vertical.GetYSelections().at(0),
+"scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+},
+"color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/pie chart.png');
+}
+*/
         default:
             break;
     }
@@ -497,17 +505,26 @@ export function GetTemplates(metaData_obj, visData_arr) {
 
 function GetObjectSelections(visDataObj_arr) {
     let selections = new FieldSelection();
-
-    for (const key in visDataObj_arr[0]) {
-        if (Object.hasOwnProperty.call(visDataObj_arr[0], key)) {
-            if (key.substring(0, 3) == 'row') {
-                selections.AddXSelection(key);
+    let sort = {};
+    for (let i = 0; i < visDataObj_arr.length; i++) {
+        const element = visDataObj_arr[i];
+        for (const key in visDataObj_arr[i]) {
+            if (key.substring(0, 3) == 'row' || key.substring(0, 3) == 'col') {
+                if (!sort[key]) {
+                    sort[key] = [];
+                }
+                sort[key].push(element[key]);
             }
-            else if (key.substring(0, 3) == 'col') {
-                selections.AddXSelection(key);
-            }
-            else {
-                selections.AddQSelection(key);
+            if (i == visDataObj_arr.length - 1) {
+                if (key.substring(0, 3) == 'row') {
+                    selections.AddXSelection(key, sort[key]);
+                }
+                else if (key.substring(0, 3) == 'col') {
+                    selections.AddYSelection(key, sort[key]);
+                }
+                else {
+                    selections.AddQSelection(key);
+                }
             }
         }
     }
@@ -568,7 +585,7 @@ function GetObjData(visData_arr, metaData_obj, direction_str) {
             bracket[row_data_key] = {};
         }
 
-        bracket[row_data_key][element[another_atom_key]] = element['value'];
+        bracket[row_data_key][element[another_atom_key]] = Number(element['value']);
 
         for (const key in element) {
             if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
@@ -868,83 +885,55 @@ function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previ
 
 
 // no selection
-function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
-    this.selections = selections_obj;
-    this.is_X = true;
-    this.col_row_selection = [];
-    this.obj_selection = [];
+// TODO vega config to parallel plot
+function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, is_horizon, vegaConfig_obj) {
+    this.selections_cell = selections_obj;
+    this.visData_arr = visData_arr;
+    this.is_horizon = is_horizon;
+    // this.col_row_selection = selections_obj.GetXSelections();
+    // this.obj_selection = selections_objj.GetQSelection();
+    if (!vegaConfig_obj) {
+        if (is_horizon) {
+            this.vegaConfig = {
+                mark: { type: "line", opacity: 0.3 },
+                encoding: {
 
-    selections_obj.GetYSelections().forEach(element => {
-        if (element.substring(0, 3) == 'row' || element.substring(0, 3) == 'col') {
-            this.col_row_selection.push(element);
+                    color: { type: "nominal", field: selections_obj.GetYSelection(-1), legend: null, sort: selections_obj.GetSort(selections_obj.GetYSelection(-1)) }
+                }
+            }
         }
         else {
-            this.obj_selection.push(element);
-        }
-    });
+            this.vegaConfig = {
+                mark: { type: "line", opacity: 0.3 },
+                encoding: {
 
-    if (direction == 'y' || 'vertical') {
-        this.is_X = false;
-        this.vegaConfig = {
-            "data": { "values": visData_arr },
-            "transform": [
-                { "window": [{ "op": "count", "as": "index" }] },
-                {
-                    "fold": this.obj_selection
-                },
-                {
-                    "joinaggregate": [
-                        { "op": "min", "field": selections_cell.GetQSelection(0), "as": "min" },
-                        { "op": "max", "field": selections_cell.GetQSelection(0), "as": "max" }
-                    ],
-                    "groupby": ["key"]
-                },
-                {
-                    "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
-                    "as": "norm_val"
-                },
-                { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
-            ],
-            "layer": [
-                {
-                    "mark": { "type": "line", "opacity": 0.3 },
-                    "encoding": {
-                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
-                        "detail": { "type": "nominal", "field": "index" },
-                        "y": {
-                            "type": "nominal",
-                            "field": "key",
-                            "sort": this.obj_selection
-                        },
-                        "x": { "type": "quantitative", "field": "norm_val", "axis": null }
-                    }
-                },
-                {
-                    "mark": { "type": "rule", "color": "#ccc" },
-                    "encoding": {
-                        "detail": { "aggregate": "count" },
-                        "y": {
-                            "field": "key",
-                            "sort": this.obj_selection
-                        }
-                    }
+                    color: { type: "nominal", field: selections_obj.GetXSelection(-1), legend: null, sort: selections_obj.GetSort(selections_obj.GetXSelection(-1)) }
                 }
-            ],
-            "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+            }
         }
     }
     else {
-        this.vegaConfig = {
-            "data": { "values": visData_arr },
+        this.vegaConfig = vegaConfig_obj;
+    }
+    VegaTemplate.call(this, supportedTemplate.NQ_Parallel_Coordinate_Plot, this.vegaConfig, selections_obj, previewPic_str);
+}
+ParallelCoordinatePlot.prototype = new VegaTemplate();
+ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
+
+    if (this.is_horizon)
+        return {
+            height: height,
+            width: width,
+            "data": { "values": this.visData_arr },
             "transform": [
                 { "window": [{ "op": "count", "as": "index" }] },
                 {
-                    "fold": this.obj_selection
+                    "fold": this.GetSelections().GetQSelections()
                 },
                 {
                     "joinaggregate": [
-                        { "op": "min", "field": selections_cell.GetQSelection(0), "as": "min" },
-                        { "op": "max", "field": selections_cell.GetQSelection(0), "as": "max" }
+                        { "op": "min", "field": this.GetSelections().GetQSelection(0), "as": "min" }, // aggregate field
+                        { "op": "max", "field": this.GetSelections().GetQSelection(0), "as": "max" }
                     ],
                     "groupby": ["key"]
                 },
@@ -952,18 +941,17 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                     "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
                     "as": "norm_val"
                 },
-                { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
             ],
             "layer": [
                 {
-                    "mark": { "type": "line", "opacity": 0.3 },
+                    mark: this.vegaConfig.mark,
                     "encoding": {
-                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
+                        color: this.vegaConfig.encoding.color,
                         "detail": { "type": "nominal", "field": "index" },
                         "x": {
                             "type": "nominal",
-                            "field": "key",
-                            "sort": this.obj_selection
+                            "field": "key", //y
+                            "sort": this.GetSelections().GetQSelections()
                         },
                         "y": { "type": "quantitative", "field": "norm_val", "axis": null }
                     }
@@ -974,141 +962,191 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                         "detail": { "aggregate": "count" },
                         "x": {
                             "field": "key",
-                            "sort": this.obj_selection
+                            "sort": this.GetSelections().GetQSelections()
+                        }
+                    }
+                }
+            ],
+            "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+
+        }
+
+    else
+        return {
+            height: height,
+            width: width,
+            "data": { "values": this.visData_arr },
+            "transform": [
+                { "window": [{ "op": "count", "as": "index" }] },
+                {
+                    "fold": this.GetSelections().GetQSelections()
+                },
+                {
+                    "joinaggregate": [
+                        { "op": "min", "field": this.GetSelections().GetQSelection(0), "as": "min" }, // aggregate field
+                        { "op": "max", "field": this.GetSelections().GetQSelection(0), "as": "max" }
+                    ],
+                    "groupby": ["key"]
+                },
+                {
+                    "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
+                    "as": "norm_val"
+                },
+            ],
+            "layer": [
+                {
+                    mark: this.vegaConfig.mark,
+                    "encoding": {
+                        color: this.vegaConfig.encoding.color,
+                        "detail": { "type": "nominal", "field": "index" },
+                        "y": {
+                            "type": "nominal",
+                            "field": "key", //y
+                            "sort": this.GetSelections().GetQSelections()
+                        },
+                        "x": { "type": "quantitative", "field": "norm_val", "axis": null }
+                    }
+                },
+                {
+                    "mark": { "type": "rule", "color": "#ccc" },
+                    "encoding": {
+                        "detail": { "aggregate": "count" },
+                        "y": {
+                            "field": "key",
+                            "sort": this.GetSelections().GetQSelections()
                         }
                     }
                 }
             ],
             "config": { "axis": { "labels": false, "ticks": false, "title": null } }
         }
-    }
-    VegaTemplate.call(this, supportedTemplate.NQ_Parallel_Coordinate_Plot, this.vegaConfig, selections_obj, previewPic_str);
-}
-ParallelCoordinatePlot.prototype = new VegaTemplate();
-ParallelCoordinatePlot.prototype.GetVegaConfig = function () {
-    let layer1 = {
-        mark: this.vegaConfig.layer[0].mark,
-        encoding: {
-            color: this.vegaConfig.layer[0].encoding.color
-        }
-    }
-    return layer1;
+
 }
 ParallelCoordinatePlot.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
-    this.vegaConfig.layer[0].mark = vegaConfig_obj.mark;
-    if (vegaConfig_obj.encoding.color != undefined) {
-        this.vegaConfig.layer[0].encoding.color = vegaConfig_obj.encoding.color;
-        // alert("You did an unsupported config!");
-    }
-    return this.vegaConfig;
+    this.vegaConfig = vegaConfig_obj;
+    return this.GetVegaLite(300, 300);
 }
-ParallelCoordinatePlot.prototype.GetSelections = function () {
-    if (this.is_X) {
-        this.selections.SetXSelections([])
-        this.selections.SetYSelections(this.col_row_selection);
+ParallelCoordinatePlot.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vega = JSON.parse(JSON.stringify(this.vegaConfig));
+    let new_data;
+
+    // For this template, the data is in the opposit direction
+    if (this.is_horizon) {
+        new_data = GetObjData(newVisData_obj, newMetaData_obj, 'vertical');
     }
     else {
-        this.selections.SetYSelections([])
-        this.selections.SetXSelections(this.col_row_selection);
+        new_data = GetObjData(newVisData_obj, newMetaData_obj, 'horizon');
     }
-    return this.selections;
+    let new_selections = GetObjectSelections(new_data);
+    for (const channel in new_vega.encoding) {
+        if (Object.hasOwnProperty.call(new_vega.encoding, channel)) {
+            new_vega.encoding[channel].field = new_selections.GetMappedValue(new_vega.encoding[channel].field, this.GetSelections());
+        }
+    }
+    console.log("new vega", new_vega);
+    console.log("new selections", new_selections)
+    return new ParallelCoordinatePlot(new_data, new_selections, this.picture, this.is_horizon, new_vega);
 }
 
-function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str) {
-    let ySelect_str = selections_obj.GetYSelections().at(0);
-    let xSelect_str = selections_obj.GetXSelections().at(-1);
-
+function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str, vegaConfig_obj) {
     this.name = supportedTemplate.Q2_Horizon_Graph;
-
-    this.GetOffset = function (ySelect_str) {
-        // find max value in this selection
-        let max = -Infinity;
-        let min = 0;
-        for (let i = 0; i < visData_arr.length; i++) {
-            const element = visData_arr[i];
-            if (element[ySelect_str] > max) {
-                max = element[ySelect_str];
-            }
-            if (element[ySelect_str] < min) {
-                min = element[ySelect_str];
-            }
-
-        }
-
-        let Offset1 = min;
-        let Offset2 = max * 0.6 - min;
-
-        return [Offset1, Offset2];
-    }
-
-    let [Offset1, Offset2] = this.GetOffset(ySelect_str);
-
-    this.vegaConfig = {
-        data: { values: visData_arr },
-        layer: [
-            {
-                transform: [{ calculate: "datum['" + ySelect_str + "'] - " + Offset1.toString(), as: ySelect_str }],
-                mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
-                encoding: {
-                    y: { field: ySelect_str, type: "quantitative" },
-                    x: { field: xSelect_str, type: "nominal" },
-                }
-            },
-            {
-                transform: [{ calculate: "datum['" + ySelect_str + "'] - " + Offset2, as: "ny" }],
-                mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.6 },
-                encoding: {
-                    y: { field: "ny", type: "quantitative" },
-                    x: { field: xSelect_str, type: "nominal" },
-                }
-            }
-        ]
-    }
+    let ySelect_str = selections_obj.GetQSelection(0);
+    let xSelect_str = selections_obj.GetXSelection(-1);
+    this.visData_arr = visData_arr;
     this.img = previewPic_str;
     this.selections = selections_obj;
+
+
+    if (!!vegaConfig_obj) {
+        this.vegaConfig = vegaConfig_obj;
+    }
+    else {
+        this.vegaConfig = {
+            data: { values: visData_arr },
+            mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.3 },
+            encoding: {
+                y: { field: ySelect_str, type: "quantitative" },
+                x: { field: xSelect_str, type: "nominal", sort: this.selections.GetSort(xSelect_str) },
+            }
+        }
+    }
+}
+HorizonGraphTemplate.prototype.GetMinMax = function (ySelect_str) {
+    let min = 0;
+    let max = -Infinity;
+    for (let i = 0; i < this.visData_arr.length; i++) {
+        const element = this.visData_arr[i];
+        if (Number(element[ySelect_str]) > max) {
+            max = Number(element[ySelect_str]);
+        }
+        if (Number(element[ySelect_str]) < min) {
+            min = Number(element[ySelect_str]);
+        }
+
+    }
+    return [min, max]
 }
 // User visible config
 HorizonGraphTemplate.prototype.GetVegaConfig = function () {
-    let exposedVega = this.vegaConfig.layer[0];
-    return exposedVega;
+    return this.vegaConfig;
 }
 
 // Real vega-lite data
 HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.layer[0].mark.clip = true;
-    this.vegaConfig.layer[1].mark.clip = true;
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    return this.vegaConfig;
+    // layer max limit: 4 layers
+    // best: 2 layer
+    // domain is the height 
+    let layer = [];
+    let domainHeight = Number(height) / 2;
+    let ySelect = this.vegaConfig.encoding.y.field;
+    let [min, max] = this.GetMinMax(ySelect);
+    while ((max - min) / domainHeight >= 4) {
+        domainHeight *= 2;
+    }
+
+    for (let i = 0; i <= (max - min) / domainHeight + 1; i++) {
+        let layerContent = JSON.parse(JSON.stringify({ mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding }));
+        let offset = i * domainHeight + Number(min);
+        if (offset < 0) {
+            offset = "+" + String(-offset);
+        }
+        offset = "-" + String(offset);
+        layerContent.transform = [{ calculate: "datum['" + ySelect + "'] " + offset, as: ySelect }];
+        if (!layerContent.encoding.y.scale) {
+            layerContent.encoding.y.scale = {};
+        }
+        layerContent.encoding.y.scale.domain = [0, domainHeight]
+        layer.push(layerContent);
+    }
+    return {
+        data: { values: this.visData_arr },
+        layer: layer,
+        height: height,
+        width: width,
+        config: { axis: { labels: false, ticks: false, title: null } }
+    };
 }
 
 // Input tweaked config from panel, and then process it turing it into true vega-lite json.
 // Actually, after rewritting this function, it is a compiler.
 HorizonGraphTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
-    this.vegaConfig.layer[0] = vegaConfig_obj;
-    this.vegaConfig.layer[0].mark.clip = true;
-    this.vegaConfig.layer[0].encoding.y.type = "quantitative";
-
-    let ySelect = this.vegaConfig.layer[0].encoding.y.field;
-
-    let [Offset1, Offset2] = this.GetOffset(ySelect);
-
-    if (this.vegaConfig.layer[0].encoding.y.scale) {
-        this.vegaConfig.layer[0].encoding.y.scale.domain = [0, Offset2];
-    }
-    else {
-        this.vegaConfig.layer[0].encoding.y.scale = { domain: [0, Offset2] };
-    }
-    this.vegaConfig.layer[0].transform = [{ calculate: "datum['" + ySelect + "'] - " + Offset1.toString(), as: ySelect }]
-
-    this.vegaConfig.layer[1] = JSON.parse(JSON.stringify(vegaConfig_obj));
-    this.vegaConfig.layer[1].transform = [{ calculate: "datum['" + ySelect + "'] - " + Offset2, as: "ny" }]
-    this.vegaConfig.layer[1].encoding.y = { field: "ny", type: "quantitative" };
-
-    return this.vegaConfig;
+    this.vegaConfig = vegaConfig_obj;
+    this.vegaConfig.mark.clip = true;
+    return this.GetVegaLite(200, 300);
 }
-
+HorizonGraphTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    let new_data = GetObjData(newVisData_obj, newMetaData_obj, 'horizon');
+    let new_selections = GetObjectSelections(new_data);
+    new_vegaLite.data.values = new_data;
+    for (const channel in new_vegaLite.encoding) {
+        if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
+            console.log("reMapping", new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections()))
+            new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
+        }
+    }
+    return new HorizonGraphTemplate(new_data, new_selections, this.img, new_vegaLite);
+}
 HorizonGraphTemplate.prototype.GetSelections = function () {
     return this.selections;
 }

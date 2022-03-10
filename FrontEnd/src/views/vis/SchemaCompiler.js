@@ -256,7 +256,7 @@ export function FieldSelection() {
         {
             selectionName:{
                 sequence:num,
-               type:"", 
+                type:"", 
                 sort:[],
             },
             selectionName2:{},
