@@ -37,6 +37,15 @@ export default {
       encodingJson: this.vegaConfig.encoding,
     };
   },
+  watch: {
+    vegaConfig(newVal, oldVal) {
+      this.encodingJson = newVal.encoding;
+      this.markJson = newVal.mark;
+    },
+    selections(newVal, oldVal) {
+      this.selections = newVal;
+    },
+  },
   methods: {
     // like v-model. submit the modified data to visView
     Apply2Vis() {

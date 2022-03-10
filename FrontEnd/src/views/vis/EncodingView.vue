@@ -132,8 +132,7 @@ export default {
   name: "EncodingView",
   props: ["config", "selections"],
   components: {},
-  created() {
-  },
+  created() {},
   mounted() {
     // this.EC = new EncodingCompiler(this.config, this.selections);
     this.schema = this.EC.GetSchema();
@@ -146,10 +145,14 @@ export default {
       addProperties: {},
     };
   },
-  methods: {
-    InitialUpper(word) {
-      return word.toUpperCase()[0] + word.slice(1);
+  watch: {
+    config() {
+      this.EC = new EncodingCompiler(this.config, this.selections);
+      this.schema = this.EC.GetSchema();
     },
+  },
+  methods: {
+    // refresh config
     ApplyConfig() {
       this.encoding = this.EC.GetVegaConfig(this.schema);
       this.$emit("apply-config", this.encoding);

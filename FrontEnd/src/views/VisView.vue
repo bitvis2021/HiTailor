@@ -21,7 +21,7 @@
 
       <div v-if="showUnitPanel">
         <br />
-        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
+        <unit-view :visData_arr="unitData_arr" :figID="this.figID"></unit-view>
       </div>
       <div v-else-if="showTemplates">
         <br />
@@ -46,14 +46,14 @@
 
     <!-- remove group canvas -->
     <el-dialog
-      title="Batch remove"
-      :visible.sync="dialog_removeAll"
+      title="Batch Operation"
+      :visible.sync="showBatchDialog"
       width="30%"
     >
-      <span>Do you want remove other figures which belong this group?</span>
+      <span>{{ dialogText }}</span>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialog_removeAll = false">No</el-button>
-        <el-button type="primary" @click="BatchRemove">Yes</el-button>
+        <el-button @click="showBatchDialog = false">No</el-button>
+        <el-button type="primary" @click="BatchOperate">Yes</el-button>
       </span>
     </el-dialog>
   </div>
@@ -64,11 +64,7 @@ import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import UnitView from "./vis/UnitView.vue";
-import {
-  GetTemplates,
-  VegaTemplate,
-  GetTemplate,
-} from "./vis/TemplateCompiler";
+import { GetTemplates, VegaTemplate } from "./vis/TemplateCompiler";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
 // visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
@@ -84,11 +80,18 @@ export default {
     VegaConfigNoData() {
       return { mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding };
     },
+    vegaConfig() {
+      return this.currentTemplate.GetVegaConfig();
+    },
+    ECSelections() {
+      return this.currentTemplate.GetSelections();
+    },
   },
   data() {
     return {
       showTemplates: false,
       showUnitPanel: false,
+      showPanelView: false,
 
       visData: {}, // data from visualize selected data
       metaData: {},
@@ -102,24 +105,16 @@ export default {
       VisDB: new VisDatabase(this.$bus),
       figID: "",
 
-      dialog_removeAll: false,
+      showBatchDialog: false,
+      dialogTexts: {
+        remove: "Do you want remove other figures which belong this group?",
+        reconf: "Do you want config other figures which belong this group?",
+      },
+      dialogText: "",
       currentGroupID: "",
 
       unitData_arr: [],
-      currentUnit: {
-        position: { x: 0, y: 0, height: 0, width: 0 },
-        value: 0,
-      },
     };
-  },
-  computed: {
-    // user visible config
-    vegaConfig() {
-      return this.currentTemplate.GetVegaConfig();
-    },
-    ECSelections() {
-      return this.currentTemplate.GetSelections();
-    },
   },
   methods: {
     ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
@@ -188,14 +183,22 @@ export default {
       } else {
         this.VisDB.SetTemplate(this.figID, this.currentTemplate);
         this.VisDB.RerenderCanvas(this.figID);
+        if (this.VisDB.GetGroupMembers(this.figID).length > 1) {
+          this.dialogText = this.dialogTexts.reconf;
+          this.showBatchDialog = true;
+        }
       }
 
       this.$bus.$emit("apply-config");
     },
 
-    BatchRemove() {
-      this.dialog_removeAll = false;
-      this.VisDB.DeleteGroup(this.currentGroupID);
+    BatchOperate() {
+      this.showBatchDialog = false;
+      if (this.dialogText == this.dialogTexts.remove) {
+        this.VisDB.DeleteGroup(this.currentGroupID);
+      } else if (this.dialogText == this.dialogTexts.reconf) {
+        this.VisDB.ModifyGroupFigs(this.figID, this.currentTemplate);
+      }
     },
   },
   mounted() {
@@ -227,7 +230,7 @@ export default {
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
-
+      console.log("new fig ID", this.figID);
       this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
@@ -238,8 +241,7 @@ export default {
         metaData = JSON.parse(metaData);
       }
       if (metaData.x.range == 1 && metaData.y.range == 1) {
-        this.currentUnit.position = position;
-        this.currentUnit.value = JSON.parse(visData).at(0)["value"];
+        this.unitData_arr = JSON.parse(visData);
         this.OpenUnitView();
       } else {
         this.OpenTemplateView();
@@ -256,21 +258,17 @@ export default {
       );
     });
 
-    this.$bus.$on("visualize-recommendUnit", (data) => {
-      data.push(this.currentUnit);
-      this.unitData_arr = data;
-
-      this.OpenUnitView();
-    });
-
     // User click vis. Restore previous context.
     this.$bus.$on("select-canvas", (id) => {
       this.figID = id;
+      this.currentGroupID = this.VisDB.GetGroupID(this.figID);
       if (this.VisDB.database[id].type === "vega") {
+        console.log("restore data");
         this.currentTemplate = this.VisDB.GetTemplate(id);
         this.visData = this.VisDB.database[id].visData;
         this.metaData = this.VisDB.database[id].metaData;
-        console.log("restore data", this.visData, this.metaData);
+        console.log(this.currentTemplate);
+        this.showPanelView = false;
         this.OpenPanelView();
       } else {
         console.log("open Unit");
@@ -296,9 +294,9 @@ export default {
     });
 
     // User close a canvas that belongs to a group
-    this.$bus.$on("remove-groupCanvas", (group_id) => {
-      this.dialog_removeAll = true;
-      this.currentGroupID = group_id;
+    this.$bus.$on("remove-groupCanvas", () => {
+      this.showBatchDialog = true;
+      this.dialogText = this.dialogTexts.remove;
     });
 
     // resize function
@@ -324,7 +322,6 @@ export default {
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
     this.$bus.$off("select-canvas");
-    this.$bus.$off("visualize-recommendUnit");
     this.$bus.$off("remove-groupCanvas");
   },
 };
@@ -426,4 +423,3 @@ export default {
   color: #606266;
 }
 </style>
-
