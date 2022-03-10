@@ -48,15 +48,14 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
     }
 
     switch (templateName_str) {
-        /*
-    case supportedTemplate.Q2_Scatter_plot:
-        // just reuse line chart            
-        let point_template = GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, direction);
-        point_template.vegaConfig.mark = "point";
-        point_template.name = templateName_str;
-        point_template.img = './templates/scatterplot.png';
-        console.log("new tmeola", point_template);
-        return point_template;*/
+        case supportedTemplate.Q2_Scatter_plot:
+            // just reuse line chart            
+            let point_template = GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, direction);
+            point_template.vegaConfig.mark = "point";
+            point_template.name = templateName_str;
+            point_template.img = './templates/scatterplot.png';
+            console.log("new tmeola", point_template);
+            return point_template;
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
             let line_template;

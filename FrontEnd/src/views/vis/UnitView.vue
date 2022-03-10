@@ -121,17 +121,41 @@
           <el-color-picker v-model="color" @change="PreviewUnitConfig">
           </el-color-picker>
           <div class="color-legend" v-show="showColorLegend">
-             <div style="margin-top:-20px">
-              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px'>legend</span>
-             </div>
-             <svg id="color-seq" width="100" height="20" ></svg>
-             <div style="margin-top:-10px">
-              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px'>min</span>
-              <span style='font-size: 3px;font-family: "Avenir", Helvetica, Arial, sans-serif;color: #606266; margin-top:-30px;margin-left:60px'>max</span>
-             </div>
+            <div style="margin-top: -20px">
+              <span
+                style="
+                  font-size: 3px;
+                  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+                  color: #606266;
+                  margin-top: -30px;
+                "
+                >legend</span
+              >
+            </div>
+            <svg id="color-seq" width="100" height="20"></svg>
+            <div style="margin-top: -10px">
+              <span
+                style="
+                  font-size: 3px;
+                  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+                  color: #606266;
+                  margin-top: -30px;
+                "
+                >min</span
+              >
+              <span
+                style="
+                  font-size: 3px;
+                  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+                  color: #606266;
+                  margin-top: -30px;
+                  margin-left: 60px;
+                "
+                >max</span
+              >
+            </div>
           </div>
         </el-row>
-
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
           <div class="property-text">size:</div>
@@ -155,11 +179,34 @@
           >
             <div style="text-align: center; position: absolute; left: 112px">
               <el-radio-button label="top" size="mini">
-                <svg class="icon" width="12px" height="12px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#515151" d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M778.664 170.664H245.336c-41.18 0-74.672 33.492-74.672 74.672v149.328c0 41.18 33.492 74.672 74.672 74.672h533.328c41.18 0 74.672-33.492 74.672-74.672v-149.328c0-41.18-33.492-74.672-74.672-74.672z m0 0" /></svg></el-radio-button>
+                <svg
+                  class="icon"
+                  width="12px"
+                  height="12px"
+                  viewBox="0 0 1024 1024"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="#515151"
+                    d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M778.664 170.664H245.336c-41.18 0-74.672 33.492-74.672 74.672v149.328c0 41.18 33.492 74.672 74.672 74.672h533.328c41.18 0 74.672-33.492 74.672-74.672v-149.328c0-41.18-33.492-74.672-74.672-74.672z m0 0"
+                  /></svg
+              ></el-radio-button>
             </div>
             <div style="text-align: center; position: absolute; top: 40px">
               <el-radio-button label="left" size="mini"
-                ><svg class="icon" width="12px" height="12px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path fill="#515151" d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M394.664 170.664h-149.328c-41.18 0-74.672 33.492-74.672 74.672v533.328c0 41.18 33.492 74.672 74.672 74.672h149.328c41.18 0 74.672-33.492 74.672-74.672V245.336c0-41.18-33.492-74.672-74.672-74.672z m0 0" /></svg></i
+                ><svg
+                  class="icon"
+                  width="12px"
+                  height="12px"
+                  viewBox="0 0 1024 1024"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill="#515151"
+                    d="M896 0H128C57.43 0 0 57.43 0 128v768c0 70.57 57.43 128 128 128h768c70.57 0 128-57.43 128-128V128c0-70.57-57.43-128-128-128z m42.664 896c0 23.554-19.156 42.664-42.664 42.664H128c-23.508 0-42.664-19.11-42.664-42.664V128c0-23.554 19.156-42.664 42.664-42.664h768c23.508 0 42.664 19.11 42.664 42.664z m0 0M394.664 170.664h-149.328c-41.18 0-74.672 33.492-74.672 74.672v533.328c0 41.18 33.492 74.672 74.672 74.672h149.328c41.18 0 74.672-33.492 74.672-74.672V245.336c0-41.18-33.492-74.672-74.672-74.672z m0 0"
+                  /></svg
               ></el-radio-button>
               <el-radio-button label="middle" size="mini"
                 ><svg
@@ -257,6 +304,15 @@ export default {
       visData: this.visData_arr,
       showColorLegend: false,
     };
+  },
+  watch: {
+    figID(newVal, oldVal) {
+      console.log("come new value", newVal);
+      this.ID = newVal;
+    },
+    visData_arr(newVal,oldVal){
+      // TODO change panel when new config comes
+    }
   },
   methods: {
     PreviewUnitConfig() {
@@ -382,7 +438,9 @@ export default {
     },
     Apply2Vis() {
       this.visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
-      if (!!this.ID && this.ID !== "") {
+      console.log("this ID", this.ID);
+      // Use parents' figID to detect whether we should generate new data, and preserver current ID by using variable local
+      if (!!this.figID && this.figID !== "") {
         for (let i = 0; i < this.visData.length; i++) {
           let db = this.VisDB.database[this.visData[i].id];
           this.VisDB.RerenderCanvas(
@@ -415,17 +473,8 @@ export default {
       this.$bus.$emit("apply-config");
     },
   },
-  mounted() {
-    this.PreviewUnitConfig();
-    this.$bus.$on("visualize-recommendUnit", () => {
-      this.ID = "";
-    });
-    // Recommend data
-  },
-  beforeDestroy() {
-    // Recommend data
-    this.$bus.$off("visualize-recommendUnit");
-  },
+  mounted() {},
+  beforeDestroy() {},
 };
 </script>
 <style lang="less">

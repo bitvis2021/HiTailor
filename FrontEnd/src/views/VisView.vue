@@ -21,7 +21,7 @@
 
       <div v-if="showUnitPanel">
         <br />
-        <unit-view :visData_arr="unitData_arr" :figID="figID"></unit-view>
+        <unit-view :visData_arr="unitData_arr" :figID="this.figID"></unit-view>
       </div>
       <div v-else-if="showTemplates">
         <br />
@@ -114,10 +114,6 @@ export default {
       currentGroupID: "",
 
       unitData_arr: [],
-      currentUnit: {
-        position: { x: 0, y: 0, height: 0, width: 0 },
-        value: 0,
-      },
     };
   },
   methods: {
@@ -234,7 +230,7 @@ export default {
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
-
+      console.log("new fig ID", this.figID);
       this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
@@ -245,8 +241,7 @@ export default {
         metaData = JSON.parse(metaData);
       }
       if (metaData.x.range == 1 && metaData.y.range == 1) {
-        this.currentUnit.position = position;
-        this.currentUnit.value = JSON.parse(visData).at(0)["value"];
+        this.unitData_arr = JSON.parse(visData);
         this.OpenUnitView();
       } else {
         this.OpenTemplateView();
@@ -261,13 +256,6 @@ export default {
         afterPosition.x,
         afterPosition.y
       );
-    });
-
-    this.$bus.$on("visualize-recommendUnit", (data) => {
-      data.push(this.currentUnit);
-      this.unitData_arr = data;
-
-      this.OpenUnitView();
     });
 
     // User click vis. Restore previous context.
@@ -334,7 +322,6 @@ export default {
     this.$bus.$off("visualize-selectedData");
     this.$bus.$off("rerender-selectedData");
     this.$bus.$off("select-canvas");
-    this.$bus.$off("visualize-recommendUnit");
     this.$bus.$off("remove-groupCanvas");
   },
 };
@@ -436,4 +423,3 @@ export default {
   color: #606266;
 }
 </style>
-
