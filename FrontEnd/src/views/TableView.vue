@@ -837,7 +837,7 @@ export default {
       }
     },
     clear_selected_header() {
-      this.selectedHeader = null
+      // this.selectedHeader = null
       d3.select("#interaction-helper").remove()
       d3.select("#interaction-helper-line").remove()
     },
@@ -1101,25 +1101,25 @@ export default {
       // check fully connected 
       var reference = null, refernum = null
       var differ = false
-      if (upLayerNum!=0) {
-        for (var item of header[upLayerNum-1].keys()) {
-          if (reference == null) {
-            reference = header[upLayerNum-1].get(item).children[0]
-            refernum = header[upLayerNum-1].get(item).children.length
-          }
-          if (refernum != header[upLayerNum-1].get(item).children.length) {
-            differ = true
-            return  // not fully-conn, can't swap
-          }
-          for (var i=0; i<header[upLayerNum-1].get(item).children.length; i++) {
-            if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum-1].get(item).children[i])) {
-              differ = true
-              return  // not fully-conn, can't swap
-            }
-          }       
-        }
-      }
-      reference = null, refernum = null, differ = false
+      // if (upLayerNum!=0) {
+      //   for (var item of header[upLayerNum-1].keys()) {
+      //     if (reference == null) {
+      //       reference = header[upLayerNum-1].get(item).children[0]
+      //       refernum = header[upLayerNum-1].get(item).children.length
+      //     }
+      //     if (refernum != header[upLayerNum-1].get(item).children.length) {
+      //       differ = true
+      //       return  // not fully-conn, can't swap
+      //     }
+      //     for (var i=0; i<header[upLayerNum-1].get(item).children.length; i++) {
+      //       if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum-1].get(item).children[i])) {
+      //         differ = true
+      //         return  // not fully-conn, can't swap
+      //       }
+      //     }       
+      //   }
+      // }
+      // reference = null, refernum = null, differ = false
       for (var item of header[upLayerNum].keys()) {
         if (reference == null) {
           reference = header[upLayerNum].get(item).children[0]
@@ -1426,8 +1426,8 @@ export default {
           }
           sum = Number(sum).toFixed(1)
           avg = Number(sum / count).toFixed(1)
-          max = Math.max.apply(null,tmpdata)
-          min = Math.min.apply(null,tmpdata)
+          max = Number(Math.max.apply(null,tmpdata))
+          min = Number(Math.min.apply(null,tmpdata))
 
           switch(type) {
             case 'sum':
@@ -1771,6 +1771,12 @@ export default {
         this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
 
       var vis = []
+      // add chosen value
+      var value = get_unit_data_for_transmission(this.selectedArea.top-this.headerRange.bottom-1,this.selectedArea.left-this.headerRange.right-1, this.valueDistribution, this.seq2num)
+      var pos = selectedPos
+      var obj = {position: pos, value: value, priority: 0}
+      vis.push(obj)
+      console.log("obj", obj)
       for (var i=min-1; i<=max-1; i++) {
         for (var j=0; j<data[i].length; j++) {
           var area = data[i][j]
