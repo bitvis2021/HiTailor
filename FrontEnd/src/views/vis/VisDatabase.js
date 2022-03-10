@@ -38,8 +38,6 @@ VisDatabase.prototype.DeleteGroup = function (group_id) {
     console.log("deleteing", memberID);
     this.RemoveCanvas(memberID);
   }
-
-  // delete this.group[group_id];
 };
 VisDatabase.prototype.RemoveGroupMember = function (group_id, id) {
   if (!!this.group[group_id]) {
@@ -50,14 +48,17 @@ VisDatabase.prototype.RemoveGroupMember = function (group_id, id) {
   }
 };
 VisDatabase.prototype.AddGroupMember = function (group_id, id) {
-  if (group_id == undefined || this.group[group_id] == undefined) {
+  let groupID = group_id;
+  if (!groupID || !this.group[groupID]) {
     console.log("undefine");
-    group_id = this.GenID();
-    this.group[group_id] = [];
+    groupID = this.GenID();
+    this.group[groupID] = [];
   }
-  this.database[id].group_id = group_id;
-  this.group[group_id].push(id);
-  return group_id;
+  if (!!this.database[id]) {
+    this.database[id].group_id = groupID;
+  }
+  this.group[groupID].push(id);
+  return groupID;
 };
 
 VisDatabase.prototype.SelectHandler = function (id) {
