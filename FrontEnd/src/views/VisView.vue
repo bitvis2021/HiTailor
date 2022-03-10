@@ -129,7 +129,6 @@ export default {
 
     // Input data and metadata to VisTemplates. Then get the templates. Open the template view.
     OpenTemplateView() {
-      console.log(this.metaData, this.visData);
       this.templates = GetTemplates(this.metaData, this.visData);
 
       this.showTemplates = true;
@@ -188,7 +187,7 @@ export default {
           this.showBatchDialog = true;
         }
       }
-
+      console.log("table view highlight recommend selection");
       this.$bus.$emit("apply-config");
     },
 
@@ -215,7 +214,6 @@ export default {
         let data = JSON.parse(
           JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
         );
-        console.log("preview data", data);
         vegaEmbed("#chart", data, {
           renderer: "svg",
           actions: false,
@@ -230,7 +228,6 @@ export default {
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
-      console.log("new fig ID", this.figID);
       this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
@@ -263,15 +260,12 @@ export default {
       this.figID = id;
       this.currentGroupID = this.VisDB.GetGroupID(this.figID);
       if (this.VisDB.database[id].type === "vega") {
-        console.log("restore data");
         this.currentTemplate = this.VisDB.GetTemplate(id);
         this.visData = this.VisDB.database[id].visData;
         this.metaData = this.VisDB.database[id].metaData;
-        console.log(this.currentTemplate);
         this.showPanelView = false;
         this.OpenPanelView();
       } else {
-        console.log("open Unit");
         let group = this.VisDB.GetGroupMembers(this.figID);
         this.unitData_arr = [];
         for (let i = 0; i < group.length; i++) {

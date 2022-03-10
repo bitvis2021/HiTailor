@@ -53,7 +53,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             point_template.vegaConfig.mark = "point";
             point_template.name = templateName_str;
             point_template.img = './templates/scatterplot.png';
-            console.log("new tmeola", point_template);
             return point_template;
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
@@ -101,7 +100,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             return line_template;
 
         case supportedTemplate.ANQorNQ_Bar_Chart:
-            console.log("bar char range", metaData_obj.x.range);
             // simple bar chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 if (is_horizon) {
@@ -560,7 +558,6 @@ function GetObjData(visData_arr, metaData_obj, direction_str) {
     });
 
     if (atom_col_key == undefined || atom_row_key == undefined) {
-        console.log("atom key undefine", atom_row_key, atom_col_key);
         return null;
     }
     let visDataObj_arr = []
@@ -695,7 +692,6 @@ VegaTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj
             new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
         }
     }
-    console.log('new vegalite', new_vegaLite);
     return new VegaTemplate(this.name, new_vegaLite, new_selections, this.picture);
 }
 
@@ -735,7 +731,6 @@ ObjTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj)
 
 function GetHeaders(channel_obj) {
     let ans = []
-    console.log(channel_obj)
     for (let index = 0; index < channel_obj.headers.length; index++) {
         const field = channel_obj.headers[index];
         ans.push(field.name)
@@ -877,7 +872,6 @@ HistogramHeatmap.prototype.ReuseTemplate = function (newMetaData_obj, newVisData
 }
 
 HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
-    console.log("heat map");
     this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     this.vegaConfig.height = height;
     this.vegaConfig.width = width;
@@ -1095,8 +1089,6 @@ ParallelCoordinatePlot.prototype.ReuseTemplate = function (newMetaData_obj, newV
             new_vega.encoding[channel].field = new_selections.GetMappedValue(new_vega.encoding[channel].field, this.GetSelections());
         }
     }
-    console.log("new vega", new_vega);
-    console.log("new selections", new_selections)
     return new ParallelCoordinatePlot(new_data, new_selections, this.picture, this.is_horizon, new_vega);
 }
 
@@ -1193,7 +1185,6 @@ HorizonGraphTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVis
     new_vegaLite.data.values = new_data;
     for (const channel in new_vegaLite.encoding) {
         if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
-            console.log("reMapping", new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections()))
             new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
         }
     }

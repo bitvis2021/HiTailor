@@ -345,7 +345,6 @@ FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
 FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelection) {
     let find = source_FieldSelection.GetQSelections().indexOf(value_str);
     if (find != -1) {
-        console.log("mapped", find);
         return this.GetQSelection(find);
     }
     find = source_FieldSelection.GetXSelections().indexOf(value_str);

@@ -35,7 +35,6 @@ VisDatabase.prototype.GetGroupMembers = function (id) {
 VisDatabase.prototype.DeleteGroup = function (group_id) {
   for (let i = 0, len = this.group[group_id].length; i < len; i++) {
     let memberID = this.group[group_id][i];
-    console.log("deleteing", memberID);
     this.RemoveCanvas(memberID);
   }
 };
@@ -50,7 +49,6 @@ VisDatabase.prototype.RemoveGroupMember = function (group_id, id) {
 VisDatabase.prototype.AddGroupMember = function (group_id, id) {
   let groupID = group_id;
   if (!groupID || !this.group[groupID]) {
-    console.log("undefine");
     groupID = this.GenID();
     this.group[groupID] = [];
   }
