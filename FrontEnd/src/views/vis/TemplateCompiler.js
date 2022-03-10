@@ -22,7 +22,7 @@ export let supportedTemplate = {
     NQ_Histogram_Scatterplot: "2D Histogram Scatterplot",
     NQ_Histogram_Heatmap: "2D Histogram Heatmap",
     NQ_PieChart: "Pie Chart",
-    NQ_RadialPlot: "Radio Plot",
+    NQ_RadialPlot: "Radial Plot",
 }
 
 // factory model
@@ -366,75 +366,75 @@ return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_ob
 }
 else {
 return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-}
-case supportedTemplate.NQ_PieChart:
-if (is_horizon) {
-vegaConfig =
-{
-"data": {
-"values": visData_horizon
-},
-"mark": "arc",
-"encoding": {
-"theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative" },
-"color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
-}
-}
-return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
-}
-else {
-vegaConfig =
-{
-"data": {
-"values": visData_vertical
-},
-"mark": "arc",
-"encoding": {
-"theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative" },
-"color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
-}
-}
-return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
- 
-}
-case supportedTemplate.NQ_RadialPlot:
-if (is_horizon) {
-vegaConfig =
-{
-"data": {
-"values": visData_horizon
-},
-"mark": "arc",
-"encoding": {
-"theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative", "stack": true },
-"radius": {
-"field": selections_horizon.GetXSelections().at(0),
-"scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-},
-"color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
-}
-}
-return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/pie chart.png');
-}
-else {
-vegaConfig =
-{
-"data": {
-"values": visData_vertical
-},
-"mark": "arc",
-"encoding": {
-"theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative", "stack": true },
-"radius": {
-"field": selections_vertical.GetYSelections().at(0),
-"scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-},
-"color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
-}
-}
-return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/pie chart.png');
-}
-*/
+}*/
+        case supportedTemplate.NQ_PieChart:
+            if (is_horizon) {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_horizon
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_horizon.GetQSelection(0), "type": "quantitative" },
+                        "color": { "field": selections_horizon.GetXSelection(-1), "type": "nominal" }
+                    }
+                }
+                return new ObjTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png', true);
+            }
+            else {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_vertical
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_vertical.GetQSelection(0), "type": "quantitative" },
+                        "color": { "field": selections_vertical.GetYSelection(-1), "type": "nominal" }
+                    }
+                }
+                return new ObjTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png', false);
+
+            }
+        case supportedTemplate.NQ_RadialPlot:
+            if (is_horizon) {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_horizon
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_horizon.GetQSelection(0), "type": "quantitative", "stack": true },
+                        "radius": {
+                            "field": selections_horizon.GetQSelection(0),
+                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+                        },
+                        "color": { "field": selections_horizon.GetXSelection(-1), "type": "nominal" }
+                    }
+                }
+                return new ObjTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/radial plot.png', true);
+            }
+            else {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_vertical
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        "theta": { "field": selections_vertical.GetQSelection(0), "type": "quantitative", "stack": true },
+                        "radius": {
+                            "field": selections_vertical.GetQSelection(0),
+                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+                        },
+                        "color": { "field": selections_vertical.GetYSelection(-1), "type": "nominal" }
+                    }
+                }
+                return new ObjTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/radial plot.png', false);
+            }
+
         default:
             break;
     }
