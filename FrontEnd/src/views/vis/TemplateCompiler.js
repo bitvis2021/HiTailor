@@ -61,8 +61,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
 
             // simple line chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
-                selections_cell = selections_cell;
-                selections_cell.SetYSelections(['value']);
                 picture = './templates/line chart.png'
                 vegaConfig = {
                     mark: "line",
@@ -1052,11 +1050,11 @@ HorizonGraphTemplate.prototype.GetMinMax = function (ySelect_str) {
     let max = -Infinity;
     for (let i = 0; i < this.visData_arr.length; i++) {
         const element = this.visData_arr[i];
-        if (element[ySelect_str] > max) {
-            max = element[ySelect_str];
+        if (Number(element[ySelect_str]) > max) {
+            max = Number(element[ySelect_str]);
         }
-        if (element[ySelect_str] < min) {
-            min = element[ySelect_str];
+        if (Number(element[ySelect_str]) < min) {
+            min = Number(element[ySelect_str]);
         }
 
     }
@@ -1080,12 +1078,11 @@ HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
         domainHeight *= 2;
     }
 
-    for (let i = 0; i < (max - min) / domainHeight + 1; i++) {
+    for (let i = 0; i <= (max - min) / domainHeight + 1; i++) {
         let layerContent = JSON.parse(JSON.stringify({ mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding }));
         let offset = i * domainHeight + Number(min);
-        console.log("offset", offset);
         if (offset < 0) {
-            offset = "+" + String(offset);
+            offset = "+" + String(-offset);
         }
         offset = "-" + String(offset);
         layerContent.transform = [{ calculate: "datum['" + ySelect + "'] " + offset, as: ySelect }];
