@@ -346,27 +346,27 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             break;
         case supportedTemplate.NQ_Parallel_Coordinate_Plot:
             if (is_horizon) {
-                return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png', true);
+                return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png', is_horizon);
             }
             else {
-                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', false);
+                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', is_horizon);
             }
-        /*
 
-case supportedTemplate.NQ_Histogram_Heatmap:
-if (is_horizon) {
-return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-}
-else {
-return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-}
-case supportedTemplate.NQ_Histogram_Scatterplot:
-if (is_horizon) {
-return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-}
-else {
-return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-}*/
+
+        case supportedTemplate.NQ_Histogram_Heatmap:
+            if (is_horizon) {
+                return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj, './templates/heat map.png', is_horizon);
+            }
+            else {
+                return new HistogramHeatmap(visData_vertical, selections_vertical, metaData_obj, './templates/heat map.png', is_horizon);
+            }
+        case supportedTemplate.NQ_Histogram_Scatterplot:
+            if (is_horizon) {
+                return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj, './templates/histogram scatterplot.png', is_horizon);
+            }
+            else {
+                return new HistogramScatterplot(visData_vertical, selections_vertical, metaData_obj, './templates/histogram scatterplot.png', is_horizon);
+            }
         case supportedTemplate.NQ_PieChart:
             if (is_horizon) {
                 vegaConfig =
@@ -484,9 +484,9 @@ export function GetTemplates(metaData_obj, visData_arr) {
         }
 
         let Q2Chart = [
+            supportedTemplate.NQor2Q_Simple_Line_Chart,
             supportedTemplate.NQ_PieChart,
             supportedTemplate.NQ_RadialPlot,
-            supportedTemplate.NQor2Q_Simple_Line_Chart,
             supportedTemplate.Q2_Horizon_Graph,
             supportedTemplate.Q2_Scatter_plot,
             supportedTemplate.NQ_Histogram_Heatmap,
@@ -742,45 +742,53 @@ function GetHeaders(channel_obj) {
     }
     return ans
 }
-
-function HistogramScatterplot(visData_arr, selections_obj, binsX_nu, binsY_nu, previewPic_str) {
+// todo add reuse support
+function HistogramScatterplot(visData_arr, selections_obj, metaData_obj, previewPic_str, is_horizon, vegaConfig_obj) {
     this.selections = selections_obj;
-    let defaultVal1 = selections_obj.GetXSelections().at(0);
-    let defaultVal2 = selections_obj.GetXSelections().at(1);
-    this.vegaConfig = {
-        "mark": "circle",
-        data: {
-            values: visData_arr
-        },
-        "transform": [
-            {
-                "filter": {
-                    "and": [
-                        { "field": defaultVal1, "valid": true },
-                        { "field": defaultVal2, "valid": true }
-                    ]
+    let defaultVal1 = selections_obj.GetQSelections().at(0);
+    let defaultVal2 = selections_obj.GetQSelections().at(1);
+    let binsX_nu = metaData_obj.x.range;
+    let binsY_nu = metaData_obj.y.range;
+    if (!vegaConfig_obj) {
+        this.vegaConfig = {
+            "mark": "circle",
+            data: {
+                values: visData_arr
+            },
+            "transform": [
+                {
+                    "filter": {
+                        "and": [
+                            { "field": defaultVal1, "valid": true },
+                            { "field": defaultVal2, "valid": true }
+                        ]
+                    }
                 }
-            }
-        ],
-        "encoding": {
-            "x": {
-                "field": defaultVal1,
-                "bin": { "maxbins": binsX_nu },
-                "type": "quantitative"
+            ],
+            "encoding": {
+                "x": {
+                    "field": defaultVal1,
+                    "bin": { "maxbins": binsX_nu },
+                    "type": "quantitative"
+                },
+                "y": {
+                    "field": defaultVal2,
+                    "bin": { "maxbins": binsY_nu },
+                    "type": "quantitative"
+                },
+                "size": {
+                    "aggregate": "count",
+                    "type": "quantitative",
+                    legend: false
+                }
             },
-            "y": {
-                "field": defaultVal2,
-                "bin": { "maxbins": binsY_nu },
-                "type": "quantitative"
-            },
-            "size": {
-                "aggregate": "count",
-                "type": "quantitative",
-                legend: false
-            }
-        },
+        }
     }
-    VegaTemplate.call(this, supportedTemplate.NQ_Histogram_Scatterplot, this.vegaConfig, selections_obj, previewPic_str);
+    else {
+        this.vegaConfig = vegaConfig_obj;
+        this.vegaConfig.data.values = visData_arr;
+    }
+    ObjTemplate.call(this, supportedTemplate.NQ_Histogram_Scatterplot, this.vegaConfig, selections_obj, previewPic_str, is_horizon);
 }
 HistogramScatterplot.prototype = new VegaTemplate();
 HistogramScatterplot.prototype.GetVegaConfig = function () {
@@ -809,8 +817,28 @@ HistogramScatterplot.prototype.CompileTweakedConfig = function (vegaConfig_obj) 
 
     return this.vegaConfig;
 }
-HistogramHeatmap.prototype = new VegaTemplate();
 
+HistogramScatterplot.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    let new_visData;
+    if (this.is_horizon) {
+        new_visData = GetObjData(newVisData_obj, newMetaData_obj, 'horizon');
+    } else {
+        new_visData = GetObjData(newVisData_obj, newMetaData_obj, 'vertical');
+    }
+    let new_selections = GetObjectSelections(new_visData);
+    for (const channel in new_vegaLite.encoding) {
+        if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
+            new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
+        }
+    }
+    new_vegaLite.transform[0].filter.and[0].field = new_vegaLite.encoding.x.field;
+    new_vegaLite.transform[0].filter.and[1].field = new_vegaLite.encoding.y.field;
+
+    return new HistogramHeatmap(new_visData, new_selections, newMetaData_obj, this.img, this.is_horizon, new_vegaLite);
+}
+
+HistogramHeatmap.prototype = new VegaTemplate();
 HistogramHeatmap.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
     this.vegaConfig.encoding.x = vegaConfig_obj.encoding.x;
     this.vegaConfig.encoding.y = vegaConfig_obj.encoding.y;
@@ -829,6 +857,24 @@ HistogramHeatmap.prototype.GetVegaConfig = function () {
         }
     }
 }
+HistogramHeatmap.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    let new_visData;
+    if (this.is_horizon) {
+        new_visData = GetObjData(newVisData_obj, newMetaData_obj, 'horizon');
+    } else {
+        new_visData = GetObjData(newVisData_obj, newMetaData_obj, 'vertical');
+    }
+    let new_selections = GetObjectSelections(new_visData);
+    for (const channel in new_vegaLite.encoding) {
+        if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
+            new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
+        }
+    }
+    new_vegaLite.transform[0].filter.and[0].field = new_vegaLite.encoding.x.field;
+    new_vegaLite.transform[0].filter.and[1].field = new_vegaLite.encoding.y.field;
+    return new HistogramHeatmap(new_visData, new_selections, newMetaData_obj, this.img, this.is_horizon, new_vegaLite);
+}
 
 HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
     console.log("heat map");
@@ -838,52 +884,58 @@ HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
     return this.vegaConfig;
 }
 
-function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previewPic_str) {
-    let defaultVal1 = selections_obj.GetXSelections().at(0);
-    let defaultVal2 = selections_obj.GetXSelections().at(1);
+function HistogramHeatmap(visData_arr, selections_obj, metaData_obj, previewPic_str, is_horizon, vegaConfig_obj) {
+    let defaultVal1 = selections_obj.GetQSelections().at(0);
+    let defaultVal2 = selections_obj.GetQSelections().at(1);
+    let binsX_nu = metaData_obj.x.range;
+    let binsY_nu = metaData_obj.y.range;
     this.selections = selections_obj;
-    this.vegaConfig = {
-        "mark": "rect",
-        data: {
-            values: visData_arr
-        },
-        "transform": [
-            {
-                "filter": {
-                    "and": [
-                        { "field": defaultVal1, "valid": true },
-                        { "field": defaultVal2, "valid": true }
-                    ]
+    if (!vegaConfig_obj) {
+
+        this.vegaConfig = {
+            "mark": "rect",
+            data: {
+                values: visData_arr
+            },
+            "transform": [
+                {
+                    "filter": {
+                        "and": [
+                            { "field": defaultVal1, "valid": true },
+                            { "field": defaultVal2, "valid": true }
+                        ]
+                    }
+                }
+            ],
+            "encoding": {
+                "x": {
+                    "field": defaultVal1,
+                    "bin": { "maxbins": binsX_nu },
+                    "type": "quantitative"
+                },
+                "y": {
+                    "field": defaultVal2,
+                    "bin": { "maxbins": binsY_nu },
+                    "type": "quantitative"
+                },
+                "color": {
+                    "aggregate": "count",
+                    "type": "quantitative",
+                    legend: false
+                }
+            },
+            "config": {
+                "view": {
+                    "stroke": "transparent"
                 }
             }
-        ],
-        "encoding": {
-            "x": {
-                "field": defaultVal1,
-                "bin": { "maxbins": binsX_nu },
-                "type": "quantitative"
-            },
-            "y": {
-                "field": defaultVal2,
-                "bin": { "maxbins": binsY_nu },
-                "type": "quantitative"
-            },
-            "color": {
-                "aggregate": "count",
-                "type": "quantitative",
-                legend: false
-            }
-        },
-        "config": {
-            "view": {
-                "stroke": "transparent"
-            }
         }
+    } else {
+        this.vegaConfig = vegaConfig_obj;
+        this.vegaConfig.data.values = visData_arr;
     }
-    VegaTemplate.call(this, supportedTemplate.NQ_Histogram_Heatmap, this.vegaConfig, selections_obj, previewPic_str);
+    ObjTemplate.call(this, supportedTemplate.NQ_Histogram_Heatmap, this.vegaConfig, selections_obj, previewPic_str, is_horizon);
 }
-
-
 // no selection
 // TODO vega config to parallel plot
 function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, is_horizon, vegaConfig_obj) {
