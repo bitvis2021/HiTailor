@@ -344,97 +344,97 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new HorizonGraphTemplate(visData_horizon, selections_horizon, './templates/horizon graph.png');
             }
             break;
+        case supportedTemplate.NQ_Parallel_Coordinate_Plot:
+            if (is_horizon) {
+                return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png', true);
+            }
+            else {
+                return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', false);
+            }
         /*
-    case supportedTemplate.NQ_Parallel_Coordinate_Plot:
-        if (is_horizon) {
-            return new ParallelCoordinatePlot(visData_vertical, selections_vertical, './templates/parallel coordinate plot.png');
-        }
-        else {
-            return new ParallelCoordinatePlot(visData_horizon, selections_horizon, './templates/parallel coordinate plot y.png', 'y');
-        }
 
-    case supportedTemplate.NQ_Histogram_Heatmap:
-        if (is_horizon) {
-    return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-    }
-    else {
-    return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
-    }
-    case supportedTemplate.NQ_Histogram_Scatterplot:
-    if (is_horizon) {
-    return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-    }
-    else {
-    return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
-    }
-    case supportedTemplate.NQ_PieChart:
-    if (is_horizon) {
-    vegaConfig =
-    {
-    "data": {
-    "values": visData_horizon
-    },
-    "mark": "arc",
-    "encoding": {
-    "theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative" },
-    "color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
-    }
-    }
-    return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
-    }
-    else {
-    vegaConfig =
-    {
-    "data": {
-    "values": visData_vertical
-    },
-    "mark": "arc",
-    "encoding": {
-    "theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative" },
-    "color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
-    }
-    }
-    return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
-    
-    }
-    case supportedTemplate.NQ_RadialPlot:
-    if (is_horizon) {
-    vegaConfig =
-    {
-    "data": {
-    "values": visData_horizon
-    },
-    "mark": "arc",
-    "encoding": {
-    "theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative", "stack": true },
-    "radius": {
-        "field": selections_horizon.GetXSelections().at(0),
-        "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-    },
-    "color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
-    }
-    }
-    return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/pie chart.png');
-    }
-    else {
-    vegaConfig =
-    {
-    "data": {
-    "values": visData_vertical
-    },
-    "mark": "arc",
-    "encoding": {
-    "theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative", "stack": true },
-    "radius": {
-        "field": selections_vertical.GetYSelections().at(0),
-        "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-    },
-    "color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
-    }
-    }
-    return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/pie chart.png');
-    }
-    */
+case supportedTemplate.NQ_Histogram_Heatmap:
+if (is_horizon) {
+return new HistogramHeatmap(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+}
+else {
+return new HistogramHeatmap(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/heat map.png');
+}
+case supportedTemplate.NQ_Histogram_Scatterplot:
+if (is_horizon) {
+return new HistogramScatterplot(visData_horizon, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+}
+else {
+return new HistogramScatterplot(visData_vertical, selections_horizon, metaData_obj.x.range, metaData_obj.y.range, './templates/histogram scatterplot.png');
+}
+case supportedTemplate.NQ_PieChart:
+if (is_horizon) {
+vegaConfig =
+{
+"data": {
+"values": visData_horizon
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative" },
+"color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png');
+}
+else {
+vegaConfig =
+{
+"data": {
+"values": visData_vertical
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative" },
+"color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png');
+ 
+}
+case supportedTemplate.NQ_RadialPlot:
+if (is_horizon) {
+vegaConfig =
+{
+"data": {
+"values": visData_horizon
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_horizon.GetXSelections().at(0), "type": "quantitative", "stack": true },
+"radius": {
+"field": selections_horizon.GetXSelections().at(0),
+"scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+},
+"color": { "field": selections_horizon.GetXSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/pie chart.png');
+}
+else {
+vegaConfig =
+{
+"data": {
+"values": visData_vertical
+},
+"mark": "arc",
+"encoding": {
+"theta": { "field": selections_vertical.GetYSelections().at(0), "type": "quantitative", "stack": true },
+"radius": {
+"field": selections_vertical.GetYSelections().at(0),
+"scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+},
+"color": { "field": selections_vertical.GetYSelections().at(-1), "type": "nominal" }
+}
+}
+return new VegaTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/pie chart.png');
+}
+*/
         default:
             break;
     }
@@ -585,7 +585,7 @@ function GetObjData(visData_arr, metaData_obj, direction_str) {
             bracket[row_data_key] = {};
         }
 
-        bracket[row_data_key][element[another_atom_key]] = element['value'];
+        bracket[row_data_key][element[another_atom_key]] = Number(element['value']);
 
         for (const key in element) {
             if (key.substring(0, 3) == atom_key.substring(0, 3) && Object.hasOwnProperty.call(element, key)) {
@@ -885,83 +885,55 @@ function HistogramHeatmap(visData_arr, selections_obj, binsX_nu, binsY_nu, previ
 
 
 // no selection
-function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, direction) {
-    this.selections = selections_obj;
-    this.is_X = true;
-    this.col_row_selection = [];
-    this.obj_selection = [];
+// TODO vega config to parallel plot
+function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, is_horizon, vegaConfig_obj) {
+    this.selections_cell = selections_obj;
+    this.visData_arr = visData_arr;
+    this.is_horizon = is_horizon;
+    // this.col_row_selection = selections_obj.GetXSelections();
+    // this.obj_selection = selections_objj.GetQSelection();
+    if (!vegaConfig_obj) {
+        if (is_horizon) {
+            this.vegaConfig = {
+                mark: { type: "line", opacity: 0.3 },
+                encoding: {
 
-    selections_obj.GetYSelections().forEach(element => {
-        if (element.substring(0, 3) == 'row' || element.substring(0, 3) == 'col') {
-            this.col_row_selection.push(element);
+                    color: { type: "nominal", field: selections_obj.GetYSelection(-1), legend: null, sort: selections_obj.GetSort(selections_obj.GetYSelection(-1)) }
+                }
+            }
         }
         else {
-            this.obj_selection.push(element);
-        }
-    });
+            this.vegaConfig = {
+                mark: { type: "line", opacity: 0.3 },
+                encoding: {
 
-    if (direction == 'y' || 'vertical') {
-        this.is_X = false;
-        this.vegaConfig = {
-            "data": { "values": visData_arr },
-            "transform": [
-                { "window": [{ "op": "count", "as": "index" }] },
-                {
-                    "fold": this.obj_selection
-                },
-                {
-                    "joinaggregate": [
-                        { "op": "min", "field": selections_cell.GetQSelection(0), "as": "min" },
-                        { "op": "max", "field": selections_cell.GetQSelection(0), "as": "max" }
-                    ],
-                    "groupby": ["key"]
-                },
-                {
-                    "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
-                    "as": "norm_val"
-                },
-                { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
-            ],
-            "layer": [
-                {
-                    "mark": { "type": "line", "opacity": 0.3 },
-                    "encoding": {
-                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
-                        "detail": { "type": "nominal", "field": "index" },
-                        "y": {
-                            "type": "nominal",
-                            "field": "key",
-                            "sort": this.obj_selection
-                        },
-                        "x": { "type": "quantitative", "field": "norm_val", "axis": null }
-                    }
-                },
-                {
-                    "mark": { "type": "rule", "color": "#ccc" },
-                    "encoding": {
-                        "detail": { "aggregate": "count" },
-                        "y": {
-                            "field": "key",
-                            "sort": this.obj_selection
-                        }
-                    }
+                    color: { type: "nominal", field: selections_obj.GetXSelection(-1), legend: null, sort: selections_obj.GetSort(selections_obj.GetXSelection(-1)) }
                 }
-            ],
-            "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+            }
         }
     }
     else {
-        this.vegaConfig = {
-            "data": { "values": visData_arr },
+        this.vegaConfig = vegaConfig_obj;
+    }
+    VegaTemplate.call(this, supportedTemplate.NQ_Parallel_Coordinate_Plot, this.vegaConfig, selections_obj, previewPic_str);
+}
+ParallelCoordinatePlot.prototype = new VegaTemplate();
+ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
+
+    if (this.is_horizon)
+        return {
+            height: height,
+            width: width,
+            "data": { "values": this.visData_arr },
             "transform": [
                 { "window": [{ "op": "count", "as": "index" }] },
                 {
-                    "fold": this.obj_selection
+                    "fold": this.GetSelections().GetQSelections()
                 },
                 {
                     "joinaggregate": [
-                        { "op": "min", "field": selections_cell.GetQSelection(0), "as": "min" },
-                        { "op": "max", "field": selections_cell.GetQSelection(0), "as": "max" }
+                        { "op": "min", "field": this.GetSelections().GetQSelection(0), "as": "min" }, // aggregate field
+                        { "op": "max", "field": this.GetSelections().GetQSelection(0), "as": "max" }
                     ],
                     "groupby": ["key"]
                 },
@@ -969,18 +941,17 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                     "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
                     "as": "norm_val"
                 },
-                { "calculate": "(datum.min + datum.max) / 2", "as": "mid" }
             ],
             "layer": [
                 {
-                    "mark": { "type": "line", "opacity": 0.3 },
+                    mark: this.vegaConfig.mark,
                     "encoding": {
-                        "color": { "type": "nominal", "field": this.col_row_selection.at(-1), "legend": null },
+                        color: this.vegaConfig.encoding.color,
                         "detail": { "type": "nominal", "field": "index" },
                         "x": {
                             "type": "nominal",
-                            "field": "key",
-                            "sort": this.obj_selection
+                            "field": "key", //y
+                            "sort": this.GetSelections().GetQSelections()
                         },
                         "y": { "type": "quantitative", "field": "norm_val", "axis": null }
                     }
@@ -991,44 +962,90 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, dir
                         "detail": { "aggregate": "count" },
                         "x": {
                             "field": "key",
-                            "sort": this.obj_selection
+                            "sort": this.GetSelections().GetQSelections()
+                        }
+                    }
+                }
+            ],
+            "config": { "axis": { "labels": false, "ticks": false, "title": null } }
+
+        }
+
+    else
+        return {
+            height: height,
+            width: width,
+            "data": { "values": this.visData_arr },
+            "transform": [
+                { "window": [{ "op": "count", "as": "index" }] },
+                {
+                    "fold": this.GetSelections().GetQSelections()
+                },
+                {
+                    "joinaggregate": [
+                        { "op": "min", "field": this.GetSelections().GetQSelection(0), "as": "min" }, // aggregate field
+                        { "op": "max", "field": this.GetSelections().GetQSelection(0), "as": "max" }
+                    ],
+                    "groupby": ["key"]
+                },
+                {
+                    "calculate": "(datum.value - datum.min) / (datum.max-datum.min)",
+                    "as": "norm_val"
+                },
+            ],
+            "layer": [
+                {
+                    mark: this.vegaConfig.mark,
+                    "encoding": {
+                        color: this.vegaConfig.encoding.color,
+                        "detail": { "type": "nominal", "field": "index" },
+                        "y": {
+                            "type": "nominal",
+                            "field": "key", //y
+                            "sort": this.GetSelections().GetQSelections()
+                        },
+                        "x": { "type": "quantitative", "field": "norm_val", "axis": null }
+                    }
+                },
+                {
+                    "mark": { "type": "rule", "color": "#ccc" },
+                    "encoding": {
+                        "detail": { "aggregate": "count" },
+                        "y": {
+                            "field": "key",
+                            "sort": this.GetSelections().GetQSelections()
                         }
                     }
                 }
             ],
             "config": { "axis": { "labels": false, "ticks": false, "title": null } }
         }
-    }
-    VegaTemplate.call(this, supportedTemplate.NQ_Parallel_Coordinate_Plot, this.vegaConfig, selections_obj, previewPic_str);
-}
-ParallelCoordinatePlot.prototype = new VegaTemplate();
-ParallelCoordinatePlot.prototype.GetVegaConfig = function () {
-    let layer1 = {
-        mark: this.vegaConfig.layer[0].mark,
-        encoding: {
-            color: this.vegaConfig.layer[0].encoding.color
-        }
-    }
-    return layer1;
+
 }
 ParallelCoordinatePlot.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
-    this.vegaConfig.layer[0].mark = vegaConfig_obj.mark;
-    if (vegaConfig_obj.encoding.color != undefined) {
-        this.vegaConfig.layer[0].encoding.color = vegaConfig_obj.encoding.color;
-        // alert("You did an unsupported config!");
-    }
-    return this.vegaConfig;
+    this.vegaConfig = vegaConfig_obj;
+    return this.GetVegaLite(300, 300);
 }
-ParallelCoordinatePlot.prototype.GetSelections = function () {
-    if (this.is_X) {
-        this.selections.SetXSelections([])
-        this.selections.SetYSelections(this.col_row_selection);
+ParallelCoordinatePlot.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
+    let new_vega = JSON.parse(JSON.stringify(this.vegaConfig));
+    let new_data;
+
+    // For this template, the data is in the opposit direction
+    if (this.is_horizon) {
+        new_data = GetObjData(newVisData_obj, newMetaData_obj, 'vertical');
     }
     else {
-        this.selections.SetYSelections([])
-        this.selections.SetXSelections(this.col_row_selection);
+        new_data = GetObjData(newVisData_obj, newMetaData_obj, 'horizon');
     }
-    return this.selections;
+    let new_selections = GetObjectSelections(new_data);
+    for (const channel in new_vega.encoding) {
+        if (Object.hasOwnProperty.call(new_vega.encoding, channel)) {
+            new_vega.encoding[channel].field = new_selections.GetMappedValue(new_vega.encoding[channel].field, this.GetSelections());
+        }
+    }
+    console.log("new vega", new_vega);
+    console.log("new selections", new_selections)
+    return new ParallelCoordinatePlot(new_data, new_selections, this.picture, this.is_horizon, new_vega);
 }
 
 function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str, vegaConfig_obj) {
