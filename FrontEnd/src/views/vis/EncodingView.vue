@@ -61,6 +61,7 @@
               v-else-if="property.name == 'field'"
               placeholder="select..."
               @change="ApplyConfig"
+              @visible-change="UnhoverField()"
               v-model="property.value"
             >
               <el-option-group
