@@ -64,11 +64,11 @@
             @click="transform_derive()" > 
             Derive
           </button> -->
-          <button type="primary" plain size="small" v-if="!isCurrFlat"
+          <!-- <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="transform_unnamed('SSH', colHeader, rowHeader, false)" > 
             test
-          </button>
+          </button> -->
 
           <div class="recommend-element">
             <span class="toolbar-vertical-separator" />
@@ -359,7 +359,24 @@
           </line>
         </g>
         
-        <g id="recommendation-area-container" />
+        <g id="recommendation-area-container">
+          <!-- <g v-for="(priority, index) in recommendDataBoth" :key="priority.index">
+            <rect class="recommend-helper-both" v-for="pos in priority" :key="pos.index"
+              :id="'recommend-helper-both-'+(index+1)"
+              :x="markWidth + widthRangeList[pos.left+headerRange.right+1]"
+              :y="markHeight + heightRangeList[pos.top+headerRange.bottom+1]"
+              :width="widthRangeList[pos.right+1+headerRange.right+1] - widthRangeList[pos.left+headerRange.right+1]"
+              :height="heightRangeList[pos.bottom+1+headerRange.bottom+1] - heightRangeList[pos.top+headerRange.bottom+1]"
+              style="fill:blue">
+            </rect>
+          </g>
+
+          <rect class="recommend-helper-both" v-for="">
+          </rect>
+
+          <rect class="recommend-helper-both" v-for="">
+          </rect> -->
+        </g>
         
         <!-- transparent mask for choosing -->
         <rect v-if="!isCurrFlat && isHeaderFixed"
@@ -866,8 +883,7 @@ export default {
       }
     },
     cancel_recommendation() {
-      this.clear_selected_cell()
-      this.clear_recommendation_area()
+      this.clear_selected_cell(true)
       this.hide_recommend_element()
     },
     confirm_recommendation() {
@@ -875,8 +891,7 @@ export default {
         this.transmit_recommendation_to_vis()
       }
       this.hide_recommend_element()
-      this.clear_recommendation_area()
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
     },
 
     handle_transform_swap(name, isSwapUp) {
@@ -970,21 +985,21 @@ export default {
           if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  { // is stacked
             if (isRow) {
               this.transform_2linear(key, this.rowHeader, times, isRow, command)
-              for (var item of this.num2header) {
-                if (this.headerDistribution.get(item[1].value).isRowHeader) {
-                  this.cal_row_header_position(item[1].value, item[1].times)
-                }
-              }
+              // for (var item of this.num2header) {
+              //   if (this.headerDistribution.get(item[1].value).isRowHeader) {
+              //     this.cal_row_header_position(item[1].value, item[1].times)
+              //   }
+              // }
               this.cal_range_list(this.markRowHeightList, "mark height")
               this.cal_range_list(this.rowHeightList, "height")
             }
             else {
               this.transform_2linear(key, this.colHeader, times, isRow, command)
-              for (var item of this.num2header) {
-                if (!this.headerDistribution.get(item[1].value).isRowHeader) {
-                  this.cal_column_header_position(item[1].value, item[1].times)
-                }
-              }
+              // for (var item of this.num2header) {
+              //   if (!this.headerDistribution.get(item[1].value).isRowHeader) {
+              //     this.cal_column_header_position(item[1].value, item[1].times)
+              //   }
+              // }
               this.cal_range_list(this.markColumnWidthList, "mark width")
               this.cal_range_list(this.columnWidthList, "width")
             }
@@ -1003,7 +1018,7 @@ export default {
     },
 
     transform_fold() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
@@ -1027,7 +1042,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_unfold() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       this.isCurrFlat = false
       if (!this.isHeaderFixed) {
@@ -1048,7 +1063,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_transpose() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
@@ -1082,7 +1097,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_swap(name, header, isSwapUp, isRow) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
@@ -1259,7 +1274,7 @@ export default {
 
     },
     transform_2stacked(name, header, times, isRow) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1354,7 +1369,7 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow, type) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1480,9 +1495,10 @@ export default {
             sum += Number(v)
             count += 1
           }
+          sum = Number(sum).toFixed(1)
           avg = Number(sum / count).toFixed(1)
-          max = Math.max.apply(null,tmpdata)
-          min = Math.min.apply(null,tmpdata)
+          max = Number(Math.max.apply(null,tmpdata))
+          min = Number(Math.min.apply(null,tmpdata))
 
           switch(type) {
             case 'sum':
@@ -1558,12 +1574,12 @@ export default {
       }
     },
     transform_derive() {
-      this.clear_selected_cell()  
+      this.clear_selected_cell(true)  
       this.$bus.$emit("change-header")
 
     },
     transform_unnamed(name, oriHeader, newHeader, isRow) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
@@ -2228,7 +2244,8 @@ export default {
     console.log("this.heightRangeList", this.heightRangeList)
     console.log("this.dataValueList", this.dataValueList)
     
-    this.$bus.$on("apply-config", () => {
+    this.$bus.$on("apply-config", (data) => {
+      if (data==null) console.log("apply-null")
       if (!(this.selectedArea.left==this.selectedArea.right && this.selectedArea.top==this.selectedArea.bottom)) {
         // this.transmit_recommendation_to_vis()
         console.log("not single unit")
@@ -2244,11 +2261,16 @@ export default {
 
     this.$bus.$on("select-canvas", () => {
       console.log("remove selections of tableview")
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
     })
 
-    this.$bus.$on("change-header", () => {
-      console.log("change-header!")
+    this.$bus.$on("hover-field", (fieldname) => {
+      console.log("hover", fieldname)
+    })
+
+    this.$bus.$on("unhover-field", () => {
+      console.log("unhover")
+      d3.selectAll(".hover-helper").remove()
     })
   },
 
