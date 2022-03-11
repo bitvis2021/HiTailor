@@ -148,6 +148,8 @@ export default {
       addProperties: {},
 
       emitTimeout: undefined,
+      field: "",
+      newValue: true,
     };
   },
   watch: {
@@ -159,17 +161,22 @@ export default {
   methods: {
     HoverField(obj) {
       let field_str = obj.path[0].textContent;
+      this.field = field_str;
       // async execution
       if (!this.emitTimeout) {
         this.emitTimeout = setTimeout(() => {
-          console.log(obj.path[0].textContent);
-          this.$bus.$emit("hover-field", obj.path[0].textContent);
+          if (this.newValue) {
+            console.log("emit", this.field);
+            this.$bus.$emit("hover-field", this.field);
+            this.newValue = false;
+          }
           this.emitTimeout = undefined;
-        }, 200);
+        }, 66);
       }
     },
     UnhoverField() {
       this.$bus.$emit("unhover-field");
+      this.newValue = true;
       console.log("leave");
     },
 
