@@ -185,7 +185,6 @@ config={
 */
 UnitCompiler.GetUnitDom = function (config_obj) {
 	let dom;
-
 	// set length channel
 	if (config_obj.shape == 'circle') {
 		dom = document.createElementNS(
@@ -271,10 +270,32 @@ UnitCompiler.GetUnitDom = function (config_obj) {
 
 	dom.setAttribute("style", "fill:" + config_obj.color);
 	dom.setAttribute("opacity", config_obj.opacity);
+	// vg-tooltip-element
+	dom.addEventListener("mouseover", (event) => {
+		// console.log(document.getElementById("unit-tooltip-element"));
+		// console.log(event);
+
+		// document.getElementById("unit-tooltip-element").setAttribute("style", "top:" + event.clientY + "px;" + "left:" + event.clientX + "px;");
+	})
+	dom.addEventListener("mousemove", (event) => {
+		document.getElementById("unit-tooltip-element").setAttribute("class", "vg-tooltip visible light-theme");
+		document.getElementById("unit-tooltip-element").setAttribute("style", "top:" + event.clientY + "px;" + "left:" + event.clientX + "px;");
+	})
 	let container = document.createElementNS(
 		"http://www.w3.org/2000/svg",
 		"g"
 	);
 	container.append(dom)
+	let eventTimeout;
+	container.addEventListener("mouseout", () => {
+		if (!eventTimeout) {
+			eventTimeout = setTimeout(function () {
+				eventTimeout = null;
+				console.log("leave")
+				document.getElementById("unit-tooltip-element").removeAttribute("class");
+				document.getElementById("unit-tooltip-element").setAttribute("class", "vg-tooltip");
+			}, 1000);
+		}
+	})
 	return container;
 }
