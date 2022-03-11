@@ -13036,6 +13036,85 @@ index 0000000..7d0fa18
 +    }
 +  }
 +}
+diff --git a/node_modules/vega-scenegraph/src/Handler.js b/node_modules/vega-scenegraph/src/Handler.js
+index 66e8b53..0220b19 100644
+--- a/node_modules/vega-scenegraph/src/Handler.js
++++ b/node_modules/vega-scenegraph/src/Handler.js
+@@ -1,6 +1,6 @@
+-import {domCreate} from './util/dom';
++import { domCreate } from './util/dom';
+ import resolveItem from './util/resolveItem';
+-import {loader} from 'vega-loader';
++import { loader } from 'vega-loader';
+ 
+ /**
+  * Create a new Handler instance.
+@@ -81,12 +81,12 @@ Handler.prototype = {
+   /**
+    * Add an event handler. Subclasses should override this method.
+    */
+-  on(/*type, handler*/) {},
++  on(/*type, handler*/) { },
+ 
+   /**
+    * Remove an event handler. Subclasses should override this method.
+    */
+-  off(/*type, handler*/) {},
++  off(/*type, handler*/) { },
+ 
+   /**
+    * Utility method for finding the array index of an event handler.
+@@ -96,7 +96,7 @@ Handler.prototype = {
+    * @return {number} - The handler's array index or -1 if not registered.
+    */
+   _handlerIndex(h, type, handler) {
+-    for (let i = h ? h.length : 0; --i>=0;) {
++    for (let i = h ? h.length : 0; --i >= 0;) {
+       if (h[i].type === type && (!handler || h[i].handler === handler)) {
+         return i;
+       }
+@@ -141,10 +141,10 @@ Handler.prototype = {
+    */
+   handleHref(event, item, href) {
+     this._loader
+-      .sanitize(href, {context:'href'})
++      .sanitize(href, { context: 'href' })
+       .then(opt => {
+         const e = new MouseEvent(event.type, event),
+-              a = domCreate(null, 'a');
++          a = domCreate(null, 'a');
+         for (const name in opt) a.setAttribute(name, opt[name]);
+         a.dispatchEvent(e);
+       })
+@@ -160,7 +160,8 @@ Handler.prototype = {
+    */
+   handleTooltip(event, item, show) {
+     if (item && item.tooltip != null) {
+-      item = resolveItem(item, event, this.canvas(), this._origin);
++      // Comment it to make line can show the hover all the time
++      // item = resolveItem(item, event, this.canvas(), this._origin);
+       const value = (show && item && item.tooltip) || null;
+       this._tooltip.call(this._obj, this, event, item, value);
+     }
+@@ -179,13 +180,13 @@ Handler.prototype = {
+     if (!el) return;
+ 
+     const rect = el.getBoundingClientRect(),
+-          origin = this._origin,
+-          bounds = item.bounds,
+-          width = bounds.width(),
+-          height = bounds.height();
++      origin = this._origin,
++      bounds = item.bounds,
++      width = bounds.width(),
++      height = bounds.height();
+ 
+     let x = bounds.x1 + origin[0] + rect.left,
+-        y = bounds.y1 + origin[1] + rect.top;
++      y = bounds.y1 + origin[1] + rect.top;
+ 
+     // translate coordinate for each parent group
+     while (item.mark && (item = item.mark.group)) {
 diff --git a/node_modules/vega-scenegraph/src/SVGHandler.js b/node_modules/vega-scenegraph/src/SVGHandler.js
 index c614203..af83ab2 100644
 --- a/node_modules/vega-scenegraph/src/SVGHandler.js
