@@ -1,6 +1,6 @@
 <template>
   <div class="unit-view">
-    <div id="unit-chart">
+    <div class="unit-chart">
       <svg viewBox="0 0 1000 1000">
         <line
           x1="-1000"
@@ -307,12 +307,11 @@ export default {
   },
   watch: {
     figID(newVal, oldVal) {
-      console.log("come new value", newVal);
       this.ID = newVal;
     },
-    visData_arr(newVal,oldVal){
+    visData_arr(newVal, oldVal) {
       // TODO change panel when new config comes
-    }
+    },
   },
   methods: {
     PreviewUnitConfig() {
@@ -408,7 +407,6 @@ export default {
       this.showColorLegend = true;
       let interpolator = getColorFunction(this.color);
       let id = "color-seq";
-      console.log("corlsdfsdf", this.color, interpolator);
 
       d3.select("#" + id)
         .selectAll("*")
@@ -438,7 +436,6 @@ export default {
     },
     Apply2Vis() {
       this.visData = UnitCompiler.GetUnits(this.visData_arr, this.GetConfig());
-      console.log("this ID", this.ID);
       // Use parents' figID to detect whether we should generate new data, and preserver current ID by using variable local
       if (!!this.figID && this.figID !== "") {
         for (let i = 0; i < this.visData.length; i++) {
@@ -515,18 +512,6 @@ export default {
   }
   .el-icon-arrow-down {
     font-size: 12px;
-  }
-
-  #unit-chart {
-    margin: 10px;
-    width: 93%;
-    height: 24vh;
-    border: 1px solid #dddddd;
-    overflow: hidden;
-    svg {
-      height: 100%;
-      width: 100%;
-    }
   }
 
   #unit-config-panel {

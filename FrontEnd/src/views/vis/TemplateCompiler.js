@@ -1,4 +1,3 @@
-import { FieldSelection } from './SchemaCompiler'
 // Reconsitution temp2vega
 // Target: decouple vis 
 // select area (metadata/visData) -> templates -> template (vegaConfig) -> panel (tweaked config) -> vis
@@ -53,7 +52,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             point_template.vegaConfig.mark = "point";
             point_template.name = templateName_str;
             point_template.img = './templates/scatterplot.png';
-            console.log("new tmeola", point_template);
             return point_template;
 
         case supportedTemplate.NQor2Q_Simple_Line_Chart:
@@ -101,7 +99,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             return line_template;
 
         case supportedTemplate.ANQorNQ_Bar_Chart:
-            console.log("bar char range", metaData_obj.x.range);
             // simple bar chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
                 if (is_horizon) {
@@ -251,68 +248,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             break;
-        /*
-        case supportedTemplate.NNQ_grouped_bar_chart:
-
-            let spilitSubstring = function (str) {
-                let find = str.indexOf(" > ");
-                if (find > -1) {
-                    return str.substring(find + " > ".length);
-                }
-                return str;
-            }
-
-            let groupedBarchartData = JSON.parse(JSON.stringify(visData_arr));
-            for (let i = 0; i < groupedBarchartData.length; i++) {
-                const element = groupedBarchartData[i];
-                for (const key in element) {
-                    if (Object.hasOwnProperty.call(element, key)) {
-                        const value = element[key];
-                        // split string
-                        element[key] = spilitSubstring(value);
-                    }
-                }
-            }
-            let groupedBarchartMetaData = JSON.parse(JSON.stringify(metaData_obj));
-            for (let i = 0; i < groupedBarchartMetaData.x.headers.length; i++) {
-                groupedBarchartMetaData.x.headers[i].name = spilitSubstring(groupedBarchartMetaData.x.headers[i].name);
-                for (let j = 0; j < groupedBarchartMetaData.x.headers[i].sort.length; j++) {
-                    groupedBarchartMetaData.x.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.x.headers[i].sort[j]);
-                }
-            }
-            for (let i = 0; i < groupedBarchartMetaData.y.headers.length; i++) {
-                groupedBarchartMetaData.y.headers[i].name = spilitSubstring(groupedBarchartMetaData.y.headers[i].name);
-                for (let j = 0; j < groupedBarchartMetaData.y.headers[i].sort.length; j++) {
-                    groupedBarchartMetaData.y.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.y.headers[i].sort[j]);
-                }
-            }
-
-            let groupedSelections = GetSelectionsFromMetaData(groupedBarchartMetaData);
-            vegaConfig = {
-                data: { values: groupedBarchartData },
-                mark: "bar",
-                encoding: {
-                }
-            }
-            if (is_horizon) {
-                let defaultX2 = groupedBarchartMetaData.x.headers.at(0);
-                let defaultX1 = groupedBarchartMetaData.x.headers.at(-1);
-                vegaConfig.encoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
-                vegaConfig.encoding.y = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
-                vegaConfig.encoding.xOffset = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
-                vegaConfig.encoding.color = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
-                return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart.png');
-            }
-            else {
-                let defaultY1 = groupedBarchartMetaData.y.headers.at(0);
-                let defaultY2 = groupedBarchartMetaData.y.headers.at(-1);
-                vegaConfig.encoding.x = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
-                vegaConfig.encoding.y = { field: defaultY2.name, type: "nominal", sort: defaultY2.sort };
-                vegaConfig.encoding.yOffset = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
-                vegaConfig.encoding.color = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
-                return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart y.png');
-            }
-            */
         case supportedTemplate.NQ_Ranged_Dot_Plot:
             // TODO: add point support
             if (is_horizon) {
@@ -560,7 +495,6 @@ function GetObjData(visData_arr, metaData_obj, direction_str) {
     });
 
     if (atom_col_key == undefined || atom_row_key == undefined) {
-        console.log("atom key undefine", atom_row_key, atom_col_key);
         return null;
     }
     let visDataObj_arr = []
@@ -600,6 +534,120 @@ function GetObjData(visData_arr, metaData_obj, direction_str) {
 
     return visDataObj_arr;
 }
+
+export function FieldSelection() {
+    this.XSelections = [];
+    this.YSelections = [];
+    this.QSelections = [];
+    this.bindings = {};
+    /*
+        {
+            selectionName:{
+                sequence:num,
+                type:"", 
+                sort:[],
+            },
+            selectionName2:{},
+            ...
+        }
+    */
+}
+
+FieldSelection.prototype.AddXSelection = function (selectionName_str, nominalSort_arr) {
+    this.XSelections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
+    this.bindings[selectionName_str].type = "nominal";
+    this.bindings[selectionName_str].sort = nominalSort_arr;
+    this.XSelections.sort();
+}
+
+FieldSelection.prototype.AddYSelection = function (selectionName_str, nominalSort_arr) {
+    this.YSelections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
+    this.bindings[selectionName_str].type = "nominal";
+    this.bindings[selectionName_str].sort = nominalSort_arr;
+    this.YSelections.sort();
+}
+
+FieldSelection.prototype.AddQSelection = function (selectionName_str) {
+    this.QSelections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
+    this.bindings[selectionName_str].type = "quantitative";
+    this.QSelections.sort();
+}
+
+FieldSelection.prototype.GetXSelections = function () {
+    return this.XSelections;
+}
+
+FieldSelection.prototype.GetYSelections = function () {
+    return this.YSelections;
+}
+
+FieldSelection.prototype.GetQSelections = function () {
+    return this.QSelections;
+}
+
+FieldSelection.prototype.GetXSelection = function (at_num) {
+    if (at_num > this.XSelections.length) {
+        return this.XSelections.at(-1);
+    }
+    else if (at_num < -this.XSelections.length) {
+        return this.XSelections.at(0);
+    }
+    return this.XSelections.at(at_num);
+}
+
+FieldSelection.prototype.GetSort = function (selectionName_str) {
+    return this.bindings[selectionName_str].sort;
+}
+
+FieldSelection.prototype.GetType = function (selectionName_str) {
+    return this.bindings[selectionName_str].type;
+}
+
+
+FieldSelection.prototype.GetYSelection = function (at_num) {
+    if (at_num > this.YSelections.length) {
+        return this.YSelections.at(-1);
+    }
+    else if (at_num < -this.YSelections.length) {
+        return this.YSelections.at(0);
+    }
+    return this.YSelections.at(at_num);
+}
+
+FieldSelection.prototype.GetQSelection = function (at_num) {
+    if (at_num >= this.QSelections.length) {
+        return this.QSelections.at(-1);
+    }
+    else if (at_num <= -this.QSelections.length) {
+        return this.QSelections.at(0);
+    }
+    return this.QSelections.at(at_num);
+}
+
+FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
+    encoding_obj['type'] = this.GetType(value_str);
+    encoding_obj['sort'] = this.GetSort(value_str);
+    // type and sort support
+}
+
+FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelection) {
+    let find = source_FieldSelection.GetQSelections().indexOf(value_str);
+    if (find != -1) {
+        return this.GetQSelection(find);
+    }
+    find = source_FieldSelection.GetXSelections().indexOf(value_str);
+    if (find != -1) {
+        return this.GetXSelection(find);
+    }
+    find = source_FieldSelection.GetYSelections().indexOf(value_str);
+    if (find != -1) {
+        return this.GetYSelection(find);
+    }
+}
+
 
 function Templates() {
     this.templates = {}
@@ -661,17 +709,26 @@ VegaTemplate.prototype.GetVegaConfig = function () {
 
 // Real vega-lite data
 VegaTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
 
-    if (!!this.vegaConfig.encoding) {
-        if (!!this.vegaConfig.encoding.y && !!this.vegaConfig.encoding.x) {
-            this.vegaConfig.encoding.y.title = null;
-            this.vegaConfig.encoding.x.title = null;
+    vegaLite.height = height;
+    vegaLite.width = width;
+    vegaLite.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
+
+    if (vegaLite.encoding) {
+        if (vegaLite.encoding.y && vegaLite.encoding.x) {
+            vegaLite.encoding.y.title = null;
+            vegaLite.encoding.x.title = null;
         }
     }
-    return this.vegaConfig;
+
+    // Add tool tips
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
+    return vegaLite;
 }
 
 // Input tweaked config from panel, and then process it turing it into true vega-lite json.
@@ -695,7 +752,6 @@ VegaTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj
             new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
         }
     }
-    console.log('new vegalite', new_vegaLite);
     return new VegaTemplate(this.name, new_vegaLite, new_selections, this.picture);
 }
 
@@ -706,11 +762,18 @@ function ObjTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_st
 }
 ObjTemplate.prototype = new VegaTemplate();
 ObjTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    vegaLite.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.height = height;
+    vegaLite.width = width;
+    // Add tool tips
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
 
-    return this.vegaConfig;
+    return vegaLite;
 }
 
 ObjTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
@@ -735,7 +798,6 @@ ObjTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj)
 
 function GetHeaders(channel_obj) {
     let ans = []
-    console.log(channel_obj)
     for (let index = 0; index < channel_obj.headers.length; index++) {
         const field = channel_obj.headers[index];
         ans.push(field.name)
@@ -801,10 +863,18 @@ HistogramScatterplot.prototype.GetVegaConfig = function () {
     }
 }
 HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    return this.vegaConfig;
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.height = height;
+    vegaLite.width = width;
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
+
+
+    return vegaLite;
 }
 
 // todo: debug
@@ -877,11 +947,18 @@ HistogramHeatmap.prototype.ReuseTemplate = function (newMetaData_obj, newVisData
 }
 
 HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
-    console.log("heat map");
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    return this.vegaConfig;
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.height = height;
+    vegaLite.width = width;
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
+
+
+    return vegaLite;
 }
 
 function HistogramHeatmap(visData_arr, selections_obj, metaData_obj, previewPic_str, is_horizon, vegaConfig_obj) {
@@ -971,6 +1048,11 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, is_
 }
 ParallelCoordinatePlot.prototype = new VegaTemplate();
 ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
+    let mark = this.vegaConfig.mark;
+    if (typeof mark == "string") {
+        mark = { type: mark }
+    }
+    mark.tooltip = true;
 
     if (this.is_horizon)
         return {
@@ -996,7 +1078,7 @@ ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
             ],
             "layer": [
                 {
-                    mark: this.vegaConfig.mark,
+                    mark: mark,
                     "encoding": {
                         color: this.vegaConfig.encoding.color,
                         "detail": { "type": "nominal", "field": "index" },
@@ -1047,7 +1129,7 @@ ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
             ],
             "layer": [
                 {
-                    mark: this.vegaConfig.mark,
+                    mark: mark,
                     "encoding": {
                         color: this.vegaConfig.encoding.color,
                         "detail": { "type": "nominal", "field": "index" },
@@ -1095,8 +1177,6 @@ ParallelCoordinatePlot.prototype.ReuseTemplate = function (newMetaData_obj, newV
             new_vega.encoding[channel].field = new_selections.GetMappedValue(new_vega.encoding[channel].field, this.GetSelections());
         }
     }
-    console.log("new vega", new_vega);
-    console.log("new selections", new_selections)
     return new ParallelCoordinatePlot(new_data, new_selections, this.picture, this.is_horizon, new_vega);
 }
 
@@ -1115,7 +1195,7 @@ function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str, vegaC
     else {
         this.vegaConfig = {
             data: { values: visData_arr },
-            mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.3 },
+            mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.3, tooltip: true },
             encoding: {
                 y: { field: ySelect_str, type: "quantitative" },
                 x: { field: xSelect_str, type: "nominal", sort: this.selections.GetSort(xSelect_str) },
@@ -1183,6 +1263,7 @@ HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
 // Actually, after rewritting this function, it is a compiler.
 HorizonGraphTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
     this.vegaConfig = vegaConfig_obj;
+    this.vegaConfig.mark.tooltip = true;
     this.vegaConfig.mark.clip = true;
     return this.GetVegaLite(200, 300);
 }
@@ -1193,7 +1274,6 @@ HorizonGraphTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVis
     new_vegaLite.data.values = new_data;
     for (const channel in new_vegaLite.encoding) {
         if (Object.hasOwnProperty.call(new_vegaLite.encoding, channel)) {
-            console.log("reMapping", new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections()))
             new_vegaLite.encoding[channel].field = new_selections.GetMappedValue(new_vegaLite.encoding[channel].field, this.GetSelections());
         }
     }

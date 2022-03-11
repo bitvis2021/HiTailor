@@ -56,8 +56,9 @@
               >
               </el-option>
             </el-select>
+            <!-- todo: pay attention! this is modified, and only field can toggle this selection out -->
             <el-select
-              v-else-if="property.type == 'group select'"
+              v-else-if="property.name == 'field'"
               placeholder="select..."
               @change="ApplyConfig"
               v-model="property.value"
@@ -72,6 +73,8 @@
                   :key="GenID() + item"
                   :label="item"
                   :value="item"
+                  @mouseover.native="HoverField($event)"
+                  @mouseleave.native="UnhoverField()"
                 >
                 </el-option>
               </el-option-group>
@@ -152,6 +155,12 @@ export default {
     },
   },
   methods: {
+    HoverField(obj) {
+      console.log("hover!", obj.path[0].textContent);
+    },
+    UnhoverField() {
+      console.log("leave");
+    },
     // refresh config
     ApplyConfig() {
       this.encoding = this.EC.GetVegaConfig(this.schema);

@@ -4,8 +4,6 @@
       {{ this.vegaConfig }}
     </div>
 
-    <div id="gen-chart"></div>
-
     <div id="vis-view">
       <!-- return buttons -->
       <el-row
@@ -33,7 +31,9 @@
       <div v-else>
         <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
         <div v-if="showPanelView">
-          <div id="chart"></div>
+          <div class="unit-chart">
+            <svg id="chart"></svg>
+          </div>
           <panel-view
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
@@ -129,7 +129,6 @@ export default {
 
     // Input data and metadata to VisTemplates. Then get the templates. Open the template view.
     OpenTemplateView() {
-      console.log(this.metaData, this.visData);
       this.templates = GetTemplates(this.metaData, this.visData);
 
       this.showTemplates = true;
@@ -188,7 +187,7 @@ export default {
           this.showBatchDialog = true;
         }
       }
-
+      console.log("table view highlight recommend selection");
       this.$bus.$emit("apply-config");
     },
 
@@ -215,7 +214,6 @@ export default {
         let data = JSON.parse(
           JSON.stringify(this.currentTemplate.GetVegaLite(height, width))
         );
-        console.log("preview data", data);
         vegaEmbed("#chart", data, {
           renderer: "svg",
           actions: false,
@@ -230,7 +228,6 @@ export default {
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
-      console.log("new fig ID", this.figID);
       this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
@@ -263,15 +260,13 @@ export default {
       this.figID = id;
       this.currentGroupID = this.VisDB.GetGroupID(this.figID);
       if (this.VisDB.database[id].type === "vega") {
-        console.log("restore data");
         this.currentTemplate = this.VisDB.GetTemplate(id);
         this.visData = this.VisDB.database[id].visData;
         this.metaData = this.VisDB.database[id].metaData;
-        console.log(this.currentTemplate);
         this.showPanelView = false;
+        console.log("restore vega config", this.currentTemplate.GetVegaLite());
         this.OpenPanelView();
       } else {
-        console.log("open Unit");
         let group = this.VisDB.GetGroupMembers(this.figID);
         this.unitData_arr = [];
         for (let i = 0; i < group.length; i++) {
@@ -355,16 +350,26 @@ export default {
   }
 }
 
-#gen-chart {
-  // display: none;
-  overflow: hidden;
-}
-
 .role-axis-grid {
   display: none;
 }
 .role-axis-domain {
   display: none;
+}
+.background {
+  display: none;
+}
+
+.unit-chart {
+  margin: 10px;
+  width: 93%;
+  height: 24vh;
+  border: 1px solid #dddddd;
+  overflow: hidden;
+  svg {
+    height: 100%;
+    width: 100%;
+  }
 }
 
 .vis-test {
