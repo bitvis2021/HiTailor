@@ -148,6 +148,7 @@ export default {
       addProperties: {},
 
       emitTimeout: undefined,
+      field: "",
     };
   },
   watch: {
@@ -159,13 +160,14 @@ export default {
   methods: {
     HoverField(obj) {
       let field_str = obj.path[0].textContent;
-      // async execution
+      this.field = field_str;
+      // async execution at 15 fps
       if (!this.emitTimeout) {
         this.emitTimeout = setTimeout(() => {
-          console.log(obj.path[0].textContent);
-          this.$bus.$emit("hover-field", obj.path[0].textContent);
+          console.log("emit", this.field);
+          this.$bus.$emit("hover-field", this.field);
           this.emitTimeout = undefined;
-        }, 200);
+        }, 66);
       }
     },
     UnhoverField() {
