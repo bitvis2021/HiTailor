@@ -184,6 +184,8 @@ export default {
     ApplyConfig() {
       this.encoding = this.EC.GetVegaConfig(this.schema);
       this.$emit("apply-config", this.encoding);
+
+      this.UnhoverField();
     },
     AddEncoding(encodingName) {
       this.$set(
