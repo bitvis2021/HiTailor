@@ -146,6 +146,8 @@ export default {
       encoding: this.config,
       schema: {},
       addProperties: {},
+
+      emitTimeout: undefined,
     };
   },
   watch: {
@@ -156,11 +158,21 @@ export default {
   },
   methods: {
     HoverField(obj) {
-      console.log("hover!", obj.path[0].textContent);
+      let field_str = obj.path[0].textContent;
+      // async execution
+      if (!this.emitTimeout) {
+        this.emitTimeout = setTimeout(() => {
+          console.log(obj.path[0].textContent);
+          this.$bus.$emit("hover-field", obj.path[0].textContent);
+          this.emitTimeout = undefined;
+        }, 200);
+      }
     },
     UnhoverField() {
+      this.$bus.$emit("unhover-field");
       console.log("leave");
     },
+
     // refresh config
     ApplyConfig() {
       this.encoding = this.EC.GetVegaConfig(this.schema);

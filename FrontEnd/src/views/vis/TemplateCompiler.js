@@ -649,6 +649,8 @@ FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelec
 }
 
 
+/* Templates */
+
 function Templates() {
     this.templates = {}
 }
