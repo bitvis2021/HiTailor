@@ -143,7 +143,9 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
                     pos.bottom = ranges[i].end
                     pos.left = left
                     pos.right = right
-
+                    
+                    //for little bugs
+                    if (pos.top > pos.bottom)   continue
                     var tmp = {start:pos.top, end:pos.bottom}
                     headerPriority[priority-1].row.push(tmp)
                     
@@ -164,6 +166,9 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
                         pos.left = ranges[i].start
                     }
                     pos.right = ranges[i].end
+                    //for little bugs
+                    if (pos.left > pos.right)   continue
+
                     var tmp = {start:pos.left, end:pos.right}
                     headerPriority[priority-1].column.push(tmp)
 

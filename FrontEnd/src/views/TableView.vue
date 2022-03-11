@@ -359,24 +359,9 @@
           </line>
         </g>
         
-        <g id="recommendation-area-container">
-          <!-- <g v-for="(priority, index) in recommendDataBoth" :key="priority.index">
-            <rect class="recommend-helper-both" v-for="pos in priority" :key="pos.index"
-              :id="'recommend-helper-both-'+(index+1)"
-              :x="markWidth + widthRangeList[pos.left+headerRange.right+1]"
-              :y="markHeight + heightRangeList[pos.top+headerRange.bottom+1]"
-              :width="widthRangeList[pos.right+1+headerRange.right+1] - widthRangeList[pos.left+headerRange.right+1]"
-              :height="heightRangeList[pos.bottom+1+headerRange.bottom+1] - heightRangeList[pos.top+headerRange.bottom+1]"
-              style="fill:blue">
-            </rect>
-          </g>
+        <g id="recommendation-area-container" />
 
-          <rect class="recommend-helper-both" v-for="">
-          </rect>
-
-          <rect class="recommend-helper-both" v-for="">
-          </rect> -->
-        </g>
+        <g id="hover-helper-container" />
         
         <!-- transparent mask for choosing -->
         <rect v-if="!isCurrFlat && isHeaderFixed"
@@ -449,6 +434,7 @@ export default {
       selectedArea: {top:null, left:null, bottom:null, right:null},
       selectedMark: {index:null, type:null},
       selectedHeader: null,
+      selectedAreaForHoverOffset: {top: null, left:null},
 
       mouseOverCell: {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null},
       mouseOverMark: {index:null, type:null},
@@ -489,6 +475,7 @@ export default {
       visRerenderAfterPos: {x:0, y:0},
 
       isChoosingUnit: false,
+      isRecommendState: false,
 
       recommendDataBoth: [[], [], [], [], []],
       recommendDataRow: [[], [], []],
@@ -612,6 +599,20 @@ export default {
       res += String.fromCharCode(65+(index % 26))
       return res
     },
+    cal_column_number_with_mark(mark) {
+      var res
+      if (mark.length == 1) {
+        res = mark.charCodeAt() - 64
+      }
+      else if (mark.length == 2) {
+        res = (mark[0].charCodeAt() - 64) * 26 + (mark[1].charCodeAt() - 64)
+      }
+      else {
+        console.log("cannot resolve column mark!")
+        return
+      }
+      return res
+    },
    
     handle_mouse_down(row, column) {
       this.selectByMark.row = false
@@ -683,6 +684,9 @@ export default {
       this.selectedArea.left = this.mouseOverCell.cstart
       this.selectedArea.bottom = this.mouseOverCell.rend
       this.selectedArea.right = this.mouseOverCell.cend
+
+      this.selectedAreaForHoverOffset.top = this.mouseOverCell.rstart
+      this.selectedAreaForHoverOffset.left = this.mouseOverCell.cstart
 
       this.mouseDownState = true
       this.mouseDownMaskState = true
@@ -871,6 +875,9 @@ export default {
     hide_recommend_element() {
       d3.selectAll(".recommend-element").style("visibility", "hidden")
       d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
+
+      d3.selectAll(".hover-helper").remove()
+      this.isRecommendState = false
     },
     show_recommend_element(notShowButton=false) {
       this.directionSelectValue = ["row", "column"]
@@ -880,6 +887,7 @@ export default {
       }
       else {
         d3.selectAll("#recommend-apply-button").style("visibility", "visible")
+        this.isRecommendState = true
       }
     },
     cancel_recommendation() {
@@ -1911,6 +1919,141 @@ export default {
         cal_recommendation_by_two_references(headerPriority, 1, 1, 5, 3, 3, this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol,
           this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) 
       }
+      console.log("this.recommendDataBoth", this.recommendDataBoth[1])
+    },
+    
+    get_header_index(headers, headerlist) {
+      var index
+      var resrange = {start:null, end:null}
+      for (var i=0; i<headers.length; i++) {
+        var info = headerlist[i].get(headers[i])
+        if (i == 0) { // first layer
+          resrange.start = info.range[0].start
+          resrange.end = info.range[0].end
+        }
+        else {
+          for (var j=0; j<info.range.length; j++) {
+            if (info.range[j].start >= resrange.start && info.range[j].end <= resrange.end) {
+              resrange.start = info.range[j].start
+              resrange.end = info.range[j].end
+            }
+          }
+        }
+      }
+
+      if (resrange.start == resrange.end) {
+        index = resrange.start
+      }
+      else {
+        console.log("find range error!")
+        return
+      }
+      return index
+    },
+    handle_hover_field(name) {
+      var type, index
+      var haveOffset = false
+      if (name.indexOf(">") != -1) { // names be like "2001 > summer"
+        haveOffset = true
+        var headers = name.split(" > ")
+        var isrow = this.headerDistribution.get(headers[0]).isRowHeader
+        if (isrow) {
+          type = "row"
+          index = this.get_header_index(headers, this.rowHeader)
+          index += this.headerRange.bottom+1
+        }
+        else {
+          type = "column"
+          index = this.get_header_index(headers, this.colHeader)
+          index += this.headerRange.right+1
+        }
+      }
+      else {
+        type = name.split(" ")[0]
+        if (type == "row") { // names be like "row 1"
+          index = Number(name.split(" ")[1]) - 1
+        }
+        else if (type == "column") { // names be like "column A"
+          index = this.cal_column_number_with_mark(name.split(" ")[1]) - 1
+        }
+        else if (type == "value") {
+          console.log("hover value!")
+          return
+        }
+        else {
+          console.log("hover name error!")
+          return
+        }
+      }
+
+      if (haveOffset) { // should consider offset
+        if (!this.isRecommendState) {
+          this.draw_hover_helper_area(type, index)
+        }
+        else {  // should draw hover-helper for recommendation too
+          var refer = isrow ? this.selectedAreaForHoverOffset.top : this.selectedAreaForHoverOffset.left
+          var offset = index - refer
+          this.handle_recommend_hover_field(offset, index, isrow)
+        }
+      }
+      else {
+        this.draw_hover_helper_area(type, index)
+      }        
+    },
+    handle_recommend_hover_field(offset, chosenindex, isRow) {
+      // direction
+      var data
+      if (this.directionSelectValue.length == 2)  data = this.recommendDataBoth
+      else if (this.directionSelectValue[0] == "row")   data = this.recommendDataRow
+      else if (this.directionSelectValue[0] == "column")  data = this.recommendDataCol
+      else {
+        console.log("recommend data error!")
+        return
+      }
+
+      // priority
+      var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
+
+      var type = isRow ? "row" : "column"
+      var indexArray = new Set
+      indexArray.add(chosenindex)
+      this.draw_hover_helper_area(type, chosenindex)
+      
+      for (var i=min-1; i<=max-1; i++) {
+        for (var j=0; j<data[i].length; j++) {
+          var area = data[i][j]
+          var start = isRow ? area.top : area.left
+          var end = isRow ? area.bottom : area.right
+          var resindex = start + offset 
+          if (resindex > end) resindex = end
+
+          resindex += isRow ? (this.headerRange.bottom+1) : (this.headerRange.right+1)
+
+          if (indexArray.has(resindex))   continue
+          else {
+            indexArray.add(resindex)
+            this.draw_hover_helper_area(type, resindex)
+          }
+        }
+      }
+    },
+    draw_hover_helper_area(type, index) {
+      var helper = d3.select("#hover-helper-container").append("rect").attr("class", "hover-helper")
+        .style("fill","#FFEC8B")
+        .style("fill-opacity","30%")
+
+      if (type == "row") {
+        helper.attr("x", this.markWidth)
+          .attr("y", this.markHeight + this.heightRangeList[index])
+          .attr("width", this.widthRangeList[this.widthRangeList.length-1])
+          .attr("height", this.heightRangeList[index+1] - this.heightRangeList[index])
+      }
+      else {
+        helper.attr("x", this.markWidth + this.widthRangeList[index])
+          .attr("y", this.markHeight)
+          .attr("width", this.widthRangeList[index+1] - this.widthRangeList[index])
+          .attr("height", this.heightRangeList[this.heightRangeList.length-1])
+      }
     },
 
     before_header_interaction(id, isRowHeader, name, times, layer) {
@@ -2265,11 +2408,10 @@ export default {
     })
 
     this.$bus.$on("hover-field", (fieldname) => {
-      console.log("hover", fieldname)
+      this.handle_hover_field(fieldname)
     })
 
     this.$bus.$on("unhover-field", () => {
-      console.log("unhover")
       d3.selectAll(".hover-helper").remove()
     })
   },
