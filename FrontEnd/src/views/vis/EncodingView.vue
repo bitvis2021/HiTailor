@@ -149,6 +149,7 @@ export default {
 
       emitTimeout: undefined,
       field: "",
+      newValue: true,
     };
   },
   watch: {
@@ -161,17 +162,21 @@ export default {
     HoverField(obj) {
       let field_str = obj.path[0].textContent;
       this.field = field_str;
-      // async execution at 15 fps
+      // async execution
       if (!this.emitTimeout) {
         this.emitTimeout = setTimeout(() => {
-          console.log("emit", this.field);
-          this.$bus.$emit("hover-field", this.field);
+          if (this.newValue) {
+            console.log("emit", this.field);
+            this.$bus.$emit("hover-field", this.field);
+            this.newValue = false;
+          }
           this.emitTimeout = undefined;
         }, 66);
       }
     },
     UnhoverField() {
       this.$bus.$emit("unhover-field");
+      this.newValue = true;
       console.log("leave");
     },
 
