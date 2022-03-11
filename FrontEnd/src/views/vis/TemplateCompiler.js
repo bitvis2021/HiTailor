@@ -658,25 +658,26 @@ VegaTemplate.prototype.GetVegaConfig = function () {
 
 // Real vega-lite data
 VegaTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
 
-    if (!!this.vegaConfig.encoding) {
-        if (!!this.vegaConfig.encoding.y && !!this.vegaConfig.encoding.x) {
-            this.vegaConfig.encoding.y.title = null;
-            this.vegaConfig.encoding.x.title = null;
+    vegaLite.height = height;
+    vegaLite.width = width;
+    vegaLite.config = { "axis": { "labels": false, "ticks": false, "title": null }, "legend": { "disable": true } };
+
+    if (vegaLite.encoding) {
+        if (vegaLite.encoding.y && vegaLite.encoding.x) {
+            vegaLite.encoding.y.title = null;
+            vegaLite.encoding.x.title = null;
         }
-        let tooltip=[];
-        for (const channel in this.vegaConfig.encoding) {
-            if (Object.hasOwnProperty.call(this.vegaConfig.encoding, channel) && channel!="tooltip") {
-                const field = this.vegaConfig.encoding[channel];
-                tooltip.push(field);
-            }
-        }
-        this.vegaConfig.encoding.tooltip=tooltip;
     }
-    return this.vegaConfig;
+
+    // Add tool tips
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
+    return vegaLite;
 }
 
 // Input tweaked config from panel, and then process it turing it into true vega-lite json.
@@ -710,11 +711,18 @@ function ObjTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_st
 }
 ObjTemplate.prototype = new VegaTemplate();
 ObjTemplate.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    vegaLite.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.height = height;
+    vegaLite.width = width;
+    // Add tool tips
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
 
-    return this.vegaConfig;
+    return vegaLite;
 }
 
 ObjTemplate.prototype.ReuseTemplate = function (newMetaData_obj, newVisData_obj) {
@@ -804,10 +812,18 @@ HistogramScatterplot.prototype.GetVegaConfig = function () {
     }
 }
 HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    return this.vegaConfig;
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.height = height;
+    vegaLite.width = width;
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
+
+
+    return vegaLite;
 }
 
 // todo: debug
@@ -880,10 +896,18 @@ HistogramHeatmap.prototype.ReuseTemplate = function (newMetaData_obj, newVisData
 }
 
 HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
-    this.vegaConfig.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
-    this.vegaConfig.height = height;
-    this.vegaConfig.width = width;
-    return this.vegaConfig;
+    let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
+    vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.height = height;
+    vegaLite.width = width;
+    if (typeof vegaLite.mark == 'string') {
+        let mark = { type: vegaLite.mark }
+        vegaLite.mark = mark;
+    }
+    vegaLite.mark.tooltip = true;
+
+
+    return vegaLite;
 }
 
 function HistogramHeatmap(visData_arr, selections_obj, metaData_obj, previewPic_str, is_horizon, vegaConfig_obj) {
@@ -973,6 +997,11 @@ function ParallelCoordinatePlot(visData_arr, selections_obj, previewPic_str, is_
 }
 ParallelCoordinatePlot.prototype = new VegaTemplate();
 ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
+    let mark = this.vegaConfig.mark;
+    if (typeof mark == "string") {
+        mark = { type: mark }
+    }
+    mark.tooltip = true;
 
     if (this.is_horizon)
         return {
@@ -998,7 +1027,7 @@ ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
             ],
             "layer": [
                 {
-                    mark: this.vegaConfig.mark,
+                    mark: mark,
                     "encoding": {
                         color: this.vegaConfig.encoding.color,
                         "detail": { "type": "nominal", "field": "index" },
@@ -1049,7 +1078,7 @@ ParallelCoordinatePlot.prototype.GetVegaLite = function (height, width) {
             ],
             "layer": [
                 {
-                    mark: this.vegaConfig.mark,
+                    mark: mark,
                     "encoding": {
                         color: this.vegaConfig.encoding.color,
                         "detail": { "type": "nominal", "field": "index" },
@@ -1115,7 +1144,7 @@ function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str, vegaC
     else {
         this.vegaConfig = {
             data: { values: visData_arr },
-            mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.3 },
+            mark: { type: "area", orient: "vertical", clip: true, interpolate: "monotone", opacity: 0.3, tooltip: true },
             encoding: {
                 y: { field: ySelect_str, type: "quantitative" },
                 x: { field: xSelect_str, type: "nominal", sort: this.selections.GetSort(xSelect_str) },
@@ -1183,6 +1212,7 @@ HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
 // Actually, after rewritting this function, it is a compiler.
 HorizonGraphTemplate.prototype.CompileTweakedConfig = function (vegaConfig_obj) {
     this.vegaConfig = vegaConfig_obj;
+    this.vegaConfig.mark.tooltip = true;
     this.vegaConfig.mark.clip = true;
     return this.GetVegaLite(200, 300);
 }

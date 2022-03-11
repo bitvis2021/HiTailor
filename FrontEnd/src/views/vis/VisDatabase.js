@@ -679,7 +679,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     let chartJson = JSON.parse(
       JSON.stringify(this.GetVegaLite(id, height, width))
     );
-
+    console.log("render JSON", chartJson);
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS(
       "http://www.w3.org/2000/svg",
