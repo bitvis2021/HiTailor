@@ -711,11 +711,12 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         document.getElementById("gen-chart").appendChild(svgFragment);
       } // it never release
 
-      vegaEmbed("#" + tempSvgFragament_Id, chartJson, {
+      vegaEmbed("#" + id, chartJson, {
         renderer: "svg",
         actions: false,
       }).then(() => {
-        // get vis picture
+        // get vis picture 
+        /*
         let pic =
           document.getElementById(tempSvgFragament_Id).childNodes[0]
             .childNodes[0];
@@ -738,7 +739,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
           document.getElementById(tempSvgFragament_Id).childNodes[0]
             .childNodes[0];
         canvas.append(defs);
-
+          */
         this.AddHiddenButton(id);
       });
     }

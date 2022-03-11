@@ -667,6 +667,14 @@ VegaTemplate.prototype.GetVegaLite = function (height, width) {
             this.vegaConfig.encoding.y.title = null;
             this.vegaConfig.encoding.x.title = null;
         }
+        let tooltip=[];
+        for (const channel in this.vegaConfig.encoding) {
+            if (Object.hasOwnProperty.call(this.vegaConfig.encoding, channel) && channel!="tooltip") {
+                const field = this.vegaConfig.encoding[channel];
+                tooltip.push(field);
+            }
+        }
+        this.vegaConfig.encoding.tooltip=tooltip;
     }
     return this.vegaConfig;
 }

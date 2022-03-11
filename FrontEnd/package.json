@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@lljj/vue-json-schema-form": "^1.10.0",
@@ -14,6 +15,7 @@
     "d3-drag": "^3.0.0",
     "element-ui": "^2.15.6",
     "jquery": "^3.4.1",
+    "patch-package": "^6.4.7",
     "vega": "^5.21.0",
     "vega-embed": "^6.20.5",
     "vega-lite": "^5.2.0",
