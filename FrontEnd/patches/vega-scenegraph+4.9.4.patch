@@ -13050,7 +13050,7 @@ index c614203..af83ab2 100644
        svg.addEventListener(HrefEvent, this._hrefHandler);
        svg.addEventListener(TooltipShowEvent, this._tooltipHandler);
 diff --git a/node_modules/vega-scenegraph/src/SVGRenderer.js b/node_modules/vega-scenegraph/src/SVGRenderer.js
-index 2c9de04..2e426e8 100644
+index 2c9de04..bf07d9e 100644
 --- a/node_modules/vega-scenegraph/src/SVGRenderer.js
 +++ b/node_modules/vega-scenegraph/src/SVGRenderer.js
 @@ -44,13 +44,12 @@ inherits(SVGRenderer, Renderer, {
@@ -13069,15 +13069,146 @@ index 2c9de04..2e426e8 100644
        this._root = domChild(this._svg, RootIndex, 'g', svgns);
        setAttributes(this._root, rootAttributes);
 diff --git a/node_modules/vega-scenegraph/src/SVGStringRenderer.js b/node_modules/vega-scenegraph/src/SVGStringRenderer.js
-index ba21d2e..46a9a79 100644
+index ba21d2e..8c2e08c 100644
 --- a/node_modules/vega-scenegraph/src/SVGStringRenderer.js
 +++ b/node_modules/vega-scenegraph/src/SVGStringRenderer.js
-@@ -43,7 +43,7 @@ inherits(SVGStringRenderer, Renderer, {
-       height:  this._height * this._scale,
+@@ -1,15 +1,15 @@
+ import Renderer from './Renderer';
+-import {gradientRef, isGradient, patternPrefix} from './Gradient';
++import { gradientRef, isGradient, patternPrefix } from './Gradient';
+ import Marks from './marks/index';
+-import {ariaItemAttributes, ariaMarkAttributes} from './util/aria';
+-import {cssClass} from './util/dom';
+-import {markup} from './util/markup';
+-import {fontFamily, fontSize, lineHeight, textLines, textValue} from './util/text';
+-import {visit} from './util/visit';
++import { ariaItemAttributes, ariaMarkAttributes } from './util/aria';
++import { cssClass } from './util/dom';
++import { markup } from './util/markup';
++import { fontFamily, fontSize, lineHeight, textLines, textValue } from './util/text';
++import { visit } from './util/visit';
+ import clip from './util/svg/clip';
+ import metadata from './util/svg/metadata';
+-import {rootAttributes, styles} from './util/svg/styles';
+-import {extend, inherits, isArray} from 'vega-util';
++import { rootAttributes, styles } from './util/svg/styles';
++import { extend, inherits, isArray } from 'vega-util';
+ 
+ export default function SVGStringRenderer(loader) {
+   Renderer.call(this, loader);
+@@ -37,20 +37,19 @@ inherits(SVGStringRenderer, Renderer, {
+     const m = markup();
+ 
+     // svg tag
+-    m.open('svg', extend({}, metadata, {
+-      class:   'marks',
+-      width:   this._width * this._scale,
+-      height:  this._height * this._scale,
++    m.open('g', extend({}, metadata, {
++      class: 'marks',
++      width: this._width * this._scale,
++      height: this._height * this._scale,
        viewBox: `0 0 ${this._width} ${this._height}`
      }));
 -
-+    console.log("what the hell!!!!!!!!");
      // background, if defined
      const bg = this._bgcolor;
      if (bg && bg !== 'transparent' && bg !== 'none') {
+       m.open('rect', {
+-        width:  this._width,
++        width: this._width,
+         height: this._height,
+-        fill:   bg
++        fill: bg
+       }).close();
+     }
+ 
+@@ -77,8 +76,8 @@ inherits(SVGStringRenderer, Renderer, {
+    */
+   mark(m, scene) {
+     const mdef = Marks[scene.marktype],
+-          tag  = mdef.tag,
+-          attrList = [ariaItemAttributes, mdef.attr];
++      tag = mdef.tag,
++      attrList = [ariaItemAttributes, mdef.attr];
+ 
+     // render opening group tag
+     m.open('g',
+@@ -106,9 +105,9 @@ inherits(SVGStringRenderer, Renderer, {
+         const tl = textLines(item);
+         if (isArray(tl)) {
+           // multi-line text
+-          const attrs = {x: 0, dy: lineHeight(item)};
+-          for (let i=0; i<tl.length; ++i) {
+-            m.open('tspan', i ? attrs: null)
++          const attrs = { x: 0, dy: lineHeight(item) };
++          for (let i = 0; i < tl.length; ++i) {
++            m.open('tspan', i ? attrs : null)
+               .text(textValue(item, tl[i]))
+               .close();
+           }
+@@ -118,8 +117,8 @@ inherits(SVGStringRenderer, Renderer, {
+         }
+       } else if (tag === 'g') {
+         const fore = item.strokeForeground,
+-              fill = item.fill,
+-              stroke = item.stroke;
++          fill = item.fill,
++          stroke = item.stroke;
+ 
+         if (fore && stroke) {
+           item.stroke = null;
+@@ -199,9 +198,9 @@ inherits(SVGStringRenderer, Renderer, {
+    */
+   attr(scene, item, attrs, tag) {
+     const object = {},
+-          emit = (name, value, ns, prefixed) => {
+-            object[prefixed || name] = value;
+-          };
++      emit = (name, value, ns, prefixed) => {
++        object[prefixed || name] = value;
++      };
+ 
+     // apply mark specific attributes
+     if (Array.isArray(attrs)) {
+@@ -226,8 +225,8 @@ inherits(SVGStringRenderer, Renderer, {
+    */
+   defs(m) {
+     const gradient = this._defs.gradient,
+-          clipping = this._defs.clipping,
+-          count = Object.keys(gradient).length + Object.keys(clipping).length;
++      clipping = this._defs.clipping,
++      count = Object.keys(gradient).length + Object.keys(clipping).length;
+ 
+     if (count === 0) return; // nothing to do
+ 
+@@ -235,7 +234,7 @@ inherits(SVGStringRenderer, Renderer, {
+ 
+     for (const id in gradient) {
+       const def = gradient[id],
+-            stops = def.stops;
++        stops = def.stops;
+ 
+       if (def.gradient === 'radial') {
+         // SVG radial gradients automatically transform to normalized bbox
+@@ -252,9 +251,9 @@ inherits(SVGStringRenderer, Renderer, {
+         });
+ 
+         m.open('rect', {
+-          width:  '1',
++          width: '1',
+           height: '1',
+-          fill:   'url(#' + id + ')'
++          fill: 'url(#' + id + ')'
+         }).close();
+ 
+         m.close(); // </pattern>
+@@ -291,7 +290,7 @@ inherits(SVGStringRenderer, Renderer, {
+     for (const id in clipping) {
+       const def = clipping[id];
+ 
+-      m.open('clipPath', {id: id});
++      m.open('clipPath', { id: id });
+       if (def.path) {
+         m.open('path', {
+           d: def.path
