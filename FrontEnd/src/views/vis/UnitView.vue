@@ -1,6 +1,6 @@
 <template>
   <div class="unit-view">
-    <div id="unit-chart">
+    <div class="unit-chart">
       <svg viewBox="0 0 1000 1000">
         <line
           x1="-1000"
@@ -512,18 +512,6 @@ export default {
   }
   .el-icon-arrow-down {
     font-size: 12px;
-  }
-
-  #unit-chart {
-    margin: 10px;
-    width: 93%;
-    height: 24vh;
-    border: 1px solid #dddddd;
-    overflow: hidden;
-    svg {
-      height: 100%;
-      width: 100%;
-    }
   }
 
   #unit-config-panel {

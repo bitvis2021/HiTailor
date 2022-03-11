@@ -4,8 +4,6 @@
       {{ this.vegaConfig }}
     </div>
 
-    <div id="gen-chart"></div>
-
     <div id="vis-view">
       <!-- return buttons -->
       <el-row
@@ -33,7 +31,9 @@
       <div v-else>
         <!-- 使用v-if而不是v-show，否则值会更新不上来 -->
         <div v-if="showPanelView">
-          <div id="chart"></div>
+          <div class="unit-chart">
+            <svg id="chart"></svg>
+          </div>
           <panel-view
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
@@ -349,16 +349,26 @@ export default {
   }
 }
 
-#gen-chart {
-  // display: none;
-  overflow: hidden;
-}
-
 .role-axis-grid {
   display: none;
 }
 .role-axis-domain {
   display: none;
+}
+.background {
+  display: none;
+}
+
+.unit-chart {
+  margin: 10px;
+  width: 93%;
+  height: 24vh;
+  border: 1px solid #dddddd;
+  overflow: hidden;
+  svg {
+    height: 100%;
+    width: 100%;
+  }
 }
 
 .vis-test {

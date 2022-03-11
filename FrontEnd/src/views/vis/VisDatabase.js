@@ -616,8 +616,8 @@ VisDatabase.prototype.RenderCanvas = function (id) {
   let table = this.GetTable();
   let height = this.database[id].height - 1.1;
   let width = this.database[id].width - 1.1;
-  let x = this.database[id].x + 0.5;
-  let y = this.database[id].y + 0.5;
+  let x = this.database[id].x + 0.4;
+  let y = this.database[id].y + 0.4;
 
   if (this.database[id].type == "unit") {
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -677,7 +677,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     this.AddHiddenButton(id);
   } else {
     let chartJson = JSON.parse(
-      JSON.stringify(this.GetVegaLite(id, height - 0.3, width - 0.3))
+      JSON.stringify(this.GetVegaLite(id, height, width))
     );
 
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -685,7 +685,10 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       "http://www.w3.org/2000/svg",
       "rect"
     );
+    let contentContainer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
     if (canvas) {
+      table.append(canvas);
       canvas.setAttribute("id", id);
       canvas.setAttribute("width", width);
       canvas.setAttribute("height", height);
@@ -699,48 +702,17 @@ VisDatabase.prototype.RenderCanvas = function (id) {
 
       // click event
       canvas.addEventListener("click", () => this.SelectHandler(id));
+      canvas.append(background);
+      contentContainer.setAttribute("id", "chart-" + id);
+      contentContainer.setAttribute("transform", "translate(" + -5 + "," + -5 + ")");
+      canvas.append(contentContainer);
 
-      table.append(canvas);
+      this.AddHiddenButton(id);
 
-      // get svg from #gen-chart
-      let tempSvgFragament_Id = "gen-" + id;
-
-      if (document.getElementById(tempSvgFragament_Id) == undefined) {
-        let svgFragment = document.createElement("div");
-        svgFragment.setAttribute("id", tempSvgFragament_Id);
-        document.getElementById("gen-chart").appendChild(svgFragment);
-      } // it never release
-
-      vegaEmbed("#" + id, chartJson, {
+      // canvas.append(background);
+      vegaEmbed("#chart-" + id, chartJson, {
         renderer: "svg",
         actions: false,
-      }).then(() => {
-        // get vis picture 
-        /*
-        let pic =
-          document.getElementById(tempSvgFragament_Id).childNodes[0]
-            .childNodes[0];
-
-        // define offset
-        pic.removeAttribute("transform");
-        pic.setAttribute(
-          "transform",
-          "translate(" + "-0.3" + "," + "-0.3" + ")"
-        );
-
-        // pic.removeChild(pic.childNodes[0]);
-
-        // append bacground first
-        canvas.append(background);
-        // then add vis picture
-        canvas.append(pic);
-
-        let defs =
-          document.getElementById(tempSvgFragament_Id).childNodes[0]
-            .childNodes[0];
-        canvas.append(defs);
-          */
-        this.AddHiddenButton(id);
       });
     }
   }
