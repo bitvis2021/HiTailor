@@ -1,4 +1,3 @@
-import { FieldSelection } from './SchemaCompiler'
 // Reconsitution temp2vega
 // Target: decouple vis 
 // select area (metadata/visData) -> templates -> template (vegaConfig) -> panel (tweaked config) -> vis
@@ -249,68 +248,6 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 return new VegaTemplate(templateName_str, vegaConfig, selections_cell, picture);
             }
             break;
-        /*
-        case supportedTemplate.NNQ_grouped_bar_chart:
-
-            let spilitSubstring = function (str) {
-                let find = str.indexOf(" > ");
-                if (find > -1) {
-                    return str.substring(find + " > ".length);
-                }
-                return str;
-            }
-
-            let groupedBarchartData = JSON.parse(JSON.stringify(visData_arr));
-            for (let i = 0; i < groupedBarchartData.length; i++) {
-                const element = groupedBarchartData[i];
-                for (const key in element) {
-                    if (Object.hasOwnProperty.call(element, key)) {
-                        const value = element[key];
-                        // split string
-                        element[key] = spilitSubstring(value);
-                    }
-                }
-            }
-            let groupedBarchartMetaData = JSON.parse(JSON.stringify(metaData_obj));
-            for (let i = 0; i < groupedBarchartMetaData.x.headers.length; i++) {
-                groupedBarchartMetaData.x.headers[i].name = spilitSubstring(groupedBarchartMetaData.x.headers[i].name);
-                for (let j = 0; j < groupedBarchartMetaData.x.headers[i].sort.length; j++) {
-                    groupedBarchartMetaData.x.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.x.headers[i].sort[j]);
-                }
-            }
-            for (let i = 0; i < groupedBarchartMetaData.y.headers.length; i++) {
-                groupedBarchartMetaData.y.headers[i].name = spilitSubstring(groupedBarchartMetaData.y.headers[i].name);
-                for (let j = 0; j < groupedBarchartMetaData.y.headers[i].sort.length; j++) {
-                    groupedBarchartMetaData.y.headers[i].sort[j] = spilitSubstring(groupedBarchartMetaData.y.headers[i].sort[j]);
-                }
-            }
-
-            let groupedSelections = GetSelectionsFromMetaData(groupedBarchartMetaData);
-            vegaConfig = {
-                data: { values: groupedBarchartData },
-                mark: "bar",
-                encoding: {
-                }
-            }
-            if (is_horizon) {
-                let defaultX2 = groupedBarchartMetaData.x.headers.at(0);
-                let defaultX1 = groupedBarchartMetaData.x.headers.at(-1);
-                vegaConfig.encoding.x = { field: defaultX2.name, type: "nominal", sort: defaultX2.sort };
-                vegaConfig.encoding.y = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
-                vegaConfig.encoding.xOffset = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
-                vegaConfig.encoding.color = { field: defaultX1.name, type: "nominal", sort: defaultX1.sort };
-                return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart.png');
-            }
-            else {
-                let defaultY1 = groupedBarchartMetaData.y.headers.at(0);
-                let defaultY2 = groupedBarchartMetaData.y.headers.at(-1);
-                vegaConfig.encoding.x = { aggregate: "sum", field: selections_cell.GetQSelection(0) };
-                vegaConfig.encoding.y = { field: defaultY2.name, type: "nominal", sort: defaultY2.sort };
-                vegaConfig.encoding.yOffset = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
-                vegaConfig.encoding.color = { field: defaultY1.name, type: "nominal", sort: defaultY1.sort };
-                return new VegaTemplate(templateName_str, vegaConfig, groupedSelections, './templates/group bar chart y.png');
-            }
-            */
         case supportedTemplate.NQ_Ranged_Dot_Plot:
             // TODO: add point support
             if (is_horizon) {
@@ -597,6 +534,120 @@ function GetObjData(visData_arr, metaData_obj, direction_str) {
 
     return visDataObj_arr;
 }
+
+export function FieldSelection() {
+    this.XSelections = [];
+    this.YSelections = [];
+    this.QSelections = [];
+    this.bindings = {};
+    /*
+        {
+            selectionName:{
+                sequence:num,
+                type:"", 
+                sort:[],
+            },
+            selectionName2:{},
+            ...
+        }
+    */
+}
+
+FieldSelection.prototype.AddXSelection = function (selectionName_str, nominalSort_arr) {
+    this.XSelections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
+    this.bindings[selectionName_str].type = "nominal";
+    this.bindings[selectionName_str].sort = nominalSort_arr;
+    this.XSelections.sort();
+}
+
+FieldSelection.prototype.AddYSelection = function (selectionName_str, nominalSort_arr) {
+    this.YSelections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
+    this.bindings[selectionName_str].type = "nominal";
+    this.bindings[selectionName_str].sort = nominalSort_arr;
+    this.YSelections.sort();
+}
+
+FieldSelection.prototype.AddQSelection = function (selectionName_str) {
+    this.QSelections.push(selectionName_str);
+    this.bindings[selectionName_str] = {};
+    this.bindings[selectionName_str].type = "quantitative";
+    this.QSelections.sort();
+}
+
+FieldSelection.prototype.GetXSelections = function () {
+    return this.XSelections;
+}
+
+FieldSelection.prototype.GetYSelections = function () {
+    return this.YSelections;
+}
+
+FieldSelection.prototype.GetQSelections = function () {
+    return this.QSelections;
+}
+
+FieldSelection.prototype.GetXSelection = function (at_num) {
+    if (at_num > this.XSelections.length) {
+        return this.XSelections.at(-1);
+    }
+    else if (at_num < -this.XSelections.length) {
+        return this.XSelections.at(0);
+    }
+    return this.XSelections.at(at_num);
+}
+
+FieldSelection.prototype.GetSort = function (selectionName_str) {
+    return this.bindings[selectionName_str].sort;
+}
+
+FieldSelection.prototype.GetType = function (selectionName_str) {
+    return this.bindings[selectionName_str].type;
+}
+
+
+FieldSelection.prototype.GetYSelection = function (at_num) {
+    if (at_num > this.YSelections.length) {
+        return this.YSelections.at(-1);
+    }
+    else if (at_num < -this.YSelections.length) {
+        return this.YSelections.at(0);
+    }
+    return this.YSelections.at(at_num);
+}
+
+FieldSelection.prototype.GetQSelection = function (at_num) {
+    if (at_num >= this.QSelections.length) {
+        return this.QSelections.at(-1);
+    }
+    else if (at_num <= -this.QSelections.length) {
+        return this.QSelections.at(0);
+    }
+    return this.QSelections.at(at_num);
+}
+
+FieldSelection.prototype.CompileSelection = function (value_str, encoding_obj) {
+    encoding_obj['type'] = this.GetType(value_str);
+    encoding_obj['sort'] = this.GetSort(value_str);
+    // type and sort support
+}
+
+FieldSelection.prototype.GetMappedValue = function (value_str, source_FieldSelection) {
+    let find = source_FieldSelection.GetQSelections().indexOf(value_str);
+    if (find != -1) {
+        return this.GetQSelection(find);
+    }
+    find = source_FieldSelection.GetXSelections().indexOf(value_str);
+    if (find != -1) {
+        return this.GetXSelection(find);
+    }
+    find = source_FieldSelection.GetYSelections().indexOf(value_str);
+    if (find != -1) {
+        return this.GetYSelection(find);
+    }
+}
+
 
 function Templates() {
     this.templates = {}
