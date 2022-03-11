@@ -45,10 +45,22 @@ export default {
       isMultipleProperty: false,
       formData: {},
       markType: markType,
-      type: "arc",
+      type: "bar",
       formPops: { labelWidth: "auto", labelPosition: "left", inline: false },
       schema: {},
     };
+  },
+  watch: {
+    config(newVal, oldVal) {
+      if ("object" == typeof newVal) {
+        this.type = newVal.type;
+        this.isMultipleProperty = true;
+      } else {
+        this.type = newVal;
+        this.isMultipleProperty = false;
+      }
+      this.ChangeForm(this.type);
+    },
   },
   methods: {
     ChangeMark(mark) {
