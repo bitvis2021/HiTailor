@@ -64,11 +64,11 @@
             @click="transform_derive()" > 
             Derive
           </button> -->
-          <button type="primary" plain size="small" v-if="!isCurrFlat"
+          <!-- <button type="primary" plain size="small" v-if="!isCurrFlat"
             class="button"
             @click="transform_unnamed('SSH', colHeader, rowHeader, false)" > 
             test
-          </button>
+          </button> -->
 
           <div class="recommend-element">
             <span class="toolbar-vertical-separator" />
@@ -360,6 +360,8 @@
         </g>
         
         <g id="recommendation-area-container" />
+
+        <g id="hover-helper-container" />
         
         <!-- transparent mask for choosing -->
         <rect v-if="!isCurrFlat && isHeaderFixed"
@@ -432,6 +434,7 @@ export default {
       selectedArea: {top:null, left:null, bottom:null, right:null},
       selectedMark: {index:null, type:null},
       selectedHeader: null,
+      selectedAreaForHoverOffset: {top: null, left:null},
 
       mouseOverCell: {row:null, column:null, cstart:null, cend:null, ccurrent:null, rstart:null, rend:null, rcurrent:null},
       mouseOverMark: {index:null, type:null},
@@ -472,6 +475,7 @@ export default {
       visRerenderAfterPos: {x:0, y:0},
 
       isChoosingUnit: false,
+      isRecommendState: false,
 
       recommendDataBoth: [[], [], [], [], []],
       recommendDataRow: [[], [], []],
@@ -595,6 +599,20 @@ export default {
       res += String.fromCharCode(65+(index % 26))
       return res
     },
+    cal_column_number_with_mark(mark) {
+      var res
+      if (mark.length == 1) {
+        res = mark.charCodeAt() - 64
+      }
+      else if (mark.length == 2) {
+        res = (mark[0].charCodeAt() - 64) * 26 + (mark[1].charCodeAt() - 64)
+      }
+      else {
+        console.log("cannot resolve column mark!")
+        return
+      }
+      return res
+    },
    
     handle_mouse_down(row, column) {
       this.selectByMark.row = false
@@ -666,6 +684,9 @@ export default {
       this.selectedArea.left = this.mouseOverCell.cstart
       this.selectedArea.bottom = this.mouseOverCell.rend
       this.selectedArea.right = this.mouseOverCell.cend
+
+      this.selectedAreaForHoverOffset.top = this.mouseOverCell.rstart
+      this.selectedAreaForHoverOffset.left = this.mouseOverCell.cstart
 
       this.mouseDownState = true
       this.mouseDownMaskState = true
@@ -854,6 +875,9 @@ export default {
     hide_recommend_element() {
       d3.selectAll(".recommend-element").style("visibility", "hidden")
       d3.selectAll("#recommend-apply-button").style("visibility", "hidden")
+
+      d3.selectAll(".hover-helper").remove()
+      this.isRecommendState = false
     },
     show_recommend_element(notShowButton=false) {
       this.directionSelectValue = ["row", "column"]
@@ -863,11 +887,11 @@ export default {
       }
       else {
         d3.selectAll("#recommend-apply-button").style("visibility", "visible")
+        this.isRecommendState = true
       }
     },
     cancel_recommendation() {
-      this.clear_selected_cell()
-      this.clear_recommendation_area()
+      this.clear_selected_cell(true)
       this.hide_recommend_element()
     },
     confirm_recommendation() {
@@ -875,8 +899,7 @@ export default {
         this.transmit_recommendation_to_vis()
       }
       this.hide_recommend_element()
-      this.clear_recommendation_area()
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
     },
 
     handle_transform_swap(name, isSwapUp) {
@@ -970,21 +993,21 @@ export default {
           if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  { // is stacked
             if (isRow) {
               this.transform_2linear(key, this.rowHeader, times, isRow, command)
-              for (var item of this.num2header) {
-                if (this.headerDistribution.get(item[1].value).isRowHeader) {
-                  this.cal_row_header_position(item[1].value, item[1].times)
-                }
-              }
+              // for (var item of this.num2header) {
+              //   if (this.headerDistribution.get(item[1].value).isRowHeader) {
+              //     this.cal_row_header_position(item[1].value, item[1].times)
+              //   }
+              // }
               this.cal_range_list(this.markRowHeightList, "mark height")
               this.cal_range_list(this.rowHeightList, "height")
             }
             else {
               this.transform_2linear(key, this.colHeader, times, isRow, command)
-              for (var item of this.num2header) {
-                if (!this.headerDistribution.get(item[1].value).isRowHeader) {
-                  this.cal_column_header_position(item[1].value, item[1].times)
-                }
-              }
+              // for (var item of this.num2header) {
+              //   if (!this.headerDistribution.get(item[1].value).isRowHeader) {
+              //     this.cal_column_header_position(item[1].value, item[1].times)
+              //   }
+              // }
               this.cal_range_list(this.markColumnWidthList, "mark width")
               this.cal_range_list(this.columnWidthList, "width")
             }
@@ -1003,7 +1026,7 @@ export default {
     },
 
     transform_fold() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       this.isCurrFlat = true
       if (this.flatData == null) {
@@ -1027,7 +1050,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_unfold() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       this.isCurrFlat = false
       if (!this.isHeaderFixed) {
@@ -1048,7 +1071,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_transpose() {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       this.hasTransposed = !this.hasTransposed
       for (var i=0; i<this.colHeader.length; i++) {
@@ -1082,7 +1105,7 @@ export default {
       this.send_change_width_signal()
     },
     transform_swap(name, header, isSwapUp, isRow) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
@@ -1259,7 +1282,7 @@ export default {
 
     },
     transform_2stacked(name, header, times, isRow) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1354,7 +1377,7 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow, type) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1480,9 +1503,10 @@ export default {
             sum += Number(v)
             count += 1
           }
+          sum = Number(sum).toFixed(1)
           avg = Number(sum / count).toFixed(1)
-          max = Math.max.apply(null,tmpdata)
-          min = Math.min.apply(null,tmpdata)
+          max = Number(Math.max.apply(null,tmpdata))
+          min = Number(Math.min.apply(null,tmpdata))
 
           switch(type) {
             case 'sum':
@@ -1558,12 +1582,12 @@ export default {
       }
     },
     transform_derive() {
-      this.clear_selected_cell()  
+      this.clear_selected_cell(true)  
       this.$bus.$emit("change-header")
 
     },
     transform_unnamed(name, oriHeader, newHeader, isRow) {
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = this.headerDistribution.get(name)        
       var currLayerNum = distributionInfo.layer
@@ -1894,6 +1918,141 @@ export default {
         // COL priority3
         cal_recommendation_by_two_references(headerPriority, 1, 1, 5, 3, 3, this.recommendDataBoth, this.recommendDataRow, this.recommendDataCol,
           this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList, this.headerRange, this.prioritySliderValue, this.directionSelectValue) 
+      }
+      console.log("this.recommendDataBoth", this.recommendDataBoth[1])
+    },
+    
+    get_header_index(headers, headerlist) {
+      var index
+      var resrange = {start:null, end:null}
+      for (var i=0; i<headers.length; i++) {
+        var info = headerlist[i].get(headers[i])
+        if (i == 0) { // first layer
+          resrange.start = info.range[0].start
+          resrange.end = info.range[0].end
+        }
+        else {
+          for (var j=0; j<info.range.length; j++) {
+            if (info.range[j].start >= resrange.start && info.range[j].end <= resrange.end) {
+              resrange.start = info.range[j].start
+              resrange.end = info.range[j].end
+            }
+          }
+        }
+      }
+
+      if (resrange.start == resrange.end) {
+        index = resrange.start
+      }
+      else {
+        console.log("find range error!")
+        return
+      }
+      return index
+    },
+    handle_hover_field(name) {
+      var type, index
+      var haveOffset = false
+      if (name.indexOf(">") != -1) { // names be like "2001 > summer"
+        haveOffset = true
+        var headers = name.split(" > ")
+        var isrow = this.headerDistribution.get(headers[0]).isRowHeader
+        if (isrow) {
+          type = "row"
+          index = this.get_header_index(headers, this.rowHeader)
+          index += this.headerRange.bottom+1
+        }
+        else {
+          type = "column"
+          index = this.get_header_index(headers, this.colHeader)
+          index += this.headerRange.right+1
+        }
+      }
+      else {
+        type = name.split(" ")[0]
+        if (type == "row") { // names be like "row 1"
+          index = Number(name.split(" ")[1]) - 1
+        }
+        else if (type == "column") { // names be like "column A"
+          index = this.cal_column_number_with_mark(name.split(" ")[1]) - 1
+        }
+        else if (type == "value") {
+          console.log("hover value!")
+          return
+        }
+        else {
+          console.log("hover name error!")
+          return
+        }
+      }
+
+      if (haveOffset) { // should consider offset
+        if (!this.isRecommendState) {
+          this.draw_hover_helper_area(type, index)
+        }
+        else {  // should draw hover-helper for recommendation too
+          var refer = isrow ? this.selectedAreaForHoverOffset.top : this.selectedAreaForHoverOffset.left
+          var offset = index - refer
+          this.handle_recommend_hover_field(offset, index, isrow)
+        }
+      }
+      else {
+        this.draw_hover_helper_area(type, index)
+      }        
+    },
+    handle_recommend_hover_field(offset, chosenindex, isRow) {
+      // direction
+      var data
+      if (this.directionSelectValue.length == 2)  data = this.recommendDataBoth
+      else if (this.directionSelectValue[0] == "row")   data = this.recommendDataRow
+      else if (this.directionSelectValue[0] == "column")  data = this.recommendDataCol
+      else {
+        console.log("recommend data error!")
+        return
+      }
+
+      // priority
+      var min = this.prioritySliderValue[0], max = this.prioritySliderValue[1]
+
+      var type = isRow ? "row" : "column"
+      var indexArray = new Set
+      indexArray.add(chosenindex)
+      this.draw_hover_helper_area(type, chosenindex)
+      
+      for (var i=min-1; i<=max-1; i++) {
+        for (var j=0; j<data[i].length; j++) {
+          var area = data[i][j]
+          var start = isRow ? area.top : area.left
+          var end = isRow ? area.bottom : area.right
+          var resindex = start + offset 
+          if (resindex > end) resindex = end
+
+          resindex += isRow ? (this.headerRange.bottom+1) : (this.headerRange.right+1)
+
+          if (indexArray.has(resindex))   continue
+          else {
+            indexArray.add(resindex)
+            this.draw_hover_helper_area(type, resindex)
+          }
+        }
+      }
+    },
+    draw_hover_helper_area(type, index) {
+      var helper = d3.select("#hover-helper-container").append("rect").attr("class", "hover-helper")
+        .style("fill","#FFEC8B")
+        .style("fill-opacity","30%")
+
+      if (type == "row") {
+        helper.attr("x", this.markWidth)
+          .attr("y", this.markHeight + this.heightRangeList[index])
+          .attr("width", this.widthRangeList[this.widthRangeList.length-1])
+          .attr("height", this.heightRangeList[index+1] - this.heightRangeList[index])
+      }
+      else {
+        helper.attr("x", this.markWidth + this.widthRangeList[index])
+          .attr("y", this.markHeight)
+          .attr("width", this.widthRangeList[index+1] - this.widthRangeList[index])
+          .attr("height", this.heightRangeList[this.heightRangeList.length-1])
       }
     },
 
@@ -2228,7 +2387,8 @@ export default {
     console.log("this.heightRangeList", this.heightRangeList)
     console.log("this.dataValueList", this.dataValueList)
     
-    this.$bus.$on("apply-config", () => {
+    this.$bus.$on("apply-config", (data) => {
+      if (data==null) console.log("apply-null")
       if (!(this.selectedArea.left==this.selectedArea.right && this.selectedArea.top==this.selectedArea.bottom)) {
         // this.transmit_recommendation_to_vis()
         console.log("not single unit")
@@ -2244,11 +2404,15 @@ export default {
 
     this.$bus.$on("select-canvas", () => {
       console.log("remove selections of tableview")
-      this.clear_selected_cell()
+      this.clear_selected_cell(true)
     })
 
-    this.$bus.$on("change-header", () => {
-      console.log("change-header!")
+    this.$bus.$on("hover-field", (fieldname) => {
+      this.handle_hover_field(fieldname)
+    })
+
+    this.$bus.$on("unhover-field", () => {
+      d3.selectAll(".hover-helper").remove()
     })
   },
 
