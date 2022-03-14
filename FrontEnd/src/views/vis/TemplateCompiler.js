@@ -1190,7 +1190,8 @@ function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str, vegaC
     this.img = previewPic_str;
     this.selections = selections_obj;
 
-
+    this.visData_arr.push(visData_arr.at(-1));
+    this.visData_arr.push(visData_arr.at(-1));
     if (!!vegaConfig_obj) {
         this.vegaConfig = vegaConfig_obj;
     }
@@ -1205,20 +1206,15 @@ function HorizonGraphTemplate(visData_arr, selections_obj, previewPic_str, vegaC
         }
     }
 }
-HorizonGraphTemplate.prototype.GetMinMax = function (ySelect_str) {
-    let min = 0;
+HorizonGraphTemplate.prototype.GetMax = function (ySelect_str) {
     let max = -Infinity;
     for (let i = 0; i < this.visData_arr.length; i++) {
         const element = this.visData_arr[i];
         if (Number(element[ySelect_str]) > max) {
             max = Number(element[ySelect_str]);
         }
-        if (Number(element[ySelect_str]) < min) {
-            min = Number(element[ySelect_str]);
-        }
-
     }
-    return [min, max]
+    return max;
 }
 // User visible config
 HorizonGraphTemplate.prototype.GetVegaConfig = function () {
@@ -1233,25 +1229,22 @@ HorizonGraphTemplate.prototype.GetVegaLite = function (height, width) {
     let layer = [];
     let domainHeight = Number(height) / 2;
     let ySelect = this.vegaConfig.encoding.y.field;
-    let [min, max] = this.GetMinMax(ySelect);
-    while ((max - min) / domainHeight >= 4) {
+    let max = this.GetMax(ySelect);
+    while (max / domainHeight >= 4) {
         domainHeight *= 2;
     }
 
-    for (let i = 0; i <= (max - min) / domainHeight + 1; i++) {
+    for (let i = max / domainHeight; i >= 1; i--) {
         let layerContent = JSON.parse(JSON.stringify({ mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding }));
-        let offset = i * domainHeight + Number(min);
-        if (offset < 0) {
-            offset = "+" + String(-offset);
-        }
-        offset = "-" + String(offset);
-        layerContent.transform = [{ calculate: "datum['" + ySelect + "'] " + offset, as: ySelect }];
+        let offset = i * domainHeight;
+        layerContent.transform = [{ calculate: "datum['" + ySelect + "'] -" + offset, as: ySelect }];
         if (!layerContent.encoding.y.scale) {
             layerContent.encoding.y.scale = {};
         }
         layerContent.encoding.y.scale.domain = [0, domainHeight]
         layer.push(layerContent);
     }
+    layer.push(JSON.parse(JSON.stringify({ mark: this.vegaConfig.mark, encoding: this.vegaConfig.encoding })));
     return {
         data: { values: this.visData_arr },
         layer: layer,

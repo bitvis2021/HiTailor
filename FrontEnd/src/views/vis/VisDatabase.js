@@ -1,13 +1,5 @@
 import vegaEmbed from "vega-embed";
-import { GetTemplate } from "./TemplateCompiler";
-// todo: 把vega lite 与data部分 decouple. 在gen config的时候才进行组装。
-// 应该从这里获得selection
-
-// export function VisDatabase(eventBus_obj) {
-//     this.database = {};
-//     this.bus = eventBus_obj;
-// }
-
+import { supportedTemplate } from "./TemplateCompiler";
 export let VisDatabase = (function () {
   let instance;
   let CreateSingleton = function (eventBus_obj) {
@@ -676,10 +668,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     table.append(canvas);
     this.AddHiddenButton(id);
   } else {
-    let chartJson = JSON.parse(
-      JSON.stringify(this.GetVegaLite(id, height, width))
-    );
-    console.log("render JSON", chartJson);
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS(
       "http://www.w3.org/2000/svg",
@@ -708,6 +696,11 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       canvas.append(contentContainer);
 
       this.AddHiddenButton(id);
+
+      let chartJson = JSON.parse(
+        JSON.stringify(this.GetVegaLite(id, height, width))
+      );
+      console.log("render JSON", chartJson);
 
       // canvas.append(background);
       vegaEmbed("#chart-" + id, chartJson, {
