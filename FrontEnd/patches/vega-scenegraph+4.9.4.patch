@@ -13450,10 +13450,10 @@ index ba21d2e..8c2e08c 100644
          m.open('path', {
            d: def.path
 diff --git a/node_modules/vega-scenegraph/src/util/resolveItem.js b/node_modules/vega-scenegraph/src/util/resolveItem.js
-index d088245..b51498c 100644
+index d088245..6cd106d 100644
 --- a/node_modules/vega-scenegraph/src/util/resolveItem.js
 +++ b/node_modules/vega-scenegraph/src/util/resolveItem.js
-@@ -1,19 +1,22 @@
+@@ -1,10 +1,10 @@
  import marks from '../marks/index';
  import point from './point';
  
@@ -13466,12 +13466,8 @@ index d088245..b51498c 100644
 +  let item_back = item;
    if (mark && (mdef = marks[mark.marktype]).tip) {
      p = point(event, el);
--    p[0] -= origin[0];
-+    p[0] -= origin[0] - 10;
-     p[1] -= origin[1];
-     while (item = item.mark.group) {
--      p[0] -= item.x || 0;
-+      p[0] -= item.x - 10 || 0;
+     p[0] -= origin[0];
+@@ -14,6 +14,9 @@ export default function(item, event, el, origin) {
        p[1] -= item.y || 0;
      }
      item = mdef.tip(mark.items, p);
