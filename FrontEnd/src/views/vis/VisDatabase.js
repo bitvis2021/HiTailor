@@ -701,12 +701,22 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         JSON.stringify(this.GetVegaLite(id, height, width))
       );
       console.log("render JSON", chartJson);
-
       // canvas.append(background);
       vegaEmbed("#chart-" + id, chartJson, {
         renderer: "svg",
         actions: false,
-      });
+      }).then(
+        () => {
+          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph) {
+            let content = document.getElementById("chart-" + id)
+            content.removeAttribute("transform");
+            let xOffset = 70;
+            let xScale = width / (width - xOffset)
+            content.setAttribute("transform", "translate(" + (-40 * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
+          }
+
+        }
+      );
     }
   }
 };
