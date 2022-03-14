@@ -13127,7 +13127,7 @@ index c614203..af83ab2 100644
        svg.addEventListener(HrefEvent, this._hrefHandler);
        svg.addEventListener(TooltipShowEvent, this._tooltipHandler);
 diff --git a/node_modules/vega-scenegraph/src/SVGRenderer.js b/node_modules/vega-scenegraph/src/SVGRenderer.js
-index 2c9de04..27c1775 100644
+index 2c9de04..fdafdcc 100644
 --- a/node_modules/vega-scenegraph/src/SVGRenderer.js
 +++ b/node_modules/vega-scenegraph/src/SVGRenderer.js
 @@ -1,19 +1,19 @@
@@ -13160,22 +13160,25 @@ index 2c9de04..27c1775 100644
  
  export default function SVGRenderer(loader) {
    Renderer.call(this, loader);
-@@ -44,13 +44,12 @@ inherits(SVGRenderer, Renderer, {
+@@ -44,13 +44,11 @@ inherits(SVGRenderer, Renderer, {
      this._clearDefs();
  
      if (el) {
 -      this._svg = domChild(el, 0, 'svg', svgns);
+-      this._svg.setAttributeNS(xmlns, 'xmlns', svgns);
+-      this._svg.setAttributeNS(xmlns, 'xmlns:xlink', metadata['xmlns:xlink']);
+-      this._svg.setAttribute('version', metadata['version']);
+-      this._svg.setAttribute('class', 'marks');
 +      this._svg = domChild(el, 0, 'g', svgns);
-       this._svg.setAttributeNS(xmlns, 'xmlns', svgns);
-       this._svg.setAttributeNS(xmlns, 'xmlns:xlink', metadata['xmlns:xlink']);
-       this._svg.setAttribute('version', metadata['version']);
-       this._svg.setAttribute('class', 'marks');
++      // this._svg.setAttributeNS(xmlns, 'xmlns:xlink', metadata['xmlns:xlink']);
++      // this._svg.setAttribute('version', metadata['version']);
++      // this._svg.setAttribute('class', 'marks');
        domClear(el, 1);
 -
        // set the svg root group
        this._root = domChild(this._svg, RootIndex, 'g', svgns);
        setAttributes(this._root, rootAttributes);
-@@ -116,7 +115,7 @@ inherits(SVGRenderer, Renderer, {
+@@ -116,7 +114,7 @@ inherits(SVGRenderer, Renderer, {
     */
    svg() {
      const svg = this._svg,
@@ -13184,7 +13187,7 @@ index 2c9de04..27c1775 100644
  
      if (!svg) return null;
  
-@@ -124,7 +123,7 @@ inherits(SVGRenderer, Renderer, {
+@@ -124,7 +122,7 @@ inherits(SVGRenderer, Renderer, {
      if (bg) {
        svg.removeAttribute('style');
        node = domChild(svg, RootIndex, 'rect', svgns);
@@ -13193,7 +13196,7 @@ index 2c9de04..27c1775 100644
      }
  
      const text = serializeXML(svg);
-@@ -192,7 +191,7 @@ inherits(SVGRenderer, Renderer, {
+@@ -192,7 +190,7 @@ inherits(SVGRenderer, Renderer, {
      const id = ++this._dirtyID;
      let item, mark, type, mdef, i, n, o;
  
@@ -13202,7 +13205,7 @@ index 2c9de04..27c1775 100644
        item = items[i];
        mark = item.mark;
  
-@@ -251,12 +250,12 @@ inherits(SVGRenderer, Renderer, {
+@@ -251,12 +249,12 @@ inherits(SVGRenderer, Renderer, {
      if (!this.isDirty(scene)) return scene._svg;
  
      const svg = this._svg,
@@ -13219,7 +13222,7 @@ index 2c9de04..27c1775 100644
  
      const parent = bind(scene, el, prev, 'g', svg);
      parent.setAttribute('class', cssClass(scene));
-@@ -273,7 +272,7 @@ inherits(SVGRenderer, Renderer, {
+@@ -273,7 +271,7 @@ inherits(SVGRenderer, Renderer, {
  
      const process = item => {
        const dirty = this.isDirty(item),
@@ -13228,7 +13231,7 @@ index 2c9de04..27c1775 100644
  
        if (dirty) {
          this._update(mdef, node, item);
-@@ -354,10 +353,10 @@ inherits(SVGRenderer, Renderer, {
+@@ -354,10 +352,10 @@ inherits(SVGRenderer, Renderer, {
     */
    defs() {
      const svg = this._svg,
@@ -13241,7 +13244,7 @@ index 2c9de04..27c1775 100644
  
      for (const id in defs.gradient) {
        if (!el) defs.el = (el = domChild(svg, RootIndex + 1, 'defs', svgns));
-@@ -389,7 +388,7 @@ inherits(SVGRenderer, Renderer, {
+@@ -389,7 +387,7 @@ inherits(SVGRenderer, Renderer, {
  
  // mark ancestor chain with a dirty id
  function dirtyParents(item, id) {
@@ -13250,7 +13253,7 @@ index 2c9de04..27c1775 100644
      item.dirty = id;
      if (item.mark && item.mark.dirty !== id) {
        item.mark.dirty = id;
-@@ -443,7 +442,7 @@ function updateGradient(el, grad, index) {
+@@ -443,7 +441,7 @@ function updateGradient(el, grad, index) {
      });
    }
  
@@ -13259,7 +13262,7 @@ index 2c9de04..27c1775 100644
      stop = domChild(el, i, 'stop', svgns);
      stop.setAttribute('offset', grad.stops[i].offset);
      stop.setAttribute('stop-color', grad.stops[i].color);
-@@ -465,7 +464,7 @@ function updateClipping(el, clip, index) {
+@@ -465,7 +463,7 @@ function updateClipping(el, clip, index) {
      mask.setAttribute('d', clip.path);
    } else {
      mask = domChild(el, 0, 'rect', svgns);
@@ -13268,7 +13271,7 @@ index 2c9de04..27c1775 100644
    }
    domClear(el, 1);
  
-@@ -499,7 +498,7 @@ function bind(item, el, sibling, tag, svg) {
+@@ -499,7 +497,7 @@ function bind(item, el, sibling, tag, svg) {
  
      if (item.mark) {
        node.__data__ = item;
@@ -13277,7 +13280,7 @@ index 2c9de04..27c1775 100644
  
        // if group, create background, content, and foreground elements
        if (tag === 'g') {
-@@ -514,7 +513,7 @@ function bind(item, el, sibling, tag, svg) {
+@@ -514,7 +512,7 @@ function bind(item, el, sibling, tag, svg) {
          const fg = domCreate(doc, 'path', svgns);
          node.appendChild(fg);
          fg.__data__ = item;
@@ -13286,7 +13289,7 @@ index 2c9de04..27c1775 100644
        }
      }
    }
-@@ -537,7 +536,7 @@ function siblingCheck(node, sibling) {
+@@ -537,7 +535,7 @@ function siblingCheck(node, sibling) {
  // -- Set attributes & styles on SVG elements ---
  
  let element = null, // temp var for current SVG element
@@ -13295,7 +13298,7 @@ index 2c9de04..27c1775 100644
  
  // Extra configuration for certain mark types
  const mark_extras = {
-@@ -687,5 +686,5 @@ function href() {
+@@ -687,5 +685,5 @@ function href() {
    let loc;
    return typeof window === 'undefined' ? ''
      : (loc = window.location).hash ? loc.href.slice(0, -loc.hash.length)
@@ -13447,10 +13450,10 @@ index ba21d2e..8c2e08c 100644
          m.open('path', {
            d: def.path
 diff --git a/node_modules/vega-scenegraph/src/util/resolveItem.js b/node_modules/vega-scenegraph/src/util/resolveItem.js
-index d088245..6cd106d 100644
+index d088245..b51498c 100644
 --- a/node_modules/vega-scenegraph/src/util/resolveItem.js
 +++ b/node_modules/vega-scenegraph/src/util/resolveItem.js
-@@ -1,10 +1,10 @@
+@@ -1,19 +1,22 @@
  import marks from '../marks/index';
  import point from './point';
  
@@ -13463,8 +13466,12 @@ index d088245..6cd106d 100644
 +  let item_back = item;
    if (mark && (mdef = marks[mark.marktype]).tip) {
      p = point(event, el);
-     p[0] -= origin[0];
-@@ -14,6 +14,9 @@ export default function(item, event, el, origin) {
+-    p[0] -= origin[0];
++    p[0] -= origin[0] - 10;
+     p[1] -= origin[1];
+     while (item = item.mark.group) {
+-      p[0] -= item.x || 0;
++      p[0] -= item.x - 10 || 0;
        p[1] -= item.y || 0;
      }
      item = mdef.tip(mark.items, p);

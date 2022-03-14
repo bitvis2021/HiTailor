@@ -729,7 +729,7 @@ VegaTemplate.prototype.GetVegaLite = function (height, width) {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
     }
-    vegaLite.mark.tooltip = true;
+    vegaLite.mark.tooltip = { content: "data" };
     return vegaLite;
 }
 
@@ -773,7 +773,7 @@ ObjTemplate.prototype.GetVegaLite = function (height, width) {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
     }
-    vegaLite.mark.tooltip = true;
+    vegaLite.mark.tooltip = { content: "data" };
 
     return vegaLite;
 }
@@ -873,7 +873,7 @@ HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
     }
-    vegaLite.mark.tooltip = true;
+    vegaLite.mark.tooltip = { content: "data" };
 
 
     return vegaLite;
@@ -957,7 +957,7 @@ HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
     }
-    vegaLite.mark.tooltip = true;
+    vegaLite.mark.tooltip = { content: "data" };
 
 
     return vegaLite;
