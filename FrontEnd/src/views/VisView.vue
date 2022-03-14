@@ -273,7 +273,6 @@ export default {
         this.visData = this.VisDB.database[id].visData;
         this.metaData = this.VisDB.database[id].metaData;
         this.showPanelView = false;
-        console.log("restore vega config", this.currentTemplate.GetVegaLite());
         this.OpenPanelView();
       } else {
         let group = this.VisDB.GetGroupMembers(this.figID);

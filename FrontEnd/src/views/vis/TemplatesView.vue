@@ -81,6 +81,7 @@ export default {
   methods: {
     ApplyTemplate(template) {
       this.$emit("select-template", template);
+      // this.$bus.$emit("apply-config");
     },
   },
   computed: {},
