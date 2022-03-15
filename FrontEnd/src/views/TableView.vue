@@ -342,6 +342,24 @@
           </line>
         </g>
         
+        <g id="recommendation-area-container">
+          
+        </g>
+
+        <g id="hover-helper-container" />
+        
+        <!-- transparent mask for choosing -->
+        <rect v-if="!isCurrFlat && isHeaderFixed"
+          id="transparent-mask-for-choosing"
+          :x="markWidth + widthRangeList[headerRange.right+1]" 
+          :y="markHeight + heightRangeList[headerRange.bottom+1]"
+          :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
+          :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
+          @mousedown.stop="handle_mouse_down_mask($event)">
+        </rect>
+
+        <g id="vis-container"/>
+
         <g v-if="!isCurrFlat">
           <!-- row header line -->
           <line :class="{'header-line': headerRange.right!=null}"
@@ -358,22 +376,6 @@
             :y2="markHeight + heightRangeList[headerRange.bottom+1]">
           </line>
         </g>
-        
-        <g id="recommendation-area-container" />
-
-        <g id="hover-helper-container" />
-        
-        <!-- transparent mask for choosing -->
-        <rect v-if="!isCurrFlat && isHeaderFixed"
-          id="transparent-mask-for-choosing"
-          :x="markWidth + widthRangeList[headerRange.right+1]" 
-          :y="markHeight + heightRangeList[headerRange.bottom+1]"
-          :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
-          :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
-          @mousedown.stop="handle_mouse_down_mask($event)">
-        </rect>
-
-        <g id="vis-container"/>
 
         <!-- selected area -->
         <rect v-if="selectedArea.top!=null"
@@ -511,7 +513,7 @@ export default {
         this.markHeightRangeList = res
       }
     },
-    cal_mouse_over_cell(x, y, headerFixed=false) {
+    cal_mouse_over_cell(x, y, headerFixed=true) {
       x = x - this.markWidth
       y = y - this.markHeight
 
