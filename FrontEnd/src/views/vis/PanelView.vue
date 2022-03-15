@@ -170,17 +170,17 @@ export default {
   .el-icon-arrow-down {
     font-size: 12px;
   }
-  .el-slider__bar {
-    background: #6ba8e2 !important;
-  }
-  .el-slider__button {
-    width: 8px !important;
-    height: 8px !important;
-    border-radius: 50% !important;
-    transition: 0s !important;
-  }
   .recommend-box {
     text-align: left;
+    .el-slider__bar {
+      background: #6ba8e2 !important;
+    }
+    .el-slider__button {
+      width: 8px !important;
+      height: 8px !important;
+      border-radius: 50% !important;
+      transition: 0s !important;
+    }
     display: flex;
     margin-top: 3px;
     .el-checkbox-button__inner {

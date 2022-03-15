@@ -41,15 +41,52 @@
       </svg>
     </div>
     <div class="apply-button">
-      <el-row type="flex" class="row-bg" justify="space-between">
+      <el-row type="flex" class="row-bg" justify="space-around">
         <el-col :span="6">
           <el-button type="primary" @click="Apply2Vis" size="mini" round plain>
             Apply
-          </el-button>
+          </el-button> </el-col
+        ><el-col :span="18">
+          <div>
+            <div class="recommend-box">
+              <label
+                class="property-text"
+                style="
+                  font-size: 5px;
+                  margin-right: 0px;
+                  margin-top: 2px;
+                  margin-left: 0px;
+                "
+                >priority:</label
+              >
+              <div class="slider">
+                <el-slider
+                  v-model="prioritySliderValue"
+                  range
+                  show-stops
+                  :min="0"
+                  :max="5"
+                ></el-slider>
+              </div>
+              <label
+                class="property-text"
+                style="
+                  font-size: 5px;
+                  margin-right: -5px;
+                  margin-top: 2px;
+                  margin-left: 0px;
+                "
+                >direction:</label
+              >
+              <el-checkbox-group v-model="directionSelectValue">
+                <el-checkbox-button>row</el-checkbox-button>
+                <el-checkbox-button>col</el-checkbox-button>
+              </el-checkbox-group>
+            </div>
+          </div>
         </el-col>
       </el-row>
     </div>
-    <br />
 
     <div id="unit-config-panel">
       <el-divider content-position="left">Unit Config</el-divider>
@@ -303,6 +340,9 @@ export default {
       ID: this.figID,
       visData: this.visData_arr,
       showColorLegend: false,
+
+      prioritySliderValue: [0, 5],
+      directionSelectValue: ["row", "column"],
     };
   },
   watch: {
@@ -518,7 +558,7 @@ export default {
 
   #unit-config-panel {
     padding: 0px 5px 0px 5px;
-    margin-top: 5px;
+    margin-top: 15px;
     border-radius: 10px;
     text-align: left;
     top: 5%;
@@ -544,6 +584,37 @@ export default {
     margin-left: 10px;
     margin-top: 10px;
     margin-bottom: -10px;
+  }
+  .recommend-box {
+    text-align: left;
+    text-align: left;
+    display: flex;
+    margin-top: 3px;
+    .el-slider__bar {
+      background: #6ba8e2 !important;
+    }
+    .el-slider__button {
+      width: 8px !important;
+      height: 8px !important;
+    }
+    .el-checkbox-button__inner {
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+      font-size: 1px !important;
+    }
+    .el-checkbox-group {
+      display: inline;
+    }
+    .slider {
+      display: inline !important;
+      margin-top: -8px;
+      width: 4vw;
+    }
+    .el-slider__runway {
+      width: 80% !important;
+    }
   }
 }
 </style>
