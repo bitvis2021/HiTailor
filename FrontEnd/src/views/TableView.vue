@@ -342,6 +342,24 @@
           </line>
         </g>
         
+        <g id="recommendation-area-container">
+          
+        </g>
+
+        <g id="hover-helper-container" />
+        
+        <!-- transparent mask for choosing -->
+        <rect v-if="!isCurrFlat && isHeaderFixed"
+          id="transparent-mask-for-choosing"
+          :x="markWidth + widthRangeList[headerRange.right+1]" 
+          :y="markHeight + heightRangeList[headerRange.bottom+1]"
+          :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
+          :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
+          @mousedown.stop="handle_mouse_down_mask($event)">
+        </rect>
+
+        <g id="vis-container"/>
+
         <g v-if="!isCurrFlat">
           <!-- row header line -->
           <line :class="{'header-line': headerRange.right!=null}"
@@ -358,22 +376,6 @@
             :y2="markHeight + heightRangeList[headerRange.bottom+1]">
           </line>
         </g>
-        
-        <g id="recommendation-area-container" />
-
-        <g id="hover-helper-container" />
-        
-        <!-- transparent mask for choosing -->
-        <rect v-if="!isCurrFlat && isHeaderFixed"
-          id="transparent-mask-for-choosing"
-          :x="markWidth + widthRangeList[headerRange.right+1]" 
-          :y="markHeight + heightRangeList[headerRange.bottom+1]"
-          :width="widthRangeList[columnWidthList.length] - widthRangeList[headerRange.right+1]"
-          :height="heightRangeList[rowHeightList.length] - heightRangeList[headerRange.bottom+1]"
-          @mousedown.stop="handle_mouse_down_mask($event)">
-        </rect>
-
-        <g id="vis-container"/>
 
         <!-- selected area -->
         <rect v-if="selectedArea.top!=null"
@@ -511,7 +513,7 @@ export default {
         this.markHeightRangeList = res
       }
     },
-    cal_mouse_over_cell(x, y, headerFixed=false) {
+    cal_mouse_over_cell(x, y, headerFixed=true) {
       x = x - this.markWidth
       y = y - this.markHeight
 
@@ -937,21 +939,11 @@ export default {
         for (var times=0; times<ranges.length; times++) {
           if (isRow) {
             this.transform_2stacked(key, this.rowHeader, times, true)
-            for (var item of this.num2header) {
-              if (this.headerDistribution.get(item[1].value).isRowHeader) {
-                this.cal_row_header_position(item[1].value, item[1].times)
-              }
-            }
             this.cal_range_list(this.markRowHeightList, "mark height")
             this.cal_range_list(this.rowHeightList, "height")
           }
           else {
             this.transform_2stacked(key, this.colHeader, times, false)
-            for (var item of this.num2header) {
-              if (!this.headerDistribution.get(item[1].value).isRowHeader) {
-                this.cal_column_header_position(item[1].value, item[1].times)
-              }
-            }
             this.cal_range_list(this.markColumnWidthList, "mark width")
             this.cal_range_list(this.columnWidthList, "width")
 
@@ -964,28 +956,14 @@ export default {
         }
       }
       this.clear_selected_header()
-      // if (distributionInfo.isRowHeader) {
-      //   this.transform_2stacked(name, this.rowHeader, times, true)
-      // }
-      // else {
-      //   this.transform_2stacked(name, this.colHeader, times, false)
-      // }
-      // this.clear_selected_header()
     },
     handle_transform_2linear_dropdown(command) {
       if (this.selectedHeader == null)  return
       var name = this.selectedHeader.name
-      // var times = this.selectedHeader.times
       var distributionInfo = this.headerDistribution.get(name)
       var layer = distributionInfo.layer
       var isRow = distributionInfo.isRowHeader 
       var header = isRow ? this.rowHeader: this.colHeader
-      // var headerInfo = header[layer].get(name)
-      // if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1) // is stacked
-      //   isRow ? this.transform_2linear(name, this.rowHeader, times, isRow, command) : this.transform_2linear(name, this.colHeader, times, isRow, command)
-      // else {  // already linear
-      //   return
-      // }
 
       for (var [key, headerInfo] of header[layer]) {
         var ranges = headerInfo.range
@@ -993,21 +971,11 @@ export default {
           if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  { // is stacked
             if (isRow) {
               this.transform_2linear(key, this.rowHeader, times, isRow, command)
-              // for (var item of this.num2header) {
-              //   if (this.headerDistribution.get(item[1].value).isRowHeader) {
-              //     this.cal_row_header_position(item[1].value, item[1].times)
-              //   }
-              // }
               this.cal_range_list(this.markRowHeightList, "mark height")
               this.cal_range_list(this.rowHeightList, "height")
             }
             else {
               this.transform_2linear(key, this.colHeader, times, isRow, command)
-              // for (var item of this.num2header) {
-              //   if (!this.headerDistribution.get(item[1].value).isRowHeader) {
-              //     this.cal_column_header_position(item[1].value, item[1].times)
-              //   }
-              // }
               this.cal_range_list(this.markColumnWidthList, "mark width")
               this.cal_range_list(this.columnWidthList, "width")
             }
