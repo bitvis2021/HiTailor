@@ -115,7 +115,7 @@ export default {
   margin-top: 10px !important;
 }
 .mark-container {
-  margin-top: 20px;
+  margin-top: 10px;
   // text-align: left;
   .mark-card {
     padding: 15px;

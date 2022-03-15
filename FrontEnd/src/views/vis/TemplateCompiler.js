@@ -773,7 +773,7 @@ ObjTemplate.prototype.GetVegaLite = function (height, width) {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
     }
-    vegaLite.mark.tooltip = { content: "data" };
+    vegaLite.mark.tooltip = true;
 
     return vegaLite;
 }
