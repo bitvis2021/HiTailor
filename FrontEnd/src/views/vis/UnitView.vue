@@ -462,8 +462,10 @@ export default {
             dom,
             this.visData[i].originValue
           );
-          this.visData[i].id = this.ID;
-          groupId = this.VisDB.AddGroupMember(groupId, this.ID);
+          if (this.ID) {
+            this.visData[i].id = this.ID;
+            groupId = this.VisDB.AddGroupMember(groupId, this.ID);
+          }
         }
       }
 

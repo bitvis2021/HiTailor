@@ -73,6 +73,7 @@ UnitCompiler.GetUnits = function (data_array, config) {
 
 			frameHeight: data_array[i].position.height,
 			frameWidth: data_array[i].position.width,
+			originValue: data_array[i].originValue
 		}
 		data_array[i].dom = this.GetUnitDom(generateConfig);
 	}
@@ -185,7 +186,6 @@ config={
 */
 UnitCompiler.GetUnitDom = function (config_obj) {
 	let dom;
-
 	// set length channel
 	if (config_obj.shape == 'circle') {
 		dom = document.createElementNS(
@@ -267,10 +267,21 @@ UnitCompiler.GetUnitDom = function (config_obj) {
 
 	}
 
-
-
 	dom.setAttribute("style", "fill:" + config_obj.color);
 	dom.setAttribute("opacity", config_obj.opacity);
+
+	// vg-tooltip-element
+	dom.addEventListener("mousemove", (event) => {
+
+		document.getElementById("unit-tooltip-element").childNodes[0].childNodes[0].childNodes[1].textContent = config_obj.originValue;
+		document.getElementById("unit-tooltip-element").setAttribute("class", "vg-tooltip visible light-theme");
+		document.getElementById("unit-tooltip-element").setAttribute("style", "top:" + (event.clientY + 10) + "px;" + "left:" + (event.clientX + 10) + "px;");
+	})
+	dom.addEventListener("mouseout", () => {
+		document.getElementById("unit-tooltip-element").removeAttribute("class");
+		document.getElementById("unit-tooltip-element").setAttribute("class", "vg-tooltip");
+	})
+
 	let container = document.createElementNS(
 		"http://www.w3.org/2000/svg",
 		"g"

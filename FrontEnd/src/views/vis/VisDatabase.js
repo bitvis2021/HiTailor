@@ -1,13 +1,5 @@
 import vegaEmbed from "vega-embed";
-import { GetTemplate } from "./TemplateCompiler";
-// todo: 把vega lite 与data部分 decouple. 在gen config的时候才进行组装。
-// 应该从这里获得selection
-
-// export function VisDatabase(eventBus_obj) {
-//     this.database = {};
-//     this.bus = eventBus_obj;
-// }
-
+import { supportedTemplate } from "./TemplateCompiler";
 export let VisDatabase = (function () {
   let instance;
   let CreateSingleton = function (eventBus_obj) {
@@ -484,6 +476,22 @@ VisDatabase.prototype.GetTemplate = function (id) {
 // table id==table-view-svg
 // vis generator==gen-chart
 
+VisDatabase.prototype.isOverlap = function (height_num, width_num, x_num, y_num) {
+  let under = y_num + height_num;
+  let right = x_num + width_num;
+  for (const id in this.database) {
+    if (Object.hasOwnProperty.call(this.database, id)) {
+      const metaData = this.database[id];
+      if ((y_num > metaData.y && y_num < metaData.y + metaData.height) || (under > metaData.y && y_num < metaData.y + metaData.height)) {
+        if ((x_num > metaData.x & x_num < metaData.x + metaData.width) || (right > metaData.x && x_num < metaData.x + metaData.width)) {
+          return true;
+        }
+      }
+
+    }
+  }
+}
+
 VisDatabase.prototype.GenFig = function (
   height_num,
   width_num,
@@ -525,25 +533,27 @@ VisDatabase.prototype.GenUnit = function (
   dom_obj,
   data
 ) {
-  let canvas_id = this.GenID();
-  let metaData = new visMetaData(
-    canvas_id,
-    x_num,
-    y_num,
-    height_num,
-    width_num,
-    null,
-    data,
-    null
-  );
-  this.database[canvas_id] = metaData;
-  this.database[canvas_id].type = "unit";
+  if (!this.isOverlap(height_num, width_num, x_num, y_num)) {
+    let canvas_id = this.GenID();
+    let metaData = new visMetaData(
+      canvas_id,
+      x_num,
+      y_num,
+      height_num,
+      width_num,
+      null,
+      data,
+      null
+    );
+    this.database[canvas_id] = metaData;
+    this.database[canvas_id].type = "unit";
 
-  this.database[canvas_id].dom = dom_obj;
+    this.database[canvas_id].dom = dom_obj;
 
-  this.RenderCanvas(canvas_id);
+    this.RenderCanvas(canvas_id);
+    return canvas_id;
+  }
 
-  return canvas_id;
 };
 
 VisDatabase.prototype.GenRecommendFigs = function (
@@ -565,18 +575,21 @@ VisDatabase.prototype.GenRecommendFigs = function (
   for (let i = 0, len = recommendData_array.length; i < len; i++) {
     let element = recommendData_array.at(i);
     let position = element.position;
-    let visData = JSON.parse(element.visData);
-    let metaData = JSON.parse(element.metaData);
-    let id = this.GenFig(
-      position.height,
-      position.width,
-      position.x,
-      position.y,
-      currentTemplate.ReuseTemplate(metaData, visData),
-      visData,
-      metaData
-    );
-    this.AddGroupMember(groupID, id);
+    if (!this.isOverlap(position.height, position.width, position.x, position.y)) {
+      let visData = JSON.parse(element.visData);
+      let metaData = JSON.parse(element.metaData);
+
+      let id = this.GenFig(
+        position.height,
+        position.width,
+        position.x,
+        position.y,
+        currentTemplate.ReuseTemplate(metaData, visData),
+        visData,
+        metaData
+      );
+      this.AddGroupMember(groupID, id);
+    }
   }
   return groupID;
 };
@@ -676,10 +689,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     table.append(canvas);
     this.AddHiddenButton(id);
   } else {
-    let chartJson = JSON.parse(
-      JSON.stringify(this.GetVegaLite(id, height, width))
-    );
-    console.log("render JSON", chartJson);
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS(
       "http://www.w3.org/2000/svg",
@@ -709,11 +718,26 @@ VisDatabase.prototype.RenderCanvas = function (id) {
 
       this.AddHiddenButton(id);
 
+      let chartJson = JSON.parse(
+        JSON.stringify(this.GetVegaLite(id, height, width))
+      );
+      console.log("render JSON", chartJson);
       // canvas.append(background);
       vegaEmbed("#chart-" + id, chartJson, {
         renderer: "svg",
         actions: false,
-      });
+      }).then(
+        () => {
+          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.NQor2Q_Simple_Line_Chart || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
+            let content = document.getElementById("chart-" + id)
+            content.removeAttribute("transform");
+            let xOffset = 70;
+            let xScale = width / (width - xOffset)
+            content.setAttribute("transform", "translate(" + (-40 * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
+          }
+
+        }
+      );
     }
   }
 };
