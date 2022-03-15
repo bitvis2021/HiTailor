@@ -225,9 +225,9 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                     data: { values: visData_arr },
                     mark: "bar",
                     encoding: {
-                        x: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
-                        y: { field: selections_cell.GetQSelection(0), aggregate: "sum" },
-                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        y: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        x: { field: selections_cell.GetQSelection(0), aggregate: "sum" },
+                        color: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
                     }
                 }
                 picture = './templates/stacked bar chart y.png';

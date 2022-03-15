@@ -546,6 +546,8 @@ export default {
     top: 0%;
     z-index: 100;
     background-color: white;
+    margin-bottom: 5px;
+    margin-top: 15px;
   }
 
   .el-dropdown-link {
@@ -558,7 +560,7 @@ export default {
 
   #unit-config-panel {
     padding: 0px 5px 0px 5px;
-    margin-top: 15px;
+    margin-top: 20px;
     border-radius: 10px;
     text-align: left;
     top: 5%;

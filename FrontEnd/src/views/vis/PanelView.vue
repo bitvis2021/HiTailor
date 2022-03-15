@@ -22,7 +22,7 @@
               >
               <div class="slider">
                 <el-slider
-                  v-model="prioritySliderValue"
+                  v-model="priorityXXSliderValue"
                   range
                   show-stops
                   :min="0"
@@ -142,6 +142,8 @@ export default {
     top: 0%;
     z-index: 100;
     background-color: white;
+    margin-top: 15px;
+    margin-bottom: 5px;
     // padding: 0px 5px 0px 5px;
     // border-bottom: solid #efefef 1px;
   }
