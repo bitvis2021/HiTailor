@@ -39,9 +39,13 @@
                 "
                 >direction:</label
               >
-              <el-checkbox-group v-model="directionSelectValue">
-                <el-checkbox-button>row</el-checkbox-button>
-                <el-checkbox-button>col</el-checkbox-button>
+              <el-checkbox-group v-model="directionSelectValue"
+                ><el-checkbox-button
+                  v-for="direction in directionSelections"
+                  :key="direction"
+                  :label="direction"
+                  >{{ direction.substring(0, 3) }}</el-checkbox-button
+                >
               </el-checkbox-group>
             </div>
           </div>
@@ -76,6 +80,7 @@ export default {
       encodingJson: this.vegaConfig.encoding,
       prioritySliderValue: [0, 5],
       directionSelectValue: ["row", "column"],
+      directionSelections: ["row", "column"],
     };
   },
   watch: {
@@ -88,6 +93,9 @@ export default {
     },
     prioritySliderValue(newVal, oldVal) {
       this.$bus.$emit("transmit-prioritySliderValue", newVal);
+    },
+    directionSelectValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-directionSelectValue", newVal);
     },
   },
   methods: {

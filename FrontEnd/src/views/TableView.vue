@@ -110,6 +110,7 @@
             test
           </button> -->
 
+          <!--
           <div class="recommend-element">
             <span class="toolbar-vertical-separator" />
             <span class="toolbar-label">Recommendation</span>
@@ -126,11 +127,12 @@
             </el-select>
             <span class="toolbar-label" style="color: #3e87cc">Priority</span>
           </div>
+            !-->
         </el-col>
 
+        <!--
         <el-col :lg="2" :xl="3" class="recommend-element">
           <div class="priority-slider">
-            <!-- <el-slider v-model="prioritySliderValue" range show-stops :max="directionSelectValue.length==2 ? 5 : (directionSelectValue.length==0 ? 0 : 2)"></el-slider>  -->
             <el-slider
               v-model="prioritySliderValue"
               range
@@ -146,7 +148,7 @@
             ></el-slider>
           </div>
         </el-col>
-
+        !-->
         <el-col :lg="2" :xl="2" class="recommend-element">
           <el-button
             id="recommend-apply-button"
@@ -3355,6 +3357,9 @@ export default {
     // visView remotely send value
     this.$bus.$on("transmit-prioritySliderValue", (data) => {
       this.prioritySliderValue = data;
+    });
+    this.$bus.$on("transmit-directionSelectValue", (data) => {
+      this.directionSelectValue = data;
     });
   },
 
