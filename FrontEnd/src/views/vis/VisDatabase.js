@@ -1,5 +1,31 @@
 import vegaEmbed from "vega-embed";
 import { supportedTemplate } from "./TemplateCompiler";
+let status = {
+  clear: "clear",
+  select: "select",
+};
+
+function visMetaData(
+  id,
+  x,
+  y,
+  height,
+  width,
+  vegaTemplate,
+  visData_obj,
+  metaData_obj
+) {
+  this.id = id;
+  this.x = x;
+  this.y = y;
+  this.height = height;
+  this.width = width;
+  this.vegaTemplate = vegaTemplate;
+  this.visData = visData_obj;
+  this.metaData = metaData_obj;
+  this.status = status.clear;
+}
+
 export let VisDatabase = (function () {
   let instance;
   let CreateSingleton = function (eventBus_obj) {
@@ -428,31 +454,6 @@ VisDatabase.prototype.RemoveCanvas = function (id) {
   delete this.database[id];
 };
 
-let status = {
-  clear: "clear",
-  select: "select",
-};
-
-function visMetaData(
-  id,
-  x,
-  y,
-  height,
-  width,
-  vegaTemplate,
-  visData_obj,
-  metaData_obj
-) {
-  this.id = id;
-  this.x = x;
-  this.y = y;
-  this.height = height;
-  this.width = width;
-  this.vegaTemplate = vegaTemplate;
-  this.visData = visData_obj;
-  this.metaData = metaData_obj;
-  this.status = status.clear;
-}
 
 // restore context
 
@@ -731,9 +732,11 @@ VisDatabase.prototype.RenderCanvas = function (id) {
           // TODO: scale has some problems. the margin relates to underlying data's number.
           if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.NQor2Q_Simple_Line_Chart || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
             let content = document.getElementById("chart-" + id)
-            content.removeAttribute("transform");
-            let xScale = width / (width - 90);
-            content.setAttribute("transform", "translate(" + (-50 * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
+            content.removeAttribute("transform");   
+            
+            let offset=width/this.database[id].metaData.x.range;
+            let xScale = width / (width - offset);
+            content.setAttribute("transform", "translate(" + (-(offset/2+5) * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
           }
 
         }
