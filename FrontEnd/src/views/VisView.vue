@@ -52,7 +52,7 @@
     >
       <span>{{ dialogText }}</span>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="showBatchDialog = false">No</el-button>
+        <el-button @click="BatchCancel">No</el-button>
         <el-button type="primary" @click="BatchOperate">Yes</el-button>
       </span>
     </el-dialog>
@@ -118,6 +118,7 @@ export default {
       dialogTexts: {
         remove: "Do you want remove other figures which belong this group?",
         reconf: "Do you want config other figures which belong this group?",
+        recommend: "Do you want apply this config to recommended area?",
       },
       dialogText: "",
       currentGroupID: "",
@@ -196,8 +197,9 @@ export default {
           this.showBatchDialog = true;
         }
       }
-      console.log("table view highlight recommend selection");
-      this.$bus.$emit("apply-config");
+      // this.$bus.$emit("apply-config");
+      this.showBatchDialog = true;
+      this.dialogText = this.dialogTexts.recommend;
     },
 
     BatchOperate() {
@@ -206,6 +208,14 @@ export default {
         this.VisDB.DeleteGroup(this.currentGroupID);
       } else if (this.dialogText == this.dialogTexts.reconf) {
         this.VisDB.ModifyGroupFigs(this.figID, this.currentTemplate);
+      } else if (this.dialogText == this.dialogTexts.recommend) {
+        this.$bus.$emit("apply-config");
+      }
+    },
+    BatchCancel() {
+      this.showBatchDialog = false;
+      if (this.dialogText == this.dialogTexts.recommend) {
+        this.$bus.$emit("clear-selectedCell");
       }
     },
   },

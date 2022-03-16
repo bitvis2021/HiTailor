@@ -1,11 +1,54 @@
 <template>
   <div class="panel-view">
-    <div id="apply-button">
-      <el-row type="flex" class="row-bg" justify="space-between">
+    <div class="apply-button">
+      <el-row type="flex" class="row-bg" justify="space-around">
         <el-col :span="6">
           <el-button type="primary" @click="Apply2Vis" size="mini" round plain>
             Apply
           </el-button>
+        </el-col>
+        <el-col :span="18">
+          <div>
+            <div class="recommend-box">
+              <label
+                class="property-text"
+                style="
+                  font-size: 5px;
+                  margin-right: 0px;
+                  margin-top: 2px;
+                  margin-left: 0px;
+                "
+                >priority:</label
+              >
+              <div class="slider">
+                <el-slider
+                  v-model="prioritySliderValue"
+                  range
+                  show-stops
+                  :min="0"
+                  :max="5"
+                ></el-slider>
+              </div>
+              <label
+                class="property-text"
+                style="
+                  font-size: 5px;
+                  margin-right: -5px;
+                  margin-top: 2px;
+                  margin-left: 0px;
+                "
+                >direction:</label
+              >
+              <el-checkbox-group v-model="directionSelectValue"
+                ><el-checkbox-button
+                  v-for="direction in directionSelections"
+                  :key="direction"
+                  :label="direction"
+                  >{{ direction.substring(0, 3) }}</el-checkbox-button
+                >
+              </el-checkbox-group>
+            </div>
+          </div>
         </el-col>
       </el-row>
     </div>
@@ -35,6 +78,9 @@ export default {
       visData: this.vegaConfig.data,
       markJson: this.vegaConfig.mark,
       encodingJson: this.vegaConfig.encoding,
+      prioritySliderValue: [0, 5],
+      directionSelectValue: ["row", "column"],
+      directionSelections: ["row", "column"],
     };
   },
   watch: {
@@ -44,6 +90,12 @@ export default {
     },
     selections(newVal, oldVal) {
       this.selections = newVal;
+    },
+    prioritySliderValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-prioritySliderValue", newVal);
+    },
+    directionSelectValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-directionSelectValue", newVal);
     },
   },
   methods: {
@@ -93,7 +145,7 @@ export default {
   width: 100%;
   top: 0%;
   height: 100%;
-  #apply-button {
+  .apply-button {
     // position: absolute;
     left: 0%;
     width: 100%;
@@ -101,6 +153,8 @@ export default {
     top: 0%;
     z-index: 100;
     background-color: white;
+    margin-top: 15px;
+    margin-bottom: 5px;
     // padding: 0px 5px 0px 5px;
     // border-bottom: solid #efefef 1px;
   }
@@ -128,6 +182,38 @@ export default {
   }
   .el-icon-arrow-down {
     font-size: 12px;
+  }
+  .recommend-box {
+    text-align: left;
+    .el-slider__bar {
+      background: #6ba8e2 !important;
+    }
+    .el-slider__button {
+      width: 8px !important;
+      height: 8px !important;
+      border-radius: 50% !important;
+      transition: 0s !important;
+    }
+    display: flex;
+    margin-top: 3px;
+    .el-checkbox-button__inner {
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+      font-size: 1px !important;
+    }
+    .el-checkbox-group {
+      display: inline;
+    }
+    .slider {
+      display: inline !important;
+      margin-top: -8px;
+      width: 4vw;
+    }
+    .el-slider__runway {
+      width: 80% !important;
+    }
   }
 }
 </style>
