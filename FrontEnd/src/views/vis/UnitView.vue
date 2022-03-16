@@ -352,6 +352,9 @@ export default {
     visData_arr(newVal, oldVal) {
       // TODO change panel when new config comes
     },
+    prioritySliderValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-prioritySliderValue", newVal);
+    },
   },
   methods: {
     PreviewUnitConfig() {

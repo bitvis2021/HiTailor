@@ -22,7 +22,7 @@
               >
               <div class="slider">
                 <el-slider
-                  v-model="priorityXXSliderValue"
+                  v-model="prioritySliderValue"
                   range
                   show-stops
                   :min="0"
@@ -85,6 +85,9 @@ export default {
     },
     selections(newVal, oldVal) {
       this.selections = newVal;
+    },
+    prioritySliderValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-prioritySliderValue", newVal);
     },
   },
   methods: {
