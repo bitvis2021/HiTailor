@@ -2627,7 +2627,7 @@ export default {
     background: rgba(245, 245, 245, 0.685);
     border-top: 1px solid #cecece;
     .zoom-button{
-      background-image: url("../../public/icons/zoom in.png");
+      // background-image: url("../../public/icons/zoom in.png");
       background-position:50% 50%;
       position: absolute;
       left: @padding;
