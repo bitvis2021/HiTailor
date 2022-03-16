@@ -3350,9 +3350,11 @@ export default {
       }
     });
 
-    this.$bus.$on("select-canvas", () => {
+    // Excplicitly use this instead of select canvas to cancel table selection.
+    this.$bus.$on("clear-selectedCell", () => {
       console.log("remove selections of tableview");
       this.clear_selected_cell(true);
+      this.hide_recommend_element();
     });
 
     this.$bus.$on("hover-field", (fieldname) => {
