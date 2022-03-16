@@ -1174,7 +1174,14 @@ export default {
             );
           } else {
             this.isChoosingUnit = false;
-            this.hide_recommend_element();
+            // this.hide_recommend_element();
+            this.show_recommend_element(true);
+            this.cal_recommendation_data(
+              this.selectedArea.top - this.headerRange.bottom - 1,
+              this.selectedArea.bottom - this.headerRange.bottom - 1,
+              this.selectedArea.left - this.headerRange.right - 1,
+              this.selectedArea.right - this.headerRange.right - 1
+            );
           }
           this.transmit_chosen_to_vis(
             this.selectedArea.top,
@@ -2413,6 +2420,8 @@ export default {
         }
       }
       console.log("recommend-data-to-send", dataArray);
+
+      // 在这里送了数据
       this.$bus.$emit("visualize-recommendData", dataArray);
     },
     transmit_unit_recommendation_to_vis() {
@@ -3325,19 +3334,19 @@ export default {
           this.selectedArea.top == this.selectedArea.bottom
         )
       ) {
-        // this.transmit_recommendation_to_vis()
+        this.transmit_recommendation_to_vis();
         console.log("not single unit");
-        this.show_recommend_element();
-        this.cal_recommendation_data(
-          this.selectedArea.top - this.headerRange.bottom - 1,
-          this.selectedArea.bottom - this.headerRange.bottom - 1,
-          this.selectedArea.left - this.headerRange.right - 1,
-          this.selectedArea.right - this.headerRange.right - 1
-        );
+        // this.show_recommend_element();
+        // this.cal_recommendation_data(
+        //   this.selectedArea.top - this.headerRange.bottom - 1,
+        //   this.selectedArea.bottom - this.headerRange.bottom - 1,
+        //   this.selectedArea.left - this.headerRange.right - 1,
+        //   this.selectedArea.right - this.headerRange.right - 1
+        // );
         this.clear_selected_cell(false);
       } else {
         this.hide_recommend_element();
-        this.clear_selected_cell(true);
+        // this.clear_selected_cell(true);
       }
     });
 
