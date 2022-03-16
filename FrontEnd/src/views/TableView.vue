@@ -1071,11 +1071,6 @@ export default {
             this.visRerenderPrePos,
             this.visRerenderAfterPos
           );
-          console.log(
-            "rerender",
-            this.visRerenderPrePos,
-            this.visRerenderAfterPos
-          );
         }
 
         this.mouseDownMarkLineState = false;
