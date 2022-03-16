@@ -729,7 +729,6 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         actions: false,
       }).then(
         () => {
-          // TODO: scale has some problems. the margin relates to underlying data's number.
           if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.NQor2Q_Simple_Line_Chart || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
             let content = document.getElementById("chart-" + id)
             content.removeAttribute("transform");   
