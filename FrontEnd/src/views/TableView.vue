@@ -181,19 +181,11 @@
       </button>
     </div>
 
-<<<<<<< HEAD
 
     <div class="table-view-svg-container" @mousedown="handle_click_on_blank()" @mouseup.stop="handle_mouse_up()">
       <svg class="table-view-svg" 
         :height="markHeight + heightRangeList[heightRangeList.length-1]" 
         :width="markWidth + widthRangeList[widthRangeList.length-1]"        
-=======
-    <div class="table-view-svg-container" @mousedown="handle_click_on_blank()">
-      <svg
-        class="table-view-svg"
-        :height="markHeight + heightRangeList[heightRangeList.length - 1]"
-        :width="markWidth + widthRangeList[widthRangeList.length - 1]"
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
         @mousemove="handle_mouse_move($event)"
         @mouseup.stop="handle_mouse_up()"
       >
@@ -317,7 +309,6 @@
         <g v-if="!isCurrFlat">
           <!-- column header-->
           <g v-if="headerFixedFlag.column">
-<<<<<<< HEAD
             <g v-for="(item, i) in num2header" :key="'col-header-group-'+ i">              
               <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
                 :id="'column-header-'+i" :key="'column-header-'+i"
@@ -332,57 +323,6 @@
                   :x="cal_column_header_position(item[1].value, item[1].times).x + textPaddingX" 
                   :y="cal_column_header_position(item[1].value, item[1].times).y + textPaddingY">
                   {{item[1].value[0]=='&' ? "" : item[1].value}}
-=======
-            <g v-for="(item, i) in num2header" :key="'col-header-group-' + i">
-              <g
-                v-if="
-                  !headerDistribution.get(item[1].value).isRowHeader &&
-                  item[1].times < headerDistribution.get(item[1].value).count
-                "
-                :id="'column-header-' + i"
-                :key="'column-header-' + i"
-                @mousedown.stop="
-                  before_header_interaction(
-                    'column-header-' + i,
-                    false,
-                    item[1].value,
-                    item[1].times,
-                    headerDistribution.get(item[1].value).layer
-                  )
-                "
-              >
-                <rect
-                  class="header-table-cell"
-                  :key="'rect-' + i"
-                  :x="
-                    cal_column_header_position(item[1].value, item[1].times).x
-                  "
-                  :y="
-                    cal_column_header_position(item[1].value, item[1].times).y
-                  "
-                  :width="
-                    cal_column_header_position(item[1].value, item[1].times)
-                      .width
-                  "
-                  :height="
-                    cal_column_header_position(item[1].value, item[1].times)
-                      .height
-                  "
-                ></rect>
-                <text
-                  class="table-cell-text"
-                  :key="'text-' + i"
-                  :x="
-                    cal_column_header_position(item[1].value, item[1].times).x +
-                    textPaddingX
-                  "
-                  :y="
-                    cal_column_header_position(item[1].value, item[1].times).y +
-                    textPaddingY
-                  "
-                >
-                  {{ item[1].value }}
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
                 </text>
               </g>
             </g>
@@ -410,7 +350,6 @@
                   class="header-table-cell"
                   :x="cal_row_header_position(item[1].value, item[1].times).x"
                   :y="cal_row_header_position(item[1].value, item[1].times).y"
-<<<<<<< HEAD
                   :width="cal_row_header_position(item[1].value, item[1].times).width"
                   :height="cal_row_header_position(item[1].value, item[1].times).height">
                 </rect>
@@ -418,27 +357,6 @@
                   :x="cal_row_header_position(item[1].value, item[1].times).x + textPaddingX" 
                   :y="cal_row_header_position(item[1].value, item[1].times).y + textPaddingY">
                   {{item[1].value[0]=='&' ? "" : item[1].value}}
-=======
-                  :width="
-                    cal_row_header_position(item[1].value, item[1].times).width
-                  "
-                  :height="
-                    cal_row_header_position(item[1].value, item[1].times).height
-                  "
-                ></rect>
-                <text
-                  class="table-cell-text"
-                  :x="
-                    cal_row_header_position(item[1].value, item[1].times).x +
-                    textPaddingX
-                  "
-                  :y="
-                    cal_row_header_position(item[1].value, item[1].times).y +
-                    textPaddingY
-                  "
-                >
-                  {{ item[1].value }}
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
                 </text>
               </g>
             </g>
@@ -1009,7 +927,6 @@ export default {
       this.mouseDownState = true;
     },
     handle_mouse_down_mark(index, type) {
-<<<<<<< HEAD
       // if (type == 'column') {
       //   this.selectByMark.column = true
       //   this.selectByMark.row = false
@@ -1032,28 +949,6 @@ export default {
       // this.selectedMark.type = type
       // this.mouseDownMarkState = true
 
-=======
-      if (type == "column") {
-        this.selectByMark.column = true;
-        this.selectByMark.row = false;
-
-        this.selectedArea.top = 0;
-        this.selectedArea.bottom = this.rowHeightList.length - 1;
-        this.selectedArea.left = index;
-        this.selectedArea.right = index;
-      } else {
-        this.selectByMark.row = true;
-        this.selectByMark.column = false;
-
-        this.selectedArea.top = index;
-        this.selectedArea.bottom = index;
-        this.selectedArea.left = 0;
-        this.selectedArea.right = this.columnWidthList.length - 1;
-      }
-      this.selectedMark.index = index;
-      this.selectedMark.type = type;
-      this.mouseDownMarkState = true;
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
     },
     handle_mouse_down_mark_line(index, type) {
       this.mouseDownMarkLine.index = index;
@@ -1104,7 +999,6 @@ export default {
     handle_mouse_move(event) {
       if (this.mouseDownMarkLineState) {
         if (this.mouseDownMarkLine.type == "column") {
-<<<<<<< HEAD
           var offset = event.offsetX - this.markWidth - this.markWidthRangeList[this.mouseDownMarkLine.index]
           if (offset < this.cellMin) offset = this.cellMin
           this.markColumnWidthList[this.mouseDownMarkLine.index] = offset
@@ -1139,65 +1033,6 @@ export default {
         this.selectedArea.right = this.selectedCell.cend > this.mouseOverCell.cend ? this.selectedCell.cend : this.mouseOverCell.cend   
       }   
        else  return  // ignore other mousemoves when mouse is not down 
-=======
-          var offset =
-            event.offsetX -
-            this.markWidth -
-            this.markWidthRangeList[this.mouseDownMarkLine.index];
-          if (offset < this.cellMin) offset = this.cellMin;
-          this.markColumnWidthList[this.mouseDownMarkLine.index] = offset;
-          this.markWidthChangeSignal = !this.markWidthChangeSignal;
-        } else if (this.mouseDownMarkLine.type == "row") {
-          var offset =
-            event.offsetY -
-            this.markHeight -
-            this.markHeightRangeList[this.mouseDownMarkLine.index];
-          if (offset < this.cellMin) offset = this.cellMin;
-          this.markRowHeightList[this.mouseDownMarkLine.index] = offset;
-          this.markHeightChangeSignal = !this.markHeightChangeSignal;
-        }
-      } else if (this.mouseDownMarkState) {
-        this.cal_mouse_over_cell(event.offsetX, event.offsetY);
-        if (this.selectedMark.type == "column") {
-          this.selectedArea.left =
-            this.selectedMark.index < this.mouseOverCell.ccurrent
-              ? this.selectedMark.index
-              : this.mouseOverCell.ccurrent;
-          this.selectedArea.right =
-            this.selectedMark.index > this.mouseOverCell.ccurrent
-              ? this.selectedMark.index
-              : this.mouseOverCell.ccurrent;
-        } else {
-          this.selectedArea.top =
-            this.selectedMark.index < this.mouseOverCell.rcurrent
-              ? this.selectedMark.index
-              : this.mouseOverCell.rcurrent;
-          this.selectedArea.bottom =
-            this.selectedMark.index > this.mouseOverCell.rcurrent
-              ? this.selectedMark.index
-              : this.mouseOverCell.rcurrent;
-        }
-      } else if (this.mouseDownState) {
-        this.cal_mouse_over_cell(event.offsetX, event.offsetY);
-
-        this.selectedArea.top =
-          this.selectedCell.rstart < this.mouseOverCell.rstart
-            ? this.selectedCell.rstart
-            : this.mouseOverCell.rstart;
-        this.selectedArea.bottom =
-          this.selectedCell.rend > this.mouseOverCell.rend
-            ? this.selectedCell.rend
-            : this.mouseOverCell.rend;
-        this.selectedArea.left =
-          this.selectedCell.cstart < this.mouseOverCell.cstart
-            ? this.selectedCell.cstart
-            : this.mouseOverCell.cstart;
-        this.selectedArea.right =
-          this.selectedCell.cend > this.mouseOverCell.cend
-            ? this.selectedCell.cend
-            : this.mouseOverCell.cend;
-      } else return; // ignore other mousemoves when mouse is not down
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
     },
     handle_mouse_up() {
       this.mouseDownState = false;
@@ -1481,33 +1316,20 @@ export default {
       var header = isRow ? this.rowHeader : this.colHeader;
 
       for (var [key, headerInfo] of header[layer]) {
-<<<<<<< HEAD
         if (key[0] == "&")  continue  // don't change linear nodes
         var ranges = headerInfo.range
         for (var times=0; times<ranges.length; times++) {
-=======
-        var ranges = headerInfo.range;
-        for (var times = 0; times < ranges.length; times++) {
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
           if (isRow) {
             this.transform_2stacked(key, this.rowHeader, times, true);
             this.cal_range_list(this.markRowHeightList, "mark height");
             this.cal_range_list(this.rowHeightList, "height");
-          } else {
-            this.transform_2stacked(key, this.colHeader, times, false);
-            this.cal_range_list(this.markColumnWidthList, "mark width");
-            this.cal_range_list(this.columnWidthList, "width");
           }
-<<<<<<< HEAD
           else {
             this.transform_2stacked(key, this.colHeader, times, false)
             this.cal_range_list(this.markColumnWidthList, "mark width")
             this.cal_range_list(this.columnWidthList, "width")
           }
           
-=======
-
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
           // recalculate value-cell position
           for (var item of this.num2seq) {
             this.cal_value_cell_position(item[1].seq);
@@ -1525,19 +1347,9 @@ export default {
       var header = isRow ? this.rowHeader : this.colHeader;
 
       for (var [key, headerInfo] of header[layer]) {
-<<<<<<< HEAD
         var ranges = headerInfo.range
         for (var times=0; times<ranges.length; times++) {
           if (headerInfo.children[times][0][0]!="&")  { // is stacked
-=======
-        var ranges = headerInfo.range;
-        for (var times = 0; times < ranges.length; times++) {
-          if (
-            headerInfo.children[times].indexOf("") == -1 &&
-            headerInfo.children[times].indexOf(" ") == -1
-          ) {
-            // is stacked
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
             if (isRow) {
               this.transform_2linear(
                 key,
@@ -1902,7 +1714,6 @@ export default {
       }
     },
     transform_2stacked(name, header, times, isRow) {
-<<<<<<< HEAD
       this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
@@ -1911,21 +1722,6 @@ export default {
       if (headerInfo.children[times].length == 0)  return // no child
       if (headerInfo.children[times][0][0]!="&")  return // already stacked
       
-=======
-      this.clear_selected_cell(true);
-      this.$bus.$emit("change-header");
-      var distributionInfo = JSON.parse(
-        JSON.stringify(this.headerDistribution.get(name))
-      );
-      var layer = distributionInfo.layer;
-      var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)));
-      if (headerInfo.children[times].length == 0) return; // no child
-      if (
-        headerInfo.children[times].indexOf("") == -1 &&
-        headerInfo.children[times].indexOf(" ") == -1
-      )
-        return; // already stacked
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
 
       // delete child
       var movingChild = headerInfo.children[times].shift();
@@ -2030,7 +1826,6 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow, type) {
-<<<<<<< HEAD
       this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
@@ -2044,30 +1839,6 @@ export default {
       headerInfo.children[times].unshift(newChild)
       header[layer].set(name, headerInfo)
       
-=======
-      this.clear_selected_cell(true);
-      this.$bus.$emit("change-header");
-      var distributionInfo = JSON.parse(
-        JSON.stringify(this.headerDistribution.get(name))
-      );
-      var layer = distributionInfo.layer;
-      var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)));
-      if (headerInfo.children[times].length == 0) return; // no child
-      if (
-        headerInfo.children[times].indexOf("") != -1 ||
-        headerInfo.children[times].indexOf(" ") != -1
-      )
-        return; // already linear
-
-      // add child
-      var newChild =
-        (isRow && !this.hasTransposed) || (!isRow && this.hasTransposed)
-          ? " "
-          : "";
-      headerInfo.children[times].unshift(newChild);
-      header[layer].set(name, headerInfo);
-
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
       // add parent
       var addIndex = headerInfo.range[times].start; // add before the first child
       var addRange = { start: addIndex, end: addIndex };
@@ -2608,7 +2379,6 @@ export default {
 
       var vis = [];
       // add chosen value
-<<<<<<< HEAD
       var value = get_unit_data_for_transmission(this.selectedArea.top-this.headerRange.bottom-1,this.selectedArea.left-this.headerRange.right-1, this.valueDistribution, this.seq2num)
       var pos = selectedPos
       var obj = {position: pos, value: value, priority: 0}
@@ -2637,53 +2407,6 @@ export default {
       var metadata = JSON.stringify(meta)
 
       this.$bus.$emit('visualize-selectedData', selectedPos, visdata, metadata)
-=======
-      var value = get_unit_data_for_transmission(
-        this.selectedArea.top - this.headerRange.bottom - 1,
-        this.selectedArea.left - this.headerRange.right - 1,
-        this.valueDistribution,
-        this.seq2num
-      );
-      var pos = selectedPos;
-      var obj = { position: pos, value: value, priority: 0 };
-      vis.push(obj);
-      console.log("obj", obj);
-      for (var i = min - 1; i <= max - 1; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-          var area = data[i][j];
-          var value = get_unit_data_for_transmission(
-            area.top,
-            area.left,
-            this.valueDistribution,
-            this.seq2num
-          );
-
-          var top = area.top + this.headerRange.bottom + 1;
-          var bottom = area.bottom + this.headerRange.bottom + 1;
-          var left = area.left + this.headerRange.right + 1;
-          var right = area.right + this.headerRange.right + 1;
-          var pos = get_pos_for_transmission(
-            top,
-            bottom,
-            left,
-            right,
-            this.markWidth,
-            this.markHeight,
-            this.widthRangeList,
-            this.heightRangeList
-          );
-
-          var obj = { position: pos, value: value, priority: i + 1 };
-          vis.push(obj);
-        }
-      }
-      var visdata = JSON.stringify(vis);
-
-      var meta = { x: { range: 1 }, y: { range: 1 } };
-      var metadata = JSON.stringify(meta);
-
-      this.$bus.$emit("visualize-selectedData", selectedPos, visdata, metadata);
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
     },
     // transmit_unit_recommendation_to_vis() {
     //   var dataArray = [], data
@@ -3683,15 +3406,10 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
-<<<<<<< HEAD
 @padding:0.7rem;
 @toolbar-height: 2.5rem;
 @zoombar-height: 1.8rem;
 @zoomicon-height: 1.4rem;
-=======
-@padding: 0.7rem;
-@transform-button-container-height: 2.5rem;
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
 @transform-button-height: 2rem;
 .table-view {
   position: absolute;
@@ -3709,15 +3427,9 @@ export default {
     text-align: center;
   }
   .toolbar {
-<<<<<<< HEAD
     height:@toolbar-height;
     position:absolute;
     width:100%;
-=======
-    height: @transform-button-container-height;
-    position: absolute;
-    width: 100%;
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
     padding-left: @padding;
     background: white;
     align-items: center;
@@ -3806,7 +3518,6 @@ export default {
       transition: 0s;
     }
   }
-<<<<<<< HEAD
   .zoombar {
     height: @zoombar-height;
     position: absolute;
@@ -3828,23 +3539,14 @@ export default {
     }
   }
   
-=======
-
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
   .table-view-svg-container {
     position: absolute;
     // height:100%;
     left: @padding;
     right: 0%;
-<<<<<<< HEAD
     top: @toolbar-height + 1rem;
     bottom: @zoombar-height + 0.3rem;
     overflow:auto;
-=======
-    top: @transform-button-container-height + 1rem;
-    bottom: 0%;
-    overflow: auto;
->>>>>>> 70e61082bae7e9c6a2ac26a598a88a5cfecef4b2
     // margin-top:1%;
     // margin-left:1%;
     // margin-right:1%;
