@@ -1,8 +1,7 @@
 export function get_unit_data_for_transmission(x, y, valueDistribution, seq2num) {
     var pos = [x, y].toString()
     var seq = valueDistribution.get(pos)
-    var value = seq2num.get(seq).value 
-        
+    var value = seq2num.get(seq).value    
     return value
 }
 export function get_data_for_transmission(top, bottom, left, right, headerRange, valueDistribution, seq2num, rlength, clength, headerDistribution, colHeader, rowHeader) {
@@ -28,12 +27,16 @@ export function get_data_from_chosen(top, bottom, left, right, headerRange, valu
     var res=[]
     for (var i=top; i<=bottom; i++) {
         for (var j=left; j<=right; j++) {
-        var pos = [i-headerRange.bottom-1, j-headerRange.right-1].toString()
-        var seq = valueDistribution.get(pos)
-        var value = seq2num.get(seq).value
-        var arrseq = Array.from(seq)
-        arrseq.push(value)
+            var pos = [i-headerRange.bottom-1, j-headerRange.right-1].toString()
+            var seq = valueDistribution.get(pos)
+            var value = seq2num.get(seq).value
+            var arrseq = Array.from(seq)
+            arrseq.push(value)
+            res.push(arrseq)      
         res.push(arrseq)      
+            res.push(arrseq)      
+        res.push(arrseq)      
+            res.push(arrseq)      
         }
     }
     return res
@@ -60,16 +63,16 @@ function change_data_form(origindata, rlength, clength, headerDistribution) {
         // add prefix
         var prefix = ""
         for (var k=0; k<ch.length; k++) {
-        // column
-        data[i][ch[k]] = prefix + data[i][ch[k]]
-        prefix = (data[i][ch[k]] + " > ")
+            // column
+            data[i][ch[k]] = prefix + data[i][ch[k]]
+            prefix = (data[i][ch[k]] + " > ")
         }
         
         prefix = ""
         for (var k=0; k<rh.length; k++) {
-        // row
-        data[i][rh[k]] = prefix + data[i][rh[k]]
-        prefix = (data[i][rh[k]] + " > ")
+            // row
+            data[i][rh[k]] = prefix + data[i][rh[k]]
+            prefix = (data[i][rh[k]] + " > ")
         }          
     }
     return data

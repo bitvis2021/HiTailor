@@ -1,116 +1,121 @@
 export function get_reference_node(header, start, end, isRow, hasTransposed) {     
     var res = []
-    var linearName = isRow && !hasTransposed || !isRow && hasTransposed ? " " : ""
+    // var linearName = isRow && !hasTransposed || !isRow && hasTransposed ? ("&-row-"+()) : ("&-col-"+())
     var findFlag = false
     for (var i=0; i<header.length; i++) {
         for (var [key, value] of header[i]) {
-        var goNextLayer = false
-        var ranges = value.range, children = value.children
-        for (var j=0; j<ranges.length; j++) {
-            if (start == ranges[j].start && end == ranges[j].end) {   // choose a single node(including linear)
-            var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
-            if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                tmp.hasLinear = true 
-                tmp.isLinear = true
-                // especially
-                if (children[j].length == 1) {
-                tmp.name = children[j][0]
-                tmp.times = 0
-                tmp.layer = i+1
-                tmp.hasLinear = false
-                tmp.isLinear = false
-                }
-            }
-            res.push(tmp)
-            findFlag = true
-            break
-            }
-            else {
-            if (start == ranges[j].start) {
-                if (end < ranges[j].end) {
-                goNextLayer = true
-                break
-                }
-                else {
-                var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
-                if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                    tmp.hasLinear = true
-                    tmp.isLinear = true
-                }
-                res.push(tmp)
-                break
-                }
-            }
-            else if (start < ranges[j].start) {
-                if (end == ranges[j].end) {
-                if (res.length != 0) {
-                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
-                    if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                    tmp.hasLinear = true
-                    tmp.isLinear = true
-                    }
-                    res.push(tmp)
-                    findFlag = true
-                    break
-                }
-                }
-                else if (end < ranges[j].end){
-                if (end < ranges[j].start) {
-                    continue
-                }
-                else {
-                    if (i != header.length-1) { // not last layer
-                    res = []
-                    findFlag = true
-                    break
-                    }
-                }
-                }
-                else {
-                var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
-                if (children.length!=0 && children[j].indexOf(linearName)!=-1) {
-                    tmp.hasLinear = true
-                    tmp.isLinear = true
-                }
-                res.push(tmp)
-                break
-                }
-            }
-            else if (start > ranges[j].start) {
-                if (end == ranges[j].end) {
-                if (children.length!=0 && children[j].indexOf(linearName)!=-1
-                && start == ranges[j].start+1) {    // choose a single node(not including linear)
-                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:true}
+            var goNextLayer = false
+            var ranges = value.range, children = value.children
+            for (var j=0; j<ranges.length; j++) {
+                if (start == ranges[j].start && end == ranges[j].end) {   // choose a single node(including linear)
+                    var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
+                    if (i != header.length-1) {
+                        goNextLayer = true
+                        break
+                    }  
+                    // if (children.length!=0 && children[j][0][0]=="&") {
+                    //     tmp.hasLinear = true 
+                    //     tmp.isLinear = true
+                    //     // especially
+                    //     if (children[j].length == 1) {
+                    //          
+                    //         tmp.name = children[j][0]
+                    //         tmp.times = 0
+                    //         tmp.layer = i+1
+                    //         tmp.hasLinear = false
+                    //         tmp.isLinear = false
+                    //     }
+                    // }
                     res.push(tmp)
                     findFlag = true
                     break
                 }
                 else {
-                    goNextLayer = true
-                    break
-                }
-                }
-                else if (end < ranges[j].end){
-                goNextLayer = true
-                break
-                }
-                else {
-                if (start > ranges[j].end) {
-                    continue
-                }
-                else {
-                    if (i != header.length-1) { // not last layer
-                    res = []
-                    findFlag = true
-                    break
+                    if (start == ranges[j].start) {
+                        if (end < ranges[j].end) {
+                            goNextLayer = true
+                            break
+                        }
+                        else {
+                            var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
+                            if (children.length!=0 && children[j][0][0]=="&") {
+                                tmp.hasLinear = true
+                                tmp.isLinear = true
+                            }
+                            res.push(tmp)
+                            break
+                        }
+                    }
+                    else if (start < ranges[j].start) {
+                        if (end == ranges[j].end) {
+                            if (res.length != 0) {
+                                var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
+                                if (children.length!=0 && children[j][0][0]=="&") {
+                                    tmp.hasLinear = true
+                                    tmp.isLinear = true
+                                }
+                                res.push(tmp)
+                                findFlag = true
+                                break
+                            }
+                        }
+                        else if (end < ranges[j].end){
+                            if (end < ranges[j].start) {
+                                continue
+                            }
+                            else {
+                                if (i != header.length-1) { // not last layer
+                                    res = []
+                                    findFlag = true
+                                    break
+                                }
+                            }
+                        }
+                        else {
+                            var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:false}
+                            if (children.length!=0 && children[j][0][0]=="&") {
+                                tmp.hasLinear = true
+                                tmp.isLinear = true
+                            }
+                            res.push(tmp)
+                            break
+                        }
+                    }
+                    else if (start > ranges[j].start) {
+                        if (end == ranges[j].end) {
+                            if (children.length!=0 && children[j][0][0]=="&"
+                            && start == ranges[j].start+1) {    // choose a single node(not including linear)
+                                var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear:true}
+                                res.push(tmp)
+                                findFlag = true
+                                break
+                            }
+                            else {
+                                goNextLayer = true
+                                break
+                            }
+                        }
+                            else if (end < ranges[j].end){
+                            goNextLayer = true
+                            break
+                        }
+                        else {
+                            if (start > ranges[j].end) {
+                                continue
+                            }
+                            else {
+                                if (i != header.length-1) { // not last layer
+                                res = []
+                                findFlag = true
+                                break
+                                }
+                            }
+                        }
                     }
                 }
-                }
             }
-            }
-        }
-        if (findFlag) break
-        if (goNextLayer) break
+            if (findFlag) break
+            if (goNextLayer) break
         }
         if (findFlag) break
     }

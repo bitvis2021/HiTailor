@@ -181,7 +181,7 @@ html {
     position: absolute;
     top: @menu-height;
     left: 0;
-    bottom: @padding;
+    bottom: 0;
     right: @side-panel-width;
     margin-right: @padding;
   }

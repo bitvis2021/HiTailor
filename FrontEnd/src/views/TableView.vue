@@ -103,8 +103,14 @@
       </el-row> 
         
     </div>
+    
+    <div class="zoombar">
+      <button class="zoom-button">
+      </button>
+    </div>
 
-    <div class="table-view-svg-container" @mousedown="handle_click_on_blank()">
+
+    <div class="table-view-svg-container" @mousedown="handle_click_on_blank()" @mouseup.stop="handle_mouse_up()">
       <svg class="table-view-svg" 
         :height="markHeight + heightRangeList[heightRangeList.length-1]" 
         :width="markWidth + widthRangeList[widthRangeList.length-1]"        
@@ -185,7 +191,7 @@
                 <text class="table-cell-text" :key="'text-'+i"
                   :x="cal_column_header_position(item[1].value, item[1].times).x + textPaddingX" 
                   :y="cal_column_header_position(item[1].value, item[1].times).y + textPaddingY">
-                  {{item[1].value}}
+                  {{item[1].value[0]=='&' ? "" : item[1].value}}
                 </text>
               </g>
             </g>
@@ -206,7 +212,7 @@
                 <text class="table-cell-text"
                   :x="cal_row_header_position(item[1].value, item[1].times).x + textPaddingX" 
                   :y="cal_row_header_position(item[1].value, item[1].times).y + textPaddingY">
-                  {{item[1].value}}
+                  {{item[1].value[0]=='&' ? "" : item[1].value}}
                 </text>
               </g>
             </g>
@@ -633,27 +639,27 @@ export default {
       this.mouseDownState = true
     },
     handle_mouse_down_mark(index, type) {
-      if (type == 'column') {
-        this.selectByMark.column = true
-        this.selectByMark.row = false
+      // if (type == 'column') {
+      //   this.selectByMark.column = true
+      //   this.selectByMark.row = false
 
-        this.selectedArea.top = 0
-        this.selectedArea.bottom = this.rowHeightList.length - 1
-        this.selectedArea.left = index
-        this.selectedArea.right = index
-      }
-      else {
-        this.selectByMark.row = true
-        this.selectByMark.column = false
+      //   this.selectedArea.top = 0
+      //   this.selectedArea.bottom = this.rowHeightList.length - 1
+      //   this.selectedArea.left = index
+      //   this.selectedArea.right = index
+      // }
+      // else {
+      //   this.selectByMark.row = true
+      //   this.selectByMark.column = false
 
-        this.selectedArea.top = index
-        this.selectedArea.bottom = index
-        this.selectedArea.left = 0
-        this.selectedArea.right = this.columnWidthList.length - 1
-      }
-      this.selectedMark.index = index
-      this.selectedMark.type = type
-      this.mouseDownMarkState = true
+      //   this.selectedArea.top = index
+      //   this.selectedArea.bottom = index
+      //   this.selectedArea.left = 0
+      //   this.selectedArea.right = this.columnWidthList.length - 1
+      // }
+      // this.selectedMark.index = index
+      // this.selectedMark.type = type
+      // this.mouseDownMarkState = true
 
     },
     handle_mouse_down_mark_line(index, type) {
@@ -708,12 +714,14 @@ export default {
           if (offset < this.cellMin) offset = this.cellMin
           this.markColumnWidthList[this.mouseDownMarkLine.index] = offset
           this.markWidthChangeSignal = !this.markWidthChangeSignal
+          // this.send_change_width_signal()
         }
         else if (this.mouseDownMarkLine.type == "row") {
           var offset = event.offsetY - this.markHeight - this.markHeightRangeList[this.mouseDownMarkLine.index]
           if (offset < this.cellMin) offset = this.cellMin
           this.markRowHeightList[this.mouseDownMarkLine.index] = offset
           this.markHeightChangeSignal = !this.markHeightChangeSignal
+          // this.send_change_height_signal()
         }
       }
       else if (this.mouseDownMarkState) {
@@ -742,6 +750,8 @@ export default {
       this.mouseDownMarkState = false
 
       if (this.mouseDownMarkLineState) {
+        this.clear_selected_header()
+        this.clear_selected_cell(true)
         if (this.mouseDownMarkLine.type == "column") {
           this.columnWidthList = this.markColumnWidthList
           this.widthChangeSignal = !this.widthChangeSignal
@@ -935,6 +945,7 @@ export default {
       var header = isRow ? this.rowHeader: this.colHeader
 
       for (var [key, headerInfo] of header[layer]) {
+        if (key[0] == "&")  continue  // don't change linear nodes
         var ranges = headerInfo.range
         for (var times=0; times<ranges.length; times++) {
           if (isRow) {
@@ -946,7 +957,6 @@ export default {
             this.transform_2stacked(key, this.colHeader, times, false)
             this.cal_range_list(this.markColumnWidthList, "mark width")
             this.cal_range_list(this.columnWidthList, "width")
-
           }
           
           // recalculate value-cell position
@@ -968,7 +978,7 @@ export default {
       for (var [key, headerInfo] of header[layer]) {
         var ranges = headerInfo.range
         for (var times=0; times<ranges.length; times++) {
-          if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  { // is stacked
+          if (headerInfo.children[times][0][0]!="&")  { // is stacked
             if (isRow) {
               this.transform_2linear(key, this.rowHeader, times, isRow, command)
               this.cal_range_list(this.markRowHeightList, "mark height")
@@ -1256,7 +1266,7 @@ export default {
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
       if (headerInfo.children[times].length == 0)  return // no child
-      if (headerInfo.children[times].indexOf("")==-1 && headerInfo.children[times].indexOf(" ")==-1)  return // already stacked
+      if (headerInfo.children[times][0][0]!="&")  return // already stacked
       
 
       // delete child
@@ -1351,10 +1361,10 @@ export default {
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
       if (headerInfo.children[times].length == 0)  return // no child
-      if (headerInfo.children[times].indexOf("")!=-1 || headerInfo.children[times].indexOf(" ")!=-1)  return // already linear
+      if (headerInfo.children[times][0][0]=="&")  return // already linear
 
       // add child
-      var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? " " : ""
+      var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? ("&-row-"+(layer+1)+"-"+layer) : ("&-col-"+(layer+1)+"-"+layer)
       headerInfo.children[times].unshift(newChild)
       header[layer].set(name, headerInfo)
       
@@ -1786,6 +1796,7 @@ export default {
         }
       }
       var visdata = JSON.stringify(vis)
+      console.log("visdata", vis)
 
       var meta = {"x": {"range": 1}, "y": {"range": 1}}
       var metadata = JSON.stringify(meta)
@@ -2495,7 +2506,9 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
 @padding:0.7rem;
-@transform-button-container-height: 2.5rem;
+@toolbar-height: 2.5rem;
+@zoombar-height: 1.8rem;
+@zoomicon-height: 1.4rem;
 @transform-button-height: 2rem;
 .table-view {
   position: absolute;
@@ -2513,7 +2526,7 @@ export default {
     text-align: center;
   }
   .toolbar {
-    height:@transform-button-container-height;
+    height:@toolbar-height;
     position:absolute;
     width:100%;
     padding-left: @padding;
@@ -2605,14 +2618,34 @@ export default {
       transition: 0s;
     }
   }
+  .zoombar {
+    height: @zoombar-height;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    padding-left: @padding;
+    background: rgba(245, 245, 245, 0.685);
+    border-top: 1px solid #cecece;
+    .zoom-button{
+      background-image: url("../../public/icons/zoom in.png");
+      background-position:50% 50%;
+      position: absolute;
+      left: @padding;
+      top: 0.2rem;
+      height: @zoomicon-height;
+      width: @zoomicon-height;
+      cursor: pointer;
+      border: none;
+    }
+  }
   
   .table-view-svg-container {
     position: absolute;
     // height:100%;
     left: @padding;
-    right:0%;
-    top:@transform-button-container-height +  1rem;
-    bottom:0%;
+    right: 0%;
+    top: @toolbar-height + 1rem;
+    bottom: @zoombar-height + 0.3rem;
     overflow:auto;
     // margin-top:1%;
     // margin-left:1%;

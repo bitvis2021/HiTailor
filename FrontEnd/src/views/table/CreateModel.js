@@ -14,7 +14,7 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, header
       var name = dataValueList[i][j]
       if (name == 'None') {
         if ((rowDistributionList[i][j].start==headerRange.right+1)) {
-          name = ""
+          name = "&-col-"+i+"-0"
         }
         else{
           var aitem = Array.from(items)
@@ -22,8 +22,14 @@ export function get_column_header(headerIndex, colHeaderIndex, colHeader, header
           if (i>0) {
             var lastParent = find_header_parent(lastHeader, rowDistributionList[i][j].start-1, rowDistributionList[i][j].start-1, i, colHeader, false)
             var curParent = find_header_parent(name, rowDistributionList[i][j].start, rowDistributionList[i][j].start, i, colHeader, false)
-            if(lastParent != curParent) {
-              name = ""
+            if(!(lastParent.name==curParent.name && lastParent.ordinal==curParent.ordinal)) {
+              name = "&-col-"+i+"-"
+              if (curParent.name[0] == "&") { // parent is the linear node
+                name += curParent.name[curParent.name.length-1]
+              }
+              else {
+                name += (i-1)
+              }
             }
             else {
               var lastRange = aitem[aitem.length-1][1].range.pop()
@@ -102,7 +108,7 @@ export function get_row_header(headerIndex, rowHeaderIndex, rowHeader, headerRan
       var name = dataValueList[i][j]
       if (name == 'None') {
         if ((i==headerRange.bottom+1)) {
-          name = " "
+          name = "&-row-"+j+"-0"
         }
         else{
           var aitem = Array.from(items)
@@ -110,8 +116,14 @@ export function get_row_header(headerIndex, rowHeaderIndex, rowHeader, headerRan
           if (j>0) {
             var lastParent = find_header_parent(lastHeader, i-1, i-1, j, rowHeader, false)
             var curParent = find_header_parent(name, i, i, j, rowHeader, false)
-            if(lastParent != curParent) {
-              name = " "
+            if(!(lastParent.name==curParent.name && lastParent.ordinal==curParent.ordinal)) {
+              name = "&-row-"+j+"-"
+              if (curParent.name[0] == "&") { // parent is the linear node
+                name += curParent.name[curParent.name.length-1]
+              }
+              else {
+                name += (j-1)
+              }
             }
             else {
               var lastRange = aitem[aitem.length-1][1].range.pop()
