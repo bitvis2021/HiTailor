@@ -728,13 +728,15 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         actions: false,
       }).then(
         () => {
+          // TODO: scale has some problems
+          /*
           if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.NQor2Q_Simple_Line_Chart || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
             let content = document.getElementById("chart-" + id)
             content.removeAttribute("transform");
-            let xOffset = 70;
+            let xOffset = 80;
             let xScale = width / (width - xOffset)
-            content.setAttribute("transform", "translate(" + (-40 * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
-          }
+            content.setAttribute("transform", "translate(" + (-(xOffset/2) * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
+          }*/
 
         }
       );
