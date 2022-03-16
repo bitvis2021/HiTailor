@@ -662,7 +662,7 @@ export default {
   props: {},
   data() {
     return {
-      cellWidth: 70,
+      cellWidth: 90,
       cellHeight: 30,
       markWidth: 40,
       markHeight: 30,
