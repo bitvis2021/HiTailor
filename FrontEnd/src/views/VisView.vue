@@ -124,6 +124,7 @@ export default {
       currentGroupID: "",
 
       unitData_arr: [],
+      recommendData_arr: [],
     };
   },
   methods: {
@@ -197,9 +198,7 @@ export default {
           this.showBatchDialog = true;
         }
       }
-      // this.$bus.$emit("apply-config");
-      this.showBatchDialog = true;
-      this.dialogText = this.dialogTexts.recommend;
+      this.$bus.$emit("apply-config");
     },
 
     BatchOperate() {
@@ -209,13 +208,18 @@ export default {
       } else if (this.dialogText == this.dialogTexts.reconf) {
         this.VisDB.ModifyGroupFigs(this.figID, this.currentTemplate);
       } else if (this.dialogText == this.dialogTexts.recommend) {
-        this.$bus.$emit("apply-config");
+        this.VisDB.GenRecommendFigs(
+          this.recommendData_arr,
+          this.currentTemplate,
+          this.figID
+        );
       }
     },
     BatchCancel() {
       this.showBatchDialog = false;
       if (this.dialogText == this.dialogTexts.recommend) {
         this.$bus.$emit("clear-selectedCell");
+        this.recommendData_arr = [];
       }
     },
   },
@@ -241,7 +245,11 @@ export default {
     });
 
     this.$bus.$on("visualize-recommendData", (array) => {
-      this.VisDB.GenRecommendFigs(array, this.currentTemplate, this.figID);
+      this.recommendData_arr = array;
+      if (this.recommendData_arr.length>1) {
+        this.dialogText = this.dialogTexts.recommend;
+        this.showBatchDialog = true;
+      }
     });
 
     // User select data
