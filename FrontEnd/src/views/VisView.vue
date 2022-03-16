@@ -246,7 +246,7 @@ export default {
 
     this.$bus.$on("visualize-recommendData", (array) => {
       this.recommendData_arr = array;
-      if (this.recommendData_arr.length>1) {
+      if (this.recommendData_arr.length > 1) {
         this.dialogText = this.dialogTexts.recommend;
         this.showBatchDialog = true;
       }
@@ -336,6 +336,21 @@ export default {
       },
       false
     );
+
+    // listen #vg-tooltip-element
+    let observer = new MutationObserver(function (mutations, observer) {
+      console.log(mutations);
+      mutations.forEach((mutation) => {
+        if (mutation.type == "childList") {
+          console.log(mutation);
+          // todo: get childnodes' content
+        }
+      });
+    });
+    observer.observe(document.querySelector("#vg-tooltip-element"), {
+      childList: true,
+      attributes: true,
+    });
   },
 
   beforeDestroy() {
