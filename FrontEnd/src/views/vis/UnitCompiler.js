@@ -253,16 +253,24 @@ UnitCompiler.GetUnitDom = function (config_obj) {
 			dom.setAttribute("transform", "translate(" + config_obj.xOffset + "," + (-config_obj.yOffset) + ")");
 		}
 		else if (config_obj.align == "left") {
-
+			dom.removeAttribute("points");
+			dom.setAttribute("points", "0," + (- config_obj.height) + " 0," + config_obj.height + " " + config_obj.width * sq32 * 2 + ",0");
+			dom.setAttribute("transform", "translate(" + (config_obj.xOffset - config_obj.frameWidth / 2) + "," + (-config_obj.yOffset) + ")");
 		}
 		else if (config_obj.align == "top") {
-
+			dom.removeAttribute("points");
+			dom.setAttribute("points", "0," + config_obj.height * sq32 * 2 + " " + -config_obj.width * sq32 + ",0" + " " + config_obj.width * sq32 + ",0");
+			dom.setAttribute("transform", "translate(" + config_obj.xOffset + "," + (-config_obj.yOffset - config_obj.frameHeight / 2) + ")");
 		}
 		else if (config_obj.align == "right") {
-
+			dom.removeAttribute("points");
+			dom.setAttribute("points", "0,0 " + config_obj.width * sq32 * 2 + "," + (- config_obj.height) + " " + config_obj.width * sq32 * 2 + "," + config_obj.height);
+			dom.setAttribute("transform", "translate(" + (config_obj.xOffset + config_obj.frameWidth / 2 - config_obj.width * sq32 * 2) + "," + (-config_obj.yOffset) + ")");
 		}
 		else if (config_obj.align == "bottom") {
-
+			dom.removeAttribute("points");
+			dom.setAttribute("points", "0," + -config_obj.height * sq32 * 2 + " " + -config_obj.width * sq32 + ",0" + " " + config_obj.width * sq32 + ",0");
+			dom.setAttribute("transform", "translate(" + config_obj.xOffset + "," + (-config_obj.yOffset + config_obj.frameHeight / 2) + ")");
 		}
 
 	}
