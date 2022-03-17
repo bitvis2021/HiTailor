@@ -729,7 +729,7 @@ VegaTemplate.prototype.GetVegaLite = function (height, width) {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
     }
-    if (vegaLite.mark == "tick") {
+    if (vegaLite.mark.type == "tick") {
         vegaLite.mark.tooltip = { content: "data" };
     }
     else {

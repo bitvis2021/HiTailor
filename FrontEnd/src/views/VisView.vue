@@ -339,8 +339,9 @@ export default {
     );
 
     /*
-      BACKGROUND HIGHTLIGHT
-    */
+
+*/
+
     let emitTimeout = undefined;
     let oldHoverText = [];
     let hoverText = []; // the reference should not be inside the call stack of observer. otherwise the popout will not disappear after unhover event happens.
@@ -361,17 +362,11 @@ export default {
               hoverText = [];
               el.childNodes[0].childNodes[0].childNodes.forEach((childNode) =>
                 childNode.childNodes.forEach((value) => {
+                  let text = JSON.parse(JSON.stringify(value.textContent));
                   if (value.getAttribute("class") == "key") {
-                    hoverText.push(
-                      JSON.stringify(
-                        value.textContent.substring(
-                          0,
-                          value.textContent.length - 1
-                        )
-                      )
-                    );
+                    hoverText.push(text.substring(0, text.length - 1));
                   } else {
-                    hoverText.push(JSON.stringify(value.textContent));
+                    hoverText.push(text);
                   }
                 })
               );
@@ -387,21 +382,33 @@ export default {
                   }
                 }
               }
-
               if (!isEq) {
                 console.log("hover Text", hoverText);
                 if (isHighlight) {
                   $bus.$emit("unhover-field");
                 }
-                oldHoverText = hoverText;
-                hoverText.forEach((text) => {
-                  $bus.$emit("hover-field", JSON.parse(text));
-                });
-                isHighlight = true;
+                if (
+                  document
+                    .getElementById("vg-tooltip-element")
+                    .getAttribute("class") != ""
+                ) {
+                  oldHoverText = hoverText;
+                  hoverText.forEach((text) => {
+
+                    // not submit headers. but if needed, we can comment the judgement below
+                    if (
+                      text.substring(0, 3) != "row" &&
+                      text.substring(0, 3) != "col"
+                    ) {
+                      $bus.$emit("hover-field", text);
+                    }
+                  });
+                  isHighlight = true;
+                }
               }
 
               emitTimeout = undefined;
-            }, 66);
+            }, 50);
           }
         } else {
           if (mutation.attributeName == "class") {
@@ -419,6 +426,7 @@ export default {
               if (isHighlight) {
                 $bus.$emit("unhover-field");
                 isHighlight = false;
+                oldHoverText = [];
               }
             }
           }
