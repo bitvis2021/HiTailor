@@ -256,6 +256,7 @@ export default {
     // User select data
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
+      console.log("new id");
       this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
@@ -338,10 +339,10 @@ export default {
       false
     );
 
-    /*
 
-*/
 
+
+    // Background hightlight
     let emitTimeout = undefined;
     let oldHoverText = [];
     let hoverText = []; // the reference should not be inside the call stack of observer. otherwise the popout will not disappear after unhover event happens.
@@ -394,7 +395,6 @@ export default {
                 ) {
                   oldHoverText = hoverText;
                   hoverText.forEach((text) => {
-
                     // not submit headers. but if needed, we can comment the judgement below
                     if (
                       text.substring(0, 3) != "row" &&

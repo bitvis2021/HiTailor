@@ -313,7 +313,7 @@ import { UnitCompiler, getColorFunction } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
-  props: ["visData_arr", "figID"],
+  props: ["visData_arr", "figID", "newUnit"],
   data() {
     return {
       shapes: [
@@ -341,7 +341,6 @@ export default {
       enabledEncodings: [{ name: "size" }, { name: "opacity" }],
       align: "middle",
       VisDB: new VisDatabase(this.$bus),
-      ID: this.figID,
       visData: this.visData_arr,
       showColorLegend: false,
 
@@ -351,9 +350,6 @@ export default {
     };
   },
   watch: {
-    figID(newVal, oldVal) {
-      this.ID = newVal;
-    },
     visData_arr(newVal, oldVal) {
       // TODO change panel when new config comes
     },
@@ -502,22 +498,24 @@ export default {
         }
       } else {
         let groupId;
+        let ID;
         for (let i = 0; i < this.visData.length; i++) {
           let position = this.visData[i].position;
           let dom = this.visData[i].dom;
-          this.ID = this.VisDB.GenUnit(
+          ID = this.VisDB.GenUnit(
             position.height,
             position.width,
             position.x,
             position.y,
             dom,
-            this.visData[i].originValue
+            this.visData[i].value
           );
-          if (this.ID) {
-            this.visData[i].id = this.ID;
-            groupId = this.VisDB.AddGroupMember(groupId, this.ID);
+          if (ID) {
+            this.visData[i].id = ID;
+            groupId = this.VisDB.AddGroupMember(groupId, ID);
           }
         }
+        this.figID = ID;
       }
 
       this.$bus.$emit("apply-config");

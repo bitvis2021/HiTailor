@@ -61,19 +61,19 @@ UnitCompiler.GetUnits = function (data_array, config) {
 			shape: config.shape,
 			align: config.align,
 
-			color: color(data_array[i].value),
-			size: size(data_array[i].value),
-			height: height(data_array[i].value),
-			width: width(data_array[i].value),
+			color: color(data_array[i].mappedValue),
+			size: size(data_array[i].mappedValue),
+			height: height(data_array[i].mappedValue),
+			width: width(data_array[i].mappedValue),
 
-			xOffset: xOffset(data_array[i].originValue),
-			yOffset: yOffset(data_array[i].originValue),
+			xOffset: xOffset(data_array[i].value),
+			yOffset: yOffset(data_array[i].value),
 
-			opacity: opacity(data_array[i].value),
+			opacity: opacity(data_array[i].mappedValue),
 
 			frameHeight: data_array[i].position.height,
 			frameWidth: data_array[i].position.width,
-			originValue: data_array[i].originValue
+			value: data_array[i].value
 		}
 		data_array[i].dom = this.GetUnitDom(generateConfig);
 	}
@@ -148,8 +148,7 @@ function remapValue(data_array, max, min, scaleFunction_func) {
 	for (let i = 0; i < data_array.length; i++) {
 		const element = data_array[i];
 		let x = (Number(element.value) - min) / baseLine;
-		data_array[i].originValue = Number(element.value);
-		data_array[i].value = y(x);
+		data_array[i].mappedValue = y(x);
 	}
 	return data_array;
 }
@@ -281,7 +280,7 @@ UnitCompiler.GetUnitDom = function (config_obj) {
 	// vg-tooltip-element
 	dom.addEventListener("mousemove", (event) => {
 
-		document.getElementById("unit-tooltip-element").childNodes[0].childNodes[0].childNodes[1].textContent = config_obj.originValue;
+		document.getElementById("unit-tooltip-element").childNodes[0].childNodes[0].childNodes[1].textContent = config_obj.value;
 		document.getElementById("unit-tooltip-element").setAttribute("class", "vg-tooltip visible light-theme");
 		document.getElementById("unit-tooltip-element").setAttribute("style", "top:" + (event.clientY + 10) + "px;" + "left:" + (event.clientX + 10) + "px;");
 	})
