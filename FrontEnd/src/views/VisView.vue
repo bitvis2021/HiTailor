@@ -57,6 +57,7 @@
       </span>
     </el-dialog>
 
+    <div id="vg-tooltip-element"></div>
     <div id="unit-tooltip-element">
       <table>
         <tr>
@@ -321,7 +322,7 @@ export default {
     });
 
     // resize function
-    let bus = this.$bus;
+    let $bus = this.$bus;
     let resizeTimeout;
     window.addEventListener(
       "resize",
@@ -330,26 +331,105 @@ export default {
           resizeTimeout = setTimeout(function () {
             resizeTimeout = null;
             // The actualResizeHandler will execute at a rate of 15fps
-            bus.$emit("preview-config");
+            $bus.$emit("preview-config");
           }, 66);
         }
       },
       false
     );
 
+    /*
+      BACKGROUND HIGHTLIGHT
+    */
+    let emitTimeout = undefined;
+    let oldHoverText = [];
+    let hoverText = []; // the reference should not be inside the call stack of observer. otherwise the popout will not disappear after unhover event happens.
+
+    let isHighlight = false;
+
     // listen #vg-tooltip-element
     let observer = new MutationObserver(function (mutations, observer) {
       console.log(mutations);
       mutations.forEach((mutation) => {
         if (mutation.type == "childList") {
-          console.log(mutation);
-          // todo: get childnodes' content
+          // console.log(mutation);
+
+          if (!emitTimeout) {
+            emitTimeout = setTimeout(() => {
+              let el = document.getElementById("vg-tooltip-element");
+
+              hoverText = [];
+              el.childNodes[0].childNodes[0].childNodes.forEach((childNode) =>
+                childNode.childNodes.forEach((value) => {
+                  if (value.getAttribute("class") == "key") {
+                    hoverText.push(
+                      JSON.stringify(
+                        value.textContent.substring(
+                          0,
+                          value.textContent.length - 1
+                        )
+                      )
+                    );
+                  } else {
+                    hoverText.push(JSON.stringify(value.textContent));
+                  }
+                })
+              );
+
+              let isEq = true;
+              if (hoverText.length != oldHoverText.length) {
+                isEq = false;
+              } else {
+                for (let i = 0; i < hoverText.length; i++) {
+                  if (oldHoverText[i] != hoverText[i]) {
+                    isEq = false;
+                    break;
+                  }
+                }
+              }
+
+              if (!isEq) {
+                console.log("hover Text", hoverText);
+                if (isHighlight) {
+                  $bus.$emit("unhover-field");
+                }
+                oldHoverText = hoverText;
+                hoverText.forEach((text) => {
+                  $bus.$emit("hover-field", JSON.parse(text));
+                });
+                isHighlight = true;
+              }
+
+              emitTimeout = undefined;
+            }, 66);
+          }
+        } else {
+          if (mutation.attributeName == "class") {
+            console.log(
+              "now class",
+              document
+                .getElementById("vg-tooltip-element")
+                .getAttribute("class")
+            );
+            if (
+              document
+                .getElementById("vg-tooltip-element")
+                .getAttribute("class") == ""
+            ) {
+              if (isHighlight) {
+                $bus.$emit("unhover-field");
+                isHighlight = false;
+              }
+            }
+          }
         }
       });
     });
+
     observer.observe(document.querySelector("#vg-tooltip-element"), {
       childList: true,
       attributes: true,
+      // attributes: true,
     });
   },
 
