@@ -42,21 +42,16 @@
     </div>
     <div class="apply-button">
       <el-row type="flex" class="row-bg" justify="space-around">
-        <el-col :span="6">
+        <el-col :span="5">
           <el-button type="primary" @click="Apply2Vis" size="mini" round plain>
             Apply
           </el-button> </el-col
-        ><el-col :span="18">
+        ><el-col :span="15">
           <div>
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="
-                  font-size: 5px;
-                  margin-right: 0px;
-                  margin-top: 2px;
-                  margin-left: 0px;
-                "
+                style="font-size: 5px; margin-top: 2px;"
                 >priority:</label
               >
               <div class="slider">
@@ -68,17 +63,14 @@
                   :max="5"
                 ></el-slider>
               </div>
+            </div>
+            <div class="recommend-box">
               <label
                 class="property-text"
-                style="
-                  font-size: 5px;
-                  margin-right: -5px;
-                  margin-top: 2px;
-                  margin-left: 0px;
-                "
+                style="font-size: 5px; margin-top: 2px;"
                 >direction:</label
               >
-              <el-checkbox-group v-model="directionSelectValue">
+              <el-checkbox-group v-model="directionSelectValue" size="mini">
                 <el-checkbox-button
                   v-for="direction in directionSelections"
                   :key="direction"
@@ -598,19 +590,18 @@ export default {
   }
   .recommend-box {
     text-align: left;
-    text-align: left;
     display: flex;
-    margin-top: 3px;
+    margin-top: -5px;
     .el-slider__button {
       width: 8px !important;
       height: 8px !important;
     }
     .el-checkbox-button__inner {
-      padding-top: 3px !important;
-      padding-bottom: 3px !important;
-      padding-left: 5px !important;
-      padding-right: 5px !important;
-      font-size: 1px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      // font-size: 1px !important;
     }
     .el-checkbox-group {
       display: inline;
@@ -618,7 +609,7 @@ export default {
     .slider {
       display: inline !important;
       margin-top: -8px;
-      width: 4vw;
+      width: 100px;
     }
     .el-slider__runway {
       width: 80% !important;
