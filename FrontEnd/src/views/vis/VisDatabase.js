@@ -729,13 +729,20 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         actions: false,
       }).then(
         () => {
-          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.NQor2Q_Simple_Line_Chart || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
-            let content = document.getElementById("chart-" + id)
+
+          let content = document.getElementById("chart-" + id);
+          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
             content.removeAttribute("transform");   
             
             let offset=width/this.database[id].metaData.x.range;
             let xScale = width / (width - offset);
             content.setAttribute("transform", "translate(" + (-(offset/2+5) * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
+          }
+          else if(content.getBBox().width>width||content.getBBox().height>height)
+          {
+            console.log(content.getBBox()); 
+            content.removeAttribute("transform");   
+            content.setAttribute("transform", "translate(" + (-5) + "," + -5 + ") scale(" + width/content.getBBox().width + ","+ height/content.getBBox().height +")");
           }
 
         }

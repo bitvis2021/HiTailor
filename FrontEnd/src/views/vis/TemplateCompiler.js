@@ -771,7 +771,10 @@ function ObjTemplate(tempName_str, vegaConfig_obj, selections_obj, previewPic_st
 ObjTemplate.prototype = new VegaTemplate();
 ObjTemplate.prototype.GetVegaLite = function (height, width) {
     let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
-    vegaLite.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    vegaLite.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10  }, "legend": { "disable": true } };
+    if (height<=150||width<=150) {
+        vegaLite.config.axis.title=false;
+    }
     vegaLite.height = height;
     vegaLite.width = width;
     // Add tool tips
@@ -838,12 +841,12 @@ function HistogramScatterplot(visData_arr, selections_obj, metaData_obj, preview
             "encoding": {
                 "x": {
                     "field": defaultVal1,
-                    "bin": { "maxbins": binsX_nu },
+                    "bin": { "maxbins": binsX_nu * 2 },
                     "type": "quantitative"
                 },
                 "y": {
                     "field": defaultVal2,
-                    "bin": { "maxbins": binsY_nu },
+                    "bin": { "maxbins": binsY_nu * 2 },
                     "type": "quantitative"
                 },
                 "size": {
@@ -872,8 +875,15 @@ HistogramScatterplot.prototype.GetVegaConfig = function () {
 }
 HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
     let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
-    vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    // vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     vegaLite.height = height;
+    if (height <= 200 || width <= 200) {
+
+        vegaLite.config = { "axis": { "labels": true, "ticks": true, "title": false, "titleOpacity": "0.5" }, "legend": { "disable": true } };
+    }
+    else {
+        vegaLite.config = { "axis": { "labels": true, "ticks": true, "titleOpacity": "0.5" }, "legend": { "disable": true } };
+    }
     vegaLite.width = width;
     if (typeof vegaLite.mark == 'string') {
         let mark = { type: vegaLite.mark }
@@ -956,7 +966,14 @@ HistogramHeatmap.prototype.ReuseTemplate = function (newMetaData_obj, newVisData
 
 HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
     let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
-    vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
+    if (height <= 200 || width <= 200) {
+
+        vegaLite.config = { "axis": { "labels": true, "ticks": true, "title": false, "titleOpacity": "0.5" }, "legend": { "disable": true } };
+    }
+    else {
+        vegaLite.config = { "axis": { "labels": true, "ticks": true, "titleOpacity": "0.5" }, "legend": { "disable": true } };
+    }
+    // vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     vegaLite.height = height;
     vegaLite.width = width;
     if (typeof vegaLite.mark == 'string') {
@@ -995,12 +1012,12 @@ function HistogramHeatmap(visData_arr, selections_obj, metaData_obj, previewPic_
             "encoding": {
                 "x": {
                     "field": defaultVal1,
-                    "bin": { "maxbins": binsX_nu },
+                    "bin": { "maxbins": binsX_nu * 2 },
                     "type": "quantitative"
                 },
                 "y": {
                     "field": defaultVal2,
-                    "bin": { "maxbins": binsY_nu },
+                    "bin": { "maxbins": binsY_nu * 2 },
                     "type": "quantitative"
                 },
                 "color": {

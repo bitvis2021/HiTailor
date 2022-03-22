@@ -74,7 +74,7 @@ import vegaEmbed from "vega-embed";
 import PanelView from "./vis/PanelView.vue";
 import TemplatesView from "./vis/TemplatesView.vue";
 import UnitView from "./vis/UnitView.vue";
-import { GetTemplates, VegaTemplate } from "./vis/TemplateCompiler";
+import { GetTemplates, VegaTemplate,supportedTemplate } from "./vis/TemplateCompiler";
 import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
 // visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
@@ -241,6 +241,32 @@ export default {
         vegaEmbed("#chart", data, {
           renderer: "svg",
           actions: false,
+        }).then(() => {
+          let content = document.getElementById("chart").childNodes[0];
+          let width = document.getElementById("chart").clientWidth;
+          let height = document.getElementById("chart").clientHeight;
+          console.log("height", height, "width", width);
+          if (
+            this.currentTemplate.name === supportedTemplate.Q2_Horizon_Graph
+          ) {
+          } else if (
+            content.getBBox().width > width ||
+            content.getBBox().height > height
+          ) {
+            console.log("fuck!!!!!",content.getBBox());
+            content.setAttribute(
+              "transform",
+              "translate(" +
+                -5 +
+                "," +
+                -5 +
+                ") scale(" +
+                width / content.getBBox().width +
+                "," +
+                height / content.getBBox().height +
+                ")"
+            );
+          }
         });
       }
     });
@@ -338,9 +364,6 @@ export default {
       },
       false
     );
-
-
-
 
     // Background hightlight
     let emitTimeout = undefined;
