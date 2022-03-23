@@ -25,11 +25,18 @@
       <TableView :isHeaderFixed="isHeaderFixed" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
     </div> -->
 
-    <div class="content-container" :class="{ 'content-container-right-margin': showVisPanel} ">
+    <div
+      class="content-container"
+      :class="{ 'content-container-right-margin': showVisPanel }"
+    >
       <TableView></TableView>
     </div>
 
-    <div id="vis-panel" v-show="showVisPanel">
+    <div
+      id="vis-panel"
+      v-show="showVisPanel"
+      :class="{ 'vis-panel-slide-in': showVisPanel }"
+    >
       <VisView></VisView>
     </div>
 
@@ -184,9 +191,23 @@ html {
     }
   }
 
-  .content-container-right-margin
-  {
+  .vis-panel-slide-in {
+    animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    transform: translateX(0);
+  }
+
+  .content-container-right-margin {
+    transition-delay: 0.3s;
     right: @side-panel-width !important;
+  }
+
+  @keyframes shake {
+    from {
+      transform: translateX( @side-panel-width *2);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
 
   .labelIcon {
