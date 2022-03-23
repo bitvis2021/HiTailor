@@ -744,9 +744,12 @@ VisDatabase.prototype.RenderCanvas = function (id) {
           }
           else if(content.getBBox().width>width||content.getBBox().height>height)
           {
+            let wScale=width/content.getBBox().width;
+            let hScale=height/content.getBBox().height;
+            let scale=wScale>hScale? hScale:wScale; // Use the smaller one 
             console.log(content.getBBox()); 
             content.removeAttribute("transform");   
-            content.setAttribute("transform", "translate(" + (-5) + "," + -5 + ") scale(" + width/content.getBBox().width + ","+ height/content.getBBox().height +")");
+            content.setAttribute("transform", "translate(" + (-5) + "," + -5 + ") scale(" + scale + ","+ scale +")");
           }
 
         }
