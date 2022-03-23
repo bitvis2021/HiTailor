@@ -6,23 +6,28 @@
 
     <div id="vis-view">
       <!-- return buttons -->
-      <el-row
-        v-if="!showUnitPanel && !showTemplates"
-        type="flex"
-        justify="start"
-        style="margin-left: 5px"
-      >
-        <el-button @click="ClickReturnButton" type="text" size="medium"
-          ><i class="el-icon-back"></i
-        ></el-button>
+      <el-row type="flex" justify="space-around" style="margin-left: 5px">
+        <el-col :span="2">
+          <el-button
+            v-if="showPanelView && !showTemplates"
+            @click="ClickReturnButton"
+            type="text"
+            size="medium"
+            ><i class="el-icon-back"></i
+          ></el-button>
+        </el-col>
+        <el-col :span="20"></el-col>
+        <el-col :span="4">
+          <el-button @click="CloseVisPanel" type="text" size="medium"
+            ><i class="el-icon-close"></i
+          ></el-button>
+        </el-col>
       </el-row>
 
       <div v-if="showUnitPanel">
-        <br />
         <unit-view :visData_arr="unitData_arr" :figID="this.figID"></unit-view>
       </div>
       <div v-else-if="showTemplates">
-        <br />
         <templates-view
           v-on:select-template="SelectTemplate"
           :templates="this.templates"
@@ -66,7 +71,6 @@ import {
   VegaTemplate,
   supportedTemplate,
 } from "./vis/TemplateCompiler";
-import { mapMutations } from "vuex";
 import { VisDatabase } from "./vis/VisDatabase";
 import { DialogTexts } from "./dialogs/DialogTexts";
 // visualize-selectedData -> visView -> TemplateView ->(vegaConfig) visView -> Panel -> (metaData+vegaConfig+data) VisDataBase -> visualization
@@ -114,8 +118,10 @@ export default {
     };
   },
   methods: {
-    ...mapMutations(["OPEN_VIS_PANEL", "CLOSE_VIS_PANEL"]),
-
+    CloseVisPanel()
+    {
+      this.$bus.$emit('close-VisView');
+    },
     // User Operation events
 
     OpenUnitView() {
@@ -151,7 +157,6 @@ export default {
       // 再写一个恢复，让点击return button后templateView自动读取metaData
 
       if (this.showTemplates) {
-        // this.CLOSE_VIS_PANEL();
         return;
       }
       this.OpenTemplateView();
@@ -190,8 +195,6 @@ export default {
     },
   },
   mounted() {
-    this.OPEN_VIS_PANEL();
-
     this.$bus.$on("select-cell", () => this.VisDB.CancelAllSelections());
     this.$bus.$on("change-header", () => this.VisDB.RemoveAllCanvas());
 
@@ -269,7 +272,6 @@ export default {
     this.$bus.$on("visualize-selectedData", (position, visData, metaData) => {
       this.figID = "";
       console.log("new id");
-      this.OPEN_VIS_PANEL();
       this.position = position; // for visDatabase to use
 
       this.visData = JSON.parse(visData);

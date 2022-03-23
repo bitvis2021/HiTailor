@@ -82,7 +82,6 @@ export default {
     DataDialog,
   },
   computed: {
-    ...mapState(["showPanel"]),
   },
   data() {
     return {
