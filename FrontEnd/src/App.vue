@@ -34,6 +34,7 @@
 
     <div
       id="vis-panel"
+      v-show="initializeVis"
       :class="{
         'vis-panel-slide-in': showVisPanel,
         'vis-panel-slide-out': !showVisPanel,
@@ -92,6 +93,7 @@ export default {
       datasetDialogKey: 0,
       loadingData: true,
 
+      initializeVis: false,
       showVisPanel: false,
       // isHeaderFixed: false,
       // currView: "Transformation",
@@ -149,6 +151,7 @@ export default {
   },
   mounted: function () {
     this.$bus.$on("visualize-selectedData", () => {
+      this.initializeVis = true;
       this.showVisPanel = true;
     });
 
