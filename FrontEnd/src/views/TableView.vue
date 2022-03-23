@@ -25,8 +25,8 @@
     </div>
 
     <div class="toolbar" v-if="isHeaderFixed">
-      <el-row>
-        <el-col :lg="20" :xl="16">
+      <!-- <el-row> -->
+        <!-- <el-col :lg="20" :xl="16"> -->
           <span class="toolbar-label">Transformation</span>
           <button
             v-if="isCurrFlat"
@@ -99,6 +99,7 @@
               <el-dropdown-item command="min">Min</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
+
           <!-- <button type="primary" plain size="small" 
             class="button"
             @click="transform_derive()" > 
@@ -128,7 +129,7 @@
             <span class="toolbar-label" style="color: #3e87cc">Priority</span>
           </div>
             !-->
-        </el-col>
+        <!-- </el-col> -->
 
         <!--
         <el-col :lg="2" :xl="3" class="recommend-element">
@@ -149,7 +150,7 @@
           </div>
         </el-col>
         !-->
-        <el-col :lg="2" :xl="2" class="recommend-element">
+        <!-- <el-col :lg="2" :xl="2" class="recommend-element">
           <el-button
             id="recommend-apply-button"
             type="primary"
@@ -171,17 +172,11 @@
             circle
             @click="cancel_recommendation()"
           >
-          </el-button>
-        </el-col>
-      </el-row>
+          </el-button> 
+        </el-col>-->
+      <!-- </el-row> -->
     </div>
     
-    <div class="zoombar">
-      <button class="zoom-button">
-      </button>
-    </div>
-
-
     <div class="table-view-svg-container" @mousedown="handle_click_on_blank()" @mouseup.stop="handle_mouse_up()">
       <svg class="table-view-svg" 
         :height="markHeight + heightRangeList[heightRangeList.length-1]" 
@@ -1236,6 +1231,7 @@ export default {
       if (clearRecommend) {
         this.clear_recommendation_area();
       }
+      this.$bus.$emit("close-VisView")
     },
     clear_selected_header() {
       // this.selectedHeader = null
@@ -3403,8 +3399,6 @@ export default {
 <style scoped lang="less">
 @padding:0.7rem;
 @toolbar-height: 2.5rem;
-@zoombar-height: 1.8rem;
-@zoomicon-height: 1.4rem;
 @transform-button-height: 2rem;
 .table-view {
   position: absolute;
@@ -3427,7 +3421,8 @@ export default {
     width:100%;
     padding-left: @padding;
     background: white;
-    align-items: center;
+    // align-items: center;
+    text-align: left;
     border-bottom: 1px solid #cecece;
     // overflow: hidden;
     .el-row {
@@ -3485,53 +3480,33 @@ export default {
       display: inline;
     }
 
-    // direction select
-    /deep/.el-input__suffix {
-      transition: 0s;
-    }
-    /deep/.el-input.el-input--mini.el-input--suffix {
-      width: 155px;
-    }
-    /deep/.el-select.el-select--mini {
-      margin-right: 15px;
-    }
+    // // direction select
+    // /deep/.el-input__suffix {
+    //   transition: 0s;
+    // }
+    // /deep/.el-input.el-input--mini.el-input--suffix {
+    //   width: 155px;
+    // }
+    // /deep/.el-select.el-select--mini {
+    //   margin-right: 15px;
+    // }
 
-    // priority slider
-    .priority-slider {
-      margin-left: @padding;
-      margin-top: 2px;
-      position: relative;
-      width: 80%;
-    }
-    /deep/ .el-slider__bar {
-      background: #6ba8e2;
-    }
-    /deep/.el-slider__button {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      transition: 0s;
-    }
-  }
-  .zoombar {
-    height: @zoombar-height;
-    position: absolute;
-    width: 100%;
-    bottom: 0;
-    padding-left: @padding;
-    background: rgba(245, 245, 245, 0.685);
-    border-top: 1px solid #cecece;
-    .zoom-button{
-      // background-image: url("../../public/icons/zoom in.png");
-      background-position:50% 50%;
-      position: absolute;
-      left: @padding;
-      top: 0.2rem;
-      height: @zoomicon-height;
-      width: @zoomicon-height;
-      cursor: pointer;
-      border: none;
-    }
+    // // priority slider
+    // .priority-slider {
+    //   margin-left: @padding;
+    //   margin-top: 2px;
+    //   position: relative;
+    //   width: 80%;
+    // }
+    // /deep/ .el-slider__bar {
+    //   background: #6ba8e2;
+    // }
+    // /deep/.el-slider__button {
+    //   width: 8px;
+    //   height: 8px;
+    //   border-radius: 50%;
+    //   transition: 0s;
+    // }
   }
   
   .table-view-svg-container {
@@ -3540,7 +3515,7 @@ export default {
     left: @padding;
     right: 0%;
     top: @toolbar-height + 1rem;
-    bottom: @zoombar-height + 0.3rem;
+    bottom: @padding;
     overflow:auto;
     // margin-top:1%;
     // margin-left:1%;
