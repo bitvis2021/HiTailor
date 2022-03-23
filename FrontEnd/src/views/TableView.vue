@@ -99,7 +99,16 @@
               <el-dropdown-item command="min">Min</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
-
+          <button
+            type="primary"
+            plain
+            size="small"
+            v-if="!isCurrFlat"
+            class="button"
+            @click=""
+          >
+            Zoom
+          </button>
           <!-- <button type="primary" plain size="small" 
             class="button"
             @click="transform_derive()" > 
@@ -3242,7 +3251,8 @@ export default {
         //   this.selectedArea.right - this.headerRange.right - 1
         // );
         this.clear_selected_cell(false);
-      } else {
+      } 
+      else if (this.selectedArea.top != null && this.selectedArea.left == this.selectedArea.right && this.selectedArea.top == this.selectedArea.bottom) {
         this.hide_recommend_element();
         this.clear_selected_cell(true);
       }
