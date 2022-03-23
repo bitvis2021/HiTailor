@@ -25,19 +25,19 @@
       <TableView :isHeaderFixed="isHeaderFixed" @changeHeaderFixed="change_is_header_fixed($event)"></TableView> 
     </div> -->
 
-    <div class="content-container">
+    <div class="content-container" :class="{ 'content-container-right-margin': showVisPanel} ">
       <TableView></TableView>
     </div>
 
-    <div id="vis-panel">
-      <VisView v-show="showPanel"></VisView>
-      <div v-show="!showPanel">Select Data to Continue</div>
+    <div id="vis-panel" v-show="showVisPanel">
+      <VisView></VisView>
     </div>
 
     <el-dialog
       title="Dataset"
       id="dataset-dialog"
-      :visible.sync="datasetDialogVisible">
+      :visible.sync="datasetDialogVisible"
+    >
       <DataDialog
         :datasetDialogKey="datasetDialogKey"
         @closeDataDialog="closeDataDialog"
@@ -75,6 +75,7 @@ export default {
       datasetDialogKey: 0,
       loadingData: true,
 
+      showVisPanel: false,
       // isHeaderFixed: false,
       // currView: "Transformation",
     };
@@ -91,8 +92,13 @@ export default {
     getTabularDataset(
       tabularDataList,
       function (processed_tabular_datalist_str) {
-        let processed_tabular_dataobj_list = parseTabularData(processed_tabular_datalist_str)
-        console.log("processed_tabular_dataobj_list", processed_tabular_dataobj_list);
+        let processed_tabular_dataobj_list = parseTabularData(
+          processed_tabular_datalist_str
+        );
+        console.log(
+          "processed_tabular_dataobj_list",
+          processed_tabular_dataobj_list
+        );
         sysDatasetObj.updateTabularDatasetList(processed_tabular_dataobj_list);
         tabularDataDeferObj.resolve();
         // processed_tabular_datalist_str = processed_tabular_datalist_str.replace(/"/g, '?')
@@ -116,11 +122,15 @@ export default {
         // );
         // console.log("processed_tabular_datalist", processed_tabular_datalist);
         // sysDatasetObj.updateTabularDatasetList(processed_tabular_datalist);
-        // 
+        //
       }
     );
   },
-  mounted: function () {},
+  mounted: function () {
+    this.$bus.$on("visualize-selectedData", () => {
+      this.showVisPanel = true;
+    });
+  },
   methods: {
     iconClass(operation) {
       return "icon-" + operation;
@@ -174,6 +184,11 @@ html {
     }
   }
 
+  .content-container-right-margin
+  {
+    right: @side-panel-width !important;
+  }
+
   .labelIcon {
     font-size: 1rem;
   }
@@ -182,7 +197,7 @@ html {
     top: @menu-height;
     left: 0;
     bottom: 0;
-    right: @side-panel-width;
+    right: 0;
     margin-right: @padding;
   }
   svg:not(:root) {
@@ -208,7 +223,7 @@ html {
     background-color: #dcdfe6;
     border-radius: 5px;
     // visibility: hidden;
-    &:hover{
+    &:hover {
       visibility: visible;
     }
   }
