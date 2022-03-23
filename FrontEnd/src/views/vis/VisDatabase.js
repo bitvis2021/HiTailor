@@ -738,6 +738,10 @@ VisDatabase.prototype.RenderCanvas = function (id) {
             let xScale = width / (width - offset);
             content.setAttribute("transform", "translate(" + (-(offset/2+5) * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
           }
+          else if(this.database[id].vegaTemplate.name === supportedTemplate.NQ_PieChart||this.database[id].vegaTemplate.name === supportedTemplate.NQ_RadialPlot)
+          {
+
+          }
           else if(content.getBBox().width>width||content.getBBox().height>height)
           {
             console.log(content.getBBox()); 
