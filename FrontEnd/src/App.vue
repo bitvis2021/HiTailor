@@ -51,6 +51,14 @@
       >
       </DataDialog>
     </el-dialog>
+
+    <el-dialog :title="dialogTitle" :visible.sync="showDialog" width="30%">
+      <span>{{ dialogText }}</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="CancelDialog">No</el-button>
+        <el-button type="primary" @click="ConfirmDialog">Yes</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -85,6 +93,10 @@ export default {
       showVisPanel: false,
       // isHeaderFixed: false,
       // currView: "Transformation",
+
+      showDialog: false,
+      dialogTitle: "",
+      dialogText: "",
     };
   },
   beforeMount: function () {
@@ -137,6 +149,12 @@ export default {
     this.$bus.$on("visualize-selectedData", () => {
       this.showVisPanel = true;
     });
+
+    this.$bus.$on("show-dialog", (data) => {
+      this.showDialog = true;
+      this.dialogTitle = data.title;
+      this.dialogText = data.text;
+    });
   },
   methods: {
     iconClass(operation) {
@@ -152,6 +170,14 @@ export default {
     // change_is_header_fixed(state) {
     //   this.isHeaderFixed = state;
     // },
+    ConfirmDialog() {
+      this.showDialog = false;
+      this.$bus.$emit("confirm-dialog", this.dialogText);
+    },
+    CancelDialog() {
+      this.showDialog = false;
+      this.$bus.$emit("cancel-dialog", this.dialogText);
+    },
   },
 };
 </script>
@@ -203,7 +229,7 @@ html {
 
   @keyframes shake {
     from {
-      transform: translateX( @side-panel-width *2);
+      transform: translateX(@side-panel-width * 2);
     }
     to {
       transform: translateX(0);
