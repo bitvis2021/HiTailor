@@ -1230,8 +1230,8 @@ export default {
       // cancel recommend
       if (clearRecommend) {
         this.clear_recommendation_area();
+        this.$bus.$emit("close-VisView")
       }
-      this.$bus.$emit("close-VisView")
     },
     clear_selected_header() {
       // this.selectedHeader = null
@@ -1242,6 +1242,7 @@ export default {
       d3.selectAll(".recommend-helper-both").remove();
       d3.selectAll(".recommend-helper-row").remove();
       d3.selectAll(".recommend-helper-col").remove();
+      this.$bus.$emit("close-VisView")
     },
     hide_recommendation_area() {
       d3.selectAll(".recommend-helper-both").style("visibility", "hidden");
@@ -3224,13 +3225,13 @@ export default {
     console.log("this.dataValueList", this.dataValueList);
 
     this.$bus.$on("apply-config", (data) => {
-      if (data == null) console.log("apply-null");
-      if (
-        !(
+      if (data == null) {
+        console.log("apply-null");
+      }
+      if (!(
           this.selectedArea.left == this.selectedArea.right &&
           this.selectedArea.top == this.selectedArea.bottom
-        )
-      ) {
+        )) {
         this.transmit_recommendation_to_vis();
         console.log("not single unit");
         // this.show_recommend_element();
@@ -3243,8 +3244,16 @@ export default {
         this.clear_selected_cell(false);
       } else {
         this.hide_recommend_element();
-        // this.clear_selected_cell(true);
+        this.clear_selected_cell(true);
       }
+    });
+
+    this.$bus.$on("cancel-dialog", (data) => {
+      this.clear_recommendation_area()
+    });
+
+    this.$bus.$on("confirm-dialog", (data) => {
+      this.clear_recommendation_area()
     });
 
     // Excplicitly use this instead of select canvas to cancel table selection.
