@@ -108,7 +108,7 @@
             class="button"
             @click="handle_zoom_out()"
           >
-            Zoom-out
+            fit-in
           </button>
           <button
             type="primary"
@@ -118,7 +118,7 @@
             class="button"
             @click="handle_zoom_in()"
           >
-            Zoom-in
+            resume
           </button>
           <!-- <button type="primary" plain size="small" 
             class="button"
