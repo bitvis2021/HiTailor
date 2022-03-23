@@ -83,7 +83,7 @@ export default {
   },
   data() {
     return {
-      appName: "TableVis",
+      appName: "HiTailor",
       operationArray: ["dataset"],
       activeIndex: "",
       datasetDialogVisible: false,
