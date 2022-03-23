@@ -253,7 +253,6 @@ export default {
             content.getBBox().width > width ||
             content.getBBox().height > height
           ) {
-            console.log("fuck!!!!!",content.getBBox());
             content.setAttribute(
               "transform",
               "translate(" +

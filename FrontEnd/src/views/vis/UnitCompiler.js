@@ -61,7 +61,7 @@ UnitCompiler.GetUnits = function (data_array, config) {
 			shape: config.shape,
 			align: config.align,
 
-			color: color(data_array[i].mappedValue),
+			color: color(data_array[i].polarValue),
 			size: size(data_array[i].mappedValue),
 			height: height(data_array[i].mappedValue),
 			width: width(data_array[i].mappedValue),
@@ -79,23 +79,15 @@ UnitCompiler.GetUnits = function (data_array, config) {
 	}
 	return data_array;
 }
-
+function reverseColor(color_hex) {
+	color_hex = '0x' + color_hex.replace(/#/g, '');
+	let str = '000000' + (0xFFFFFF - color_hex).toString(16);
+	return '#' + str.substring(str.length - 6, str.length);
+}
 export function getColorFunction(color_hex) {
 	// https://observablehq.com/@d3/sequential-scales
 	let colorFunc
-	let rgb = hexToRgb(color_hex);
-	if (!rgb || (Math.abs(rgb.b - rgb.g) <= 20 && Math.abs(rgb.b - rgb.r) <= 20 && Math.abs(rgb.g - rgb.r) <= 20)) {
-		return d3.interpolateGreys;
-	}
-	if (rgb.b > rgb.r && rgb.b > rgb.g) {
-		colorFunc = d3.interpolateSinebow;
-	}
-	else if (rgb.r > rgb.b && rgb.r > rgb.g) {
-		colorFunc = d3.interpolateMagma;
-	}
-	else if (rgb.g > rgb.r && rgb.g > rgb.b) {
-		colorFunc = d3.interpolateCool;
-	}
+	colorFunc = d3.interpolateRgbBasis([reverseColor(color_hex), "white", color_hex]);
 	return colorFunc;
 }
 
@@ -142,6 +134,10 @@ function GetScaleFunction(scaleType_str) {
 
 function remapValue(data_array, max, min, scaleFunction_func) {
 	let baseLine = max - min;
+	let polarMap = false;
+	if (min < 0) {
+		polarMap = true;
+	}
 
 	let y = scaleFunction_func;
 
@@ -149,6 +145,17 @@ function remapValue(data_array, max, min, scaleFunction_func) {
 		const element = data_array[i];
 		let x = (Number(element.value) - min) / baseLine;
 		data_array[i].mappedValue = y(x);
+		data_array[i].polarValue = y(x);
+		if (polarMap = true) {
+			if (element.value > 0) {
+				let x = (Number(element.value)) / max;
+				data_array[i].polarValue = y(x) * 0.5 + 0.5;
+			}
+			else {
+				let x = -(Number(element.value)) / min;
+				data_array[i].polarValue = y(x) * 0.5;
+			}
+		}
 	}
 	return data_array;
 }
