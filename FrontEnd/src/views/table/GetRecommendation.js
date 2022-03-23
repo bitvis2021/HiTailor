@@ -9,13 +9,13 @@ export function get_reference_node(header, start, end, isRow, hasTransposed) {
             for (var j=0; j<ranges.length; j++) {
                 if (start == ranges[j].start && end == ranges[j].end) {   // choose a single node(including linear)
                     var tmp = {name: key, times: j, layer: i, hasLinear: false, isLinear: false}
-                    if (i != header.length-1) {
+                    if (start == end && i != header.length-1) {
                         goNextLayer = true
                         break
                     }  
-                    // if (children.length!=0 && children[j][0][0]=="&") {
-                    //     tmp.hasLinear = true 
-                    //     tmp.isLinear = true
+                    if (children.length!=0 && children[j][0][0]=="&") {
+                        tmp.hasLinear = true 
+                        tmp.isLinear = true
                     //     // especially
                     //     if (children[j].length == 1) {
                     //          
@@ -25,7 +25,7 @@ export function get_reference_node(header, start, end, isRow, hasTransposed) {
                     //         tmp.hasLinear = false
                     //         tmp.isLinear = false
                     //     }
-                    // }
+                    }
                     res.push(tmp)
                     findFlag = true
                     break
