@@ -150,10 +150,18 @@ export default {
       this.showVisPanel = true;
     });
 
+    this.$bus.$on("select-canvas", () => {
+      this.showVisPanel = true;
+    });
+
     this.$bus.$on("show-dialog", (data) => {
       this.showDialog = true;
       this.dialogTitle = data.title;
       this.dialogText = data.text;
+    });
+
+    this.$bus.$on("close-VisView", () => {
+      this.showVisPanel = false;
     });
   },
   methods: {
