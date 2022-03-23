@@ -99,15 +99,26 @@
               <el-dropdown-item command="min">Min</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
+
           <button
             type="primary"
             plain
             size="small"
-            v-if="!isCurrFlat"
+            v-if="!isCurrFlat && !isZoomOut"
             class="button"
-            @click=""
+            @click="handle_zoom_out()"
           >
-            Zoom
+            Zoom-out
+          </button>
+          <button
+            type="primary"
+            plain
+            size="small"
+            v-if="!isCurrFlat && isZoomOut"
+            class="button"
+            @click="handle_zoom_in()"
+          >
+            Zoom-in
           </button>
           <!-- <button type="primary" plain size="small" 
             class="button"
@@ -756,6 +767,8 @@ export default {
       recommendDataCol: [[], [], []],
       prioritySliderValue: [0, 5],
       directionSelectValue: ["row", "column"],
+
+      isZoomOut: false,
     };
   },
 
@@ -1385,8 +1398,31 @@ export default {
       }
       this.clear_selected_header();
     },
+    handle_zoom_out() {
+      this.isZoomOut = true
+      let obj = d3.select(".table-view-svg-container")
+      var w = obj.style("width"); 
+      w = Number(w.substring(0, w.length-2))
+      var h = obj.style("height")
+      h = Number(h.substring(0, h.length-2))
+      
+      let x = d3.select(".table-view-svg").style("width")
+      x = Number(x.substring(0, x.length-2))
+      let y = d3.select(".table-view-svg").style("height")
+      y = Number(y.substring(0, y.length-2))
+
+      let widthScale = w / x, heightScale = h / y
+      
+      let scale = Math.min(widthScale, heightScale)
+      d3.select(".table-view-svg").attr("transform", `translate(${ x * (scale - 1) / 2}, ${ y * (scale - 1) / 2}) scale(${scale}, ${scale})`);
+    }, 
+    handle_zoom_in() {
+      this.isZoomOut = false
+      d3.select(".table-view-svg").attr("transform", null)
+    },
 
     transform_fold() {
+      this.handle_zoom_in()
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       this.isCurrFlat = true;
@@ -1426,6 +1462,7 @@ export default {
       this.send_change_width_signal();
     },
     transform_unfold() {
+      this.handle_zoom_in()
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       this.isCurrFlat = false;
@@ -1471,6 +1508,7 @@ export default {
       this.send_change_width_signal();
     },
     transform_transpose() {
+      this.handle_zoom_in()
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       this.hasTransposed = !this.hasTransposed;
@@ -1513,6 +1551,7 @@ export default {
       this.send_change_width_signal();
     },
     transform_swap(name, header, isSwapUp, isRow) {
+      // this.handle_zoom_in()
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       var distributionInfo = this.headerDistribution.get(name);
@@ -1715,6 +1754,7 @@ export default {
       }
     },
     transform_2stacked(name, header, times, isRow) {
+      this.handle_zoom_in()
       this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
@@ -1827,6 +1867,7 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow, type) {
+      this.handle_zoom_in()
       this.clear_selected_cell(true)
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
@@ -2069,11 +2110,13 @@ export default {
         this.send_change_width_signal();
       }
     },
-    transform_derive() {
-      this.clear_selected_cell(true);
-      this.$bus.$emit("change-header");
-    },
+    // transform_derive() {
+    //   this.handle_zoom_in()
+    //   this.clear_selected_cell(true);
+    //   this.$bus.$emit("change-header");
+    // },
     transform_unnamed(name, oriHeader, newHeader, isRow) {
+      this.handle_zoom_in()
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       var distributionInfo = this.headerDistribution.get(name);
