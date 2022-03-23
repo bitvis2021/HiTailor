@@ -34,8 +34,10 @@
 
     <div
       id="vis-panel"
-      v-show="showVisPanel"
-      :class="{ 'vis-panel-slide-in': showVisPanel }"
+      :class="{
+        'vis-panel-slide-in': showVisPanel,
+        'vis-panel-slide-out': !showVisPanel,
+      }"
     >
       <VisView></VisView>
     </div>
@@ -208,6 +210,7 @@ html {
   bottom: 0%;
   left: 0%;
   right: 0%;
+  overflow: hidden;
   .el-menu.el-menu--horizontal {
     .el-menu-item {
       height: @menu-height;
@@ -226,8 +229,21 @@ html {
   }
 
   .vis-panel-slide-in {
-    animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    animation: slide-in 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
     transform: translateX(0);
+  }
+  .vis-panel-slide-out {
+    animation: slide-out 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    transform: translateX(100%);
+    transition-delay: display 2s;
+  }
+  @keyframes slide-out {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
   }
 
   .content-container-right-margin {
@@ -235,9 +251,9 @@ html {
     right: @side-panel-width !important;
   }
 
-  @keyframes shake {
+  @keyframes slide-in {
     from {
-      transform: translateX(@side-panel-width * 2);
+      transform: translateX(100%);
     }
     to {
       transform: translateX(0);
