@@ -3237,6 +3237,15 @@ export default {
     this.$bus.$on("transmit-directionSelectValue", (data) => {
       this.directionSelectValue = data;
     });
+
+    this.$bus.$on("change-zoom", () => {
+      if (this.isZoomOut) {
+        this.handle_zoom_in()
+      }
+      else {
+        this.handle_zoom_out()
+      }
+    });
   },
 
   computed: {
@@ -3368,8 +3377,7 @@ export default {
 @padding:0.7rem;
 @toolbar-width: 5rem;
 // @transform-button-height: 2rem;
-@button-size: 3.5rem;
-@button-hover-size: 4rem;
+@button-size: 4rem;
 .table-view {
   position: absolute;
   height: 100%;

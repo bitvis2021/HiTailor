@@ -3,22 +3,27 @@
     <el-menu
       class="el-menu-demo"
       mode="horizontal"
-      background-color="#676767"
+      background-color="#80b1d3"
       text-color="#fff"
-      :default-active="activeIndex"
-      active-text-color="#ffd04b"
+      active-text-color="#0087d0"
     >
-      <el-menu-item class="labelIcon" id="title">
+      <el-menu-item id="title">
         {{ appName }}
       </el-menu-item>
 
-      <el-menu-item
-        v-for="operation in operationArray"
+      <el-menu-item 
+        v-for="(operation,index) in operationArray"
         :key="operation"
         @click="changeDialogVisible(operation)"
       >
+        <img :src="iconPath[index]" class="icon"/>
         {{ operation }}
       </el-menu-item>
+
+      <el-menu-item @click="handle_zoom()">
+        <img :src="get_zoom_icon()" class="icon"/>
+      </el-menu-item>
+
     </el-menu>
 
     <!-- <div class="content-container">
@@ -86,8 +91,9 @@ export default {
   data() {
     return {
       appName: "HiTailor",
-      operationArray: ["dataset"],
-      activeIndex: "",
+      operationArray: ["Open Example Data", "Upload your data"],
+      iconPath: ["./icon/open-file.svg", "./icon/upload.svg"],
+      // activeIndex: "",
       datasetDialogVisible: false,
       datasetDialogKey: 0,
       loadingData: true,
@@ -100,6 +106,8 @@ export default {
       showDialog: false,
       dialogTitle: "",
       dialogText: "",
+
+      isZoomOut: false,
     };
   },
   beforeMount: function () {
@@ -175,13 +183,10 @@ export default {
     closeDataDialog() {},
     changeDialogVisible(panel_name) {
       console.log("panel_name", panel_name);
-      if (panel_name === "dataset") {
+      if (panel_name === "Open Example Data") {
         this.datasetDialogVisible = true;
       }
     },
-    // change_is_header_fixed(state) {
-    //   this.isHeaderFixed = state;
-    // },
     ConfirmDialog() {
       this.showDialog = false;
       this.$bus.$emit("confirm-dialog", this.dialogText);
@@ -190,6 +195,17 @@ export default {
       this.showDialog = false;
       this.$bus.$emit("cancel-dialog", this.dialogText);
     },
+    get_zoom_icon() {
+      if (this.isZoomOut) {
+        return "./icon/resume.svg"
+      }
+      else 
+        return "./icon/fitin.svg"
+    },
+    handle_zoom() {
+      this.isZoomOut = !this.isZoomOut
+      this.$bus.$emit("change-zoom")
+    }
   },
 };
 </script>
@@ -198,6 +214,7 @@ export default {
 @side-panel-width: 20%;
 @padding: 0.7rem;
 @menu-height: 2.5rem;
+@icon-size: 1.4rem;
 
 html {
   font-size: 100%;
@@ -217,16 +234,16 @@ html {
     .el-menu-item {
       height: @menu-height;
       line-height: @menu-height;
-    }
-    .el-menu-item {
-      border-bottom-color: rgb(84, 92, 100) !important;
-      font-weight: bolder;
-      font-size: 1rem;
-      color: #dadada !important;
+      font-size: 90%;
       padding: 0 10px;
       .icon {
-        color: #dadada !important;
+        width: @icon-size;
+        height: @icon-size;
       }
+    }
+    #title {
+      font-weight: bolder;
+      font-size: 115%;
     }
   }
 
@@ -260,10 +277,6 @@ html {
     to {
       transform: translateX(0);
     }
-  }
-
-  .labelIcon {
-    font-size: 1rem;
   }
   .content-container {
     position: absolute;
