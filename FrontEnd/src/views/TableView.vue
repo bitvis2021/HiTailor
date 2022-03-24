@@ -581,7 +581,7 @@ export default {
   props: {},
   data() {
     return {
-      cellWidth: 90,
+      cellWidth: 70,
       cellHeight: 30,
       markWidth: 40,
       markHeight: 30,

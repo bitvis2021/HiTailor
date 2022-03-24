@@ -282,6 +282,7 @@ export function get_cell_sequence(headerRange, rowHeightList, columnWidthList, d
     for (var col=headerRange.right+1; col<columnWidthList.length; col++) {
       var value = dataValueList[row][col]
       if (value == 'None') value = ''
+      value = Number(value).toFixed(0)
       var seq = new Set
       //column header
       for (var i=0; i<colHeader.length; i++) { // find header in each row
