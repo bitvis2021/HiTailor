@@ -321,7 +321,7 @@ export default {
       ],
       scale: "linear",
       shape: "circle",
-      color: "#4e78a5",
+      color: "#00B2FF",
       relativeSize: 0.8,
       disabledEncodings: [
         { name: "color" },
@@ -330,7 +330,7 @@ export default {
         { name: "xOffset" },
         { name: "yOffset" },
       ],
-      enabledEncodings: [{ name: "size" }, { name: "opacity" }],
+      enabledEncodings: [{ name: "size" }, { name: "color" }],
       align: "middle",
       VisDB: new VisDatabase(this.$bus),
       visData: this.visData_arr,
