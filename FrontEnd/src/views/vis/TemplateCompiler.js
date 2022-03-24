@@ -97,7 +97,76 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
                 }
             }
             return line_template;
+        case supportedTemplate.NQ_PieChart:
+            if (is_horizon) {
+                vegaConfig = {
+                    mark: "arc",
+                    data: { values: visData_arr },
+                    encoding: {
+                        color: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        theta: { aggregate: "sum", field: selections_cell.GetQSelection(0) }
+                    }
+                }
+            }
+            else {
+                vegaConfig = {
+                    mark: "arc",
+                    data: { values: visData_arr },
+                    encoding: {
+                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        theta: { aggregate: "sum", field: selections_cell.GetQSelection(0) }
+                    }
+                }
+            }
+            if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
+                delete vegaConfig.encoding.theta.aggregate
+                vegaConfig.encoding.theta.type="quantitative";
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, './templates/pie chart.png');
 
+        case supportedTemplate.NQ_RadialPlot:
+            if (is_horizon) {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_arr
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        color: { field: selections_cell.GetXSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetXSelection(-1)) },
+                        theta: { aggregate: "sum", field: selections_cell.GetQSelection(0), "stack": true },
+                        radius: {
+                            aggregate: "sum", field: selections_cell.GetQSelection(0),
+                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+                        },
+                        "color": { "field": selections_horizon.GetXSelection(-1), "type": "nominal" }
+                    }
+                }
+            }
+            else {
+                vegaConfig =
+                {
+                    "data": {
+                        "values": visData_arr
+                    },
+                    "mark": "arc",
+                    "encoding": {
+                        color: { field: selections_cell.GetYSelection(-1), type: "nominal", sort: selections_cell.GetSort(selections_cell.GetYSelection(-1)) },
+                        theta: { aggregate: "sum", field: selections_cell.GetQSelection(0), "stack": true },
+                        radius: {
+                            aggregate: "sum", field: selections_cell.GetQSelection(0),
+                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
+                        },
+                    }
+                }
+            }
+            if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
+                delete vegaConfig.encoding.theta.aggregate;
+                delete vegaConfig.encoding.radius.aggregate;
+                vegaConfig.encoding.theta.type="quantitative";
+                vegaConfig.encoding.radius.type="quantitative";
+            }
+            return new VegaTemplate(templateName_str, vegaConfig, selections_cell, './templates/radial plot.png');
         case supportedTemplate.ANQorNQ_Bar_Chart:
             // simple bar chart
             if (metaData_obj.x.range == 1 || metaData_obj.y.range == 1) {
@@ -302,73 +371,7 @@ export function GetTemplate(templateName_str, metaData_obj, visData_arr, directi
             else {
                 return new HistogramScatterplot(visData_vertical, selections_vertical, metaData_obj, './templates/histogram scatterplot.png', is_horizon);
             }
-        case supportedTemplate.NQ_PieChart:
-            if (is_horizon) {
-                vegaConfig =
-                {
-                    "data": {
-                        "values": visData_horizon
-                    },
-                    "mark": "arc",
-                    "encoding": {
-                        "theta": { "field": selections_horizon.GetQSelection(0), "type": "quantitative" },
-                        "color": { "field": selections_horizon.GetXSelection(-1), "type": "nominal" }
-                    }
-                }
-                return new ObjTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_horizon, './templates/pie chart.png', true);
-            }
-            else {
-                vegaConfig =
-                {
-                    "data": {
-                        "values": visData_vertical
-                    },
-                    "mark": "arc",
-                    "encoding": {
-                        "theta": { "field": selections_vertical.GetQSelection(0), "type": "quantitative" },
-                        "color": { "field": selections_vertical.GetYSelection(-1), "type": "nominal" }
-                    }
-                }
-                return new ObjTemplate(supportedTemplate.NQ_PieChart, vegaConfig, selections_vertical, './templates/pie chart.png', false);
 
-            }
-        case supportedTemplate.NQ_RadialPlot:
-            if (is_horizon) {
-                vegaConfig =
-                {
-                    "data": {
-                        "values": visData_horizon
-                    },
-                    "mark": "arc",
-                    "encoding": {
-                        "theta": { "field": selections_horizon.GetQSelection(0), "type": "quantitative", "stack": true },
-                        "radius": {
-                            "field": selections_horizon.GetQSelection(0),
-                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-                        },
-                        "color": { "field": selections_horizon.GetXSelection(-1), "type": "nominal" }
-                    }
-                }
-                return new ObjTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_horizon, './templates/radial plot.png', true);
-            }
-            else {
-                vegaConfig =
-                {
-                    "data": {
-                        "values": visData_vertical
-                    },
-                    "mark": "arc",
-                    "encoding": {
-                        "theta": { "field": selections_vertical.GetQSelection(0), "type": "quantitative", "stack": true },
-                        "radius": {
-                            "field": selections_vertical.GetQSelection(0),
-                            "scale": { "type": "linear", "zero": true, "rangeMin": 20 }
-                        },
-                        "color": { "field": selections_vertical.GetYSelection(-1), "type": "nominal" }
-                    }
-                }
-                return new ObjTemplate(supportedTemplate.NQ_RadialPlot, vegaConfig, selections_vertical, './templates/radial plot.png', false);
-            }
 
         default:
             break;
@@ -383,12 +386,19 @@ export function GetTemplates(metaData_obj, visData_arr) {
         if (metaData_obj.y.range == 1) {
             templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.NQor2Q_Simple_Line_Chart, metaData_obj, visData_arr, 'x'), 'horizon')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_PieChart, metaData_obj, visData_arr, 'x'), 'horizon')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_RadialPlot, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.Q2_Horizon_Graph, metaData_obj, visData_arr, 'x'), 'horizon')
-
+            
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Strip_Plot, metaData_obj, visData_arr, 'x'), 'horizon')
             templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Box_Plot, metaData_obj, visData_arr, 'y'), 'vertical')
         }
         else {
             templates.AddTemplate(GetTemplate(supportedTemplate.ANQorNQ_Bar_Chart, metaData_obj, visData_arr, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Strip_Plot, metaData_obj, visData_arr, 'y'), 'vertical')
+
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_PieChart, metaData_obj, visData_arr, 'y'), 'vertical')
+            templates.AddTemplate(GetTemplate(supportedTemplate.NQ_RadialPlot, metaData_obj, visData_arr, 'y'), 'vertical')
 
             templates.AddTemplate(GetTemplate(supportedTemplate.NQ_Box_Plot, metaData_obj, visData_arr, 'x'), 'horizon')
         }
@@ -401,12 +411,20 @@ export function GetTemplates(metaData_obj, visData_arr) {
             supportedTemplate.NQ_Box_Plot,
             supportedTemplate.NQ_Strip_Plot,
             supportedTemplate.NQ_Parallel_Coordinate_Plot,
+            supportedTemplate.NQ_PieChart,
+            supportedTemplate.NQ_RadialPlot,
             supportedTemplate.ANQN_Multi_Series_Line_Chart,
         ]
         for (let i = 0; i < aggregateChart.length; i++) {
             const chartName = aggregateChart[i];
-            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'x'))
-            templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'y'), 'vertical')
+            if (chartName == supportedTemplate.NQ_PieChart || chartName == supportedTemplate.NQ_RadialPlot) {
+                templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'x'), 'Using row data')
+                templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'y'), 'Using column data')
+            }
+            else {
+                templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'x'))
+                templates.AddTemplate(GetTemplate(chartName, metaData_obj, visData_arr, 'y'), 'vertical')
+            }
         }
 
         // @@N-N-Q grouped bar chart
@@ -420,8 +438,6 @@ export function GetTemplates(metaData_obj, visData_arr) {
 
         let Q2Chart = [
             supportedTemplate.NQor2Q_Simple_Line_Chart,
-            supportedTemplate.NQ_PieChart,
-            supportedTemplate.NQ_RadialPlot,
             supportedTemplate.Q2_Horizon_Graph,
             supportedTemplate.Q2_Scatter_plot,
             supportedTemplate.NQ_Histogram_Heatmap,
@@ -774,18 +790,18 @@ ObjTemplate.prototype.GetVegaLite = function (height, width) {
     vegaLite.height = height;
     vegaLite.width = width;
 
-    if (vegaLite.encoding.x&&vegaLite.encoding.y) {
+    if (vegaLite.encoding.x && vegaLite.encoding.y) {
         // auto scaled vis result
-        let maxLength=vegaLite.encoding.x.field.length>vegaLite.encoding.y.field.length? vegaLite.encoding.x.field.length*8:vegaLite.encoding.y.field.length*8;
+        let maxLength = vegaLite.encoding.x.field.length > vegaLite.encoding.y.field.length ? vegaLite.encoding.x.field.length * 8 : vegaLite.encoding.y.field.length * 8;
         if (height <= maxLength || width <= maxLength) {
-            let xTitle=vegaLite.encoding.x.field.split(" > ").at(-1);
-            vegaLite.encoding.x.title=xTitle;
-            let yTitle=vegaLite.encoding.y.field.split(" > ").at(-1);
-            vegaLite.encoding.y.title=yTitle;
+            let xTitle = vegaLite.encoding.x.field.split(" > ").at(-1);
+            vegaLite.encoding.x.title = xTitle;
+            let yTitle = vegaLite.encoding.y.field.split(" > ").at(-1);
+            vegaLite.encoding.y.title = yTitle;
         }
     }
 
-    vegaLite.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10  }, "legend": { "disable": true } };
+    vegaLite.config = { "axis": { "labels": false, "ticks": false, "titleOpacity": "0.5", "titlePadding": -10 }, "legend": { "disable": true } };
     // Add tool tips
     if (typeof vegaLite.mark == 'string') {
         let mark = { type: vegaLite.mark }
@@ -887,17 +903,17 @@ HistogramScatterplot.prototype.GetVegaLite = function (height, width) {
     // vegaLite.config = { "axis": { "labels": true, "ticks": true, "labelPadding": -20, "titleOpacity": "0.5", "titlePadding": -10, "titleFontSize": 8 }, "legend": { "disable": true } };
     vegaLite.height = height;
     vegaLite.width = width;
-    
+
     // auto scaled vis result
-    let maxLength=vegaLite.encoding.x.field.length>vegaLite.encoding.y.field.length? vegaLite.encoding.x.field.length*8:vegaLite.encoding.y.field.length*8;
+    let maxLength = vegaLite.encoding.x.field.length > vegaLite.encoding.y.field.length ? vegaLite.encoding.x.field.length * 8 : vegaLite.encoding.y.field.length * 8;
     if (height <= maxLength || width <= maxLength) {
-        let xTitle=vegaLite.encoding.x.field.split(" > ").at(-1);
-        vegaLite.encoding.x.title=xTitle;
-        let yTitle=vegaLite.encoding.y.field.split(" > ").at(-1);
-        vegaLite.encoding.y.title=yTitle;
+        let xTitle = vegaLite.encoding.x.field.split(" > ").at(-1);
+        vegaLite.encoding.x.title = xTitle;
+        let yTitle = vegaLite.encoding.y.field.split(" > ").at(-1);
+        vegaLite.encoding.y.title = yTitle;
     }
     vegaLite.config = { "axis": { "labels": true, "ticks": true, "titleOpacity": "0.5" }, "legend": { "disable": true } };
-    
+
     if (typeof vegaLite.mark == 'string') {
         let mark = { type: vegaLite.mark }
         vegaLite.mark = mark;
@@ -981,12 +997,12 @@ HistogramHeatmap.prototype.GetVegaLite = function (height, width) {
     let vegaLite = JSON.parse(JSON.stringify(this.vegaConfig));
 
     // auto scaled vis result
-    let maxLength=vegaLite.encoding.x.field.length>vegaLite.encoding.y.field.length? vegaLite.encoding.x.field.length*8:vegaLite.encoding.y.field.length*8;
+    let maxLength = vegaLite.encoding.x.field.length > vegaLite.encoding.y.field.length ? vegaLite.encoding.x.field.length * 8 : vegaLite.encoding.y.field.length * 8;
     if (height <= maxLength || width <= maxLength) {
-        let xTitle=vegaLite.encoding.x.field.split(" > ").at(-1);
-        vegaLite.encoding.x.title=xTitle;
-        let yTitle=vegaLite.encoding.y.field.split(" > ").at(-1);
-        vegaLite.encoding.y.title=yTitle;
+        let xTitle = vegaLite.encoding.x.field.split(" > ").at(-1);
+        vegaLite.encoding.x.title = xTitle;
+        let yTitle = vegaLite.encoding.y.field.split(" > ").at(-1);
+        vegaLite.encoding.y.title = yTitle;
     }
 
     vegaLite.config = { "axis": { "labels": true, "ticks": true, "titleOpacity": "0.5" }, "legend": { "disable": true } };

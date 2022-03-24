@@ -86,11 +86,13 @@ function EncodingCompiler(VegaEncoding_obj, FieldSelections_obj) {
             'scale type': 'scale type'
         },
         theta: {
-            field: 'xField',
+            field: 'allField',
+            aggregate: 'aggregate',
             'scale type': 'scale type'
         },
         radius: {
-            field: 'xField',
+            field: 'allField',
+            aggregate: 'aggregate',
             'scale type': 'scale type'
         }
     }
