@@ -3,8 +3,8 @@
     <el-menu
       class="el-menu-demo"
       mode="horizontal"
-      background-color="#80b1d3"
-      text-color="#fff"
+      background-color="#e6e6e6"
+      text-color="#000"
       active-text-color="#0087d0"
     >
       <el-menu-item id="title">
@@ -231,6 +231,7 @@ html {
   right: 0%;
   overflow: hidden;
   .el-menu.el-menu--horizontal {
+    border-bottom: none;
     .el-menu-item {
       height: @menu-height;
       line-height: @menu-height;
