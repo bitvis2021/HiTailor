@@ -25,176 +25,81 @@
     </div>
 
     <div class="toolbar" v-if="isHeaderFixed">
-      <!-- <el-row> -->
-        <!-- <el-col :lg="20" :xl="16"> -->
-          <span class="toolbar-label">Transformation</span>
-          <button
-            v-if="isCurrFlat"
-            type="primary"
-            plain
-            size="small"
-            class="button"
-            @click="transform_unfold()"
-          >
-            Unfold
-          </button>
-          <button
-            type="primary"
-            plain
-            size="small"
-            v-if="!isCurrFlat"
-            class="button"
-            @click="transform_fold()"
-          >
-            Fold
-          </button>
-          <button
-            type="primary"
-            plain
-            size="small"
-            v-if="!isCurrFlat"
-            class="button"
-            @click="transform_transpose()"
-          >
-            Transpose
-          </button>
-          <button
-            type="primary"
-            plain
-            size="small"
-            v-if="!isCurrFlat"
-            class="button"
-            @click="handle_transform_swap('FALL 2001', false)"
-          >
-            Swap
-          </button>
-          <button
-            type="primary"
-            plain
-            size="small"
-            v-if="!isCurrFlat"
-            class="button"
-            @click="handle_transform_2stacked_button()"
-          >
-            ToStacked
-          </button>
-          <!-- <button type="primary" plain size="small" 
-            class="button"
-            @click="handle_transform_2linear('HUMANITIES', 0)" > 
-            ToLinear
-          </button> -->
-          <el-dropdown
-            @command="handle_transform_2linear_dropdown"
-            v-if="!isCurrFlat"
-          >
-            <div class="drop-down-button">
-              <span class="el-dropdown-link">
-                ToLinear<i class="el-icon-arrow-down el-icon--right"></i>
-              </span>
-            </div>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="sum">Sum</el-dropdown-item>
-              <el-dropdown-item command="avg">Average</el-dropdown-item>
-              <el-dropdown-item command="max">Max</el-dropdown-item>
-              <el-dropdown-item command="min">Min</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+      <button
+        class="button"
+        @click="transform_transpose()"
+        style="background-image:url('./icon/transpose.svg'); margin-top:130px">
+      </button>
+      <span class="toolbar-label"> Transpose </span>
 
-          <button
-            type="primary"
-            plain
-            size="small"
-            v-if="!isCurrFlat && !isZoomOut"
-            class="button"
-            @click="handle_zoom_out()"
-          >
-            fit-in
-          </button>
-          <button
-            type="primary"
-            plain
-            size="small"
-            v-if="!isCurrFlat && isZoomOut"
-            class="button"
-            @click="handle_zoom_in()"
-          >
-            resume
-          </button>
-          <!-- <button type="primary" plain size="small" 
-            class="button"
-            @click="transform_derive()" > 
-            Derive
-          </button> -->
-          <!-- <button type="primary" plain size="small" v-if="!isCurrFlat"
-            class="button"
-            @click="transform_unnamed('SSH', colHeader, rowHeader, false)" > 
-            test
-          </button> -->
+      <button
+        class="button"
+        @click="handle_transform_swap('FALL 2001', false)"
+        style="background-image:url('./icon/swap.svg')"
+      >
+      </button>
+      <span class="toolbar-label"> Swap </span>
 
-          <!--
-          <div class="recommend-element">
-            <span class="toolbar-vertical-separator" />
-            <span class="toolbar-label">Recommendation</span>
-            <span class="toolbar-label" style="color: #3e87cc">Direction</span>
-            <el-select
-              v-model="directionSelectValue"
-              multiple
-              placeholder="Select"
-              size="mini"
-              style="width=155px"
-            >
-              <el-option key="row" label="row" value="row" />
-              <el-option key="column" label="column" value="column" />
-            </el-select>
-            <span class="toolbar-label" style="color: #3e87cc">Priority</span>
-          </div>
-            !-->
-        <!-- </el-col> -->
 
-        <!--
-        <el-col :lg="2" :xl="3" class="recommend-element">
-          <div class="priority-slider">
-            <el-slider
-              v-model="prioritySliderValue"
-              range
-              show-stops
-              :min="directionSelectValue.length == 0 ? 0 : 1"
-              :max="
-                directionSelectValue.length == 0
-                  ? 0
-                  : directionSelectValue.length == 2
-                  ? 5
-                  : 3
-              "
-            ></el-slider>
-          </div>
-        </el-col>
-        !-->
-        <!-- <el-col :lg="2" :xl="2" class="recommend-element">
-          <el-button
-            id="recommend-apply-button"
-            type="primary"
-            icon="el-icon-check"
-            size="mini"
-            plain
-            style="margin-top: 6px"
-            circle
-            @click="confirm_recommendation()"
-          >
-          </el-button>
-          <el-button
-            id="recommend-apply-button"
-            type="danger"
-            icon="el-icon-close"
-            size="mini"
-            plain
-            style="margin-top: 6px"
-            circle
-            @click="cancel_recommendation()"
-          >
-          </el-button> 
-        </el-col>-->
-      <!-- </el-row> -->
+      <button
+        class="button"
+        @click="handle_transform_2stacked_button()"
+        style="background-image:url('./icon/stack.svg')"
+      >
+      </button>
+      <span class="toolbar-label"> ToStacked </span>
+
+      <el-dropdown @command="handle_transform_2linear_dropdown" placement="bottom">
+        <div class="drop-down-button">
+          <span class="el-dropdown-link">
+            <button style="background-image:url('./icon/linear.svg')" class="button"/>
+          </span>
+        </div>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="sum">Sum</el-dropdown-item>
+          <el-dropdown-item command="avg">Average</el-dropdown-item>
+          <el-dropdown-item command="max">Max</el-dropdown-item>
+          <el-dropdown-item command="min">Min</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      <span class="toolbar-label"> ToLinear </span>
+
+      <button
+        class="button"
+        @click="transform_fold()"
+        style="background-image:url('./icon/fold.svg')"
+      >
+      </button>
+      <span class="toolbar-label"> Fold </span>
+
+      <button
+        class="button"
+        @click="transform_unfold()"
+        style="background-image:url('./icon/unfold.svg')"
+      >
+      </button>
+      <span class="toolbar-label"> Unfold </span>
+
+      <!-- <button
+        type="primary"
+        plain
+        size="small"
+        v-if="!isZoomOut"
+        class="button"
+        @click="handle_zoom_out()"
+      >
+        fit-in
+      </button>
+      <button
+        type="primary"
+        plain
+        size="small"
+        v-if="isZoomOut"
+        class="button"
+        @click="handle_zoom_in()"
+      >
+        resume
+      </button> -->
     </div>
     
     <div class="table-view-svg-container" @mousedown="handle_click_on_blank()" @mouseup.stop="handle_mouse_up()">
@@ -769,6 +674,7 @@ export default {
       directionSelectValue: ["row", "column"],
 
       isZoomOut: false,
+      iconPath: ""
     };
   },
 
@@ -3460,8 +3366,10 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
 @padding:0.7rem;
-@toolbar-height: 2.5rem;
-@transform-button-height: 2rem;
+@toolbar-width: 5rem;
+// @transform-button-height: 2rem;
+@button-size: 3.5rem;
+@button-hover-size: 4rem;
 .table-view {
   position: absolute;
   height: 100%;
@@ -3478,48 +3386,47 @@ export default {
     text-align: center;
   }
   .toolbar {
-    height:@toolbar-height;
+    height:100%;
     position:absolute;
-    width:100%;
-    padding-left: @padding;
+    width:@toolbar-width;
+    // padding-left: @padding;
     background: white;
     // align-items: center;
-    text-align: left;
-    border-bottom: 1px solid #cecece;
+    text-align: center;
+    border-right: 1px solid #cecece;
     // overflow: hidden;
-    .el-row {
-      height: 100%;
-    }
-    .el-col {
-      text-align: left;
-      height: 100%;
-    }
+    // .el-row {
+    //   height: 100%;
+    // }
+    // .el-col {
+    //   text-align: left;
+    //   height: 100%;
+    // }
     .toolbar-label {
-      font-size: 100%;
+      font-size: 80%;
       user-select: none;
-      color: #8a8785;
-      margin-right: @padding;
-      height: @transform-button-height;
+      color: #707070;
+      // margin-bottom: 10*@padding;
+      // height: @transform-button-height;
     }
     .button {
       font-size: 100%;
+      width: @button-size;
+      height: @button-size;
       background-color: transparent;
-      color: #3e87cc;
-      border-radius: 4px;
+      background-repeat: no-repeat;
+      background-position: center;
       border: none;
       cursor: pointer;
       user-select: none;
-      // margin-right:@padding;
-      height: @transform-button-height;
-      margin-top: 4.5px;
+      margin-top: 3*@padding;
     }
     .button:hover {
-      background-color: #e4e9eeb6;
+      background-color: #d3e1f0b6;
       border-radius: 4px;
       border: none;
       cursor: pointer;
       user-select: none;
-      height: @transform-button-height;
     }
     .drop-down-button {
       font-size: 115%;
@@ -3532,15 +3439,15 @@ export default {
     }
     .toolbar-vertical-separator {
       border-left: 1px solid #cecece;
-      height: @transform-button-height;
+      // height: @transform-button-height;
       margin-right: 2 * @padding;
       margin-left: @padding;
       width: 4px;
       user-select: none;
     }
-    .recommend-element {
-      display: inline;
-    }
+    // .recommend-element {
+    //   display: inline;
+    // }
 
     // // direction select
     // /deep/.el-input__suffix {
@@ -3574,9 +3481,9 @@ export default {
   .table-view-svg-container {
     position: absolute;
     // height:100%;
-    left: @padding;
+    left: @toolbar-width + 1rem;
     right: 0%;
-    top: @toolbar-height + 1rem;
+    top: @padding;
     bottom: @padding;
     overflow:auto;
     // margin-top:1%;
