@@ -963,6 +963,7 @@ export default {
       if (this.mouseDownMarkLineState) {
         this.clear_selected_header()
         this.clear_selected_cell(true)
+        this.handle_zoom_in()
         if (this.mouseDownMarkLine.type == "column") {
           this.columnWidthList = this.markColumnWidthList;
           this.widthChangeSignal = !this.widthChangeSignal;
@@ -1463,6 +1464,13 @@ export default {
       var currLayerNum = distributionInfo.layer;
       var upLayerNum, downLayerNum;
 
+      // if (["Japan", "Europe", "North America", "Rest of World"].includes(name)) {
+      //   if (currLayerNum == 2 && isSwapUp) {
+      //     this.transform_swap("Wii (Wii)", header, isSwapUp, isRow)
+      //     return
+      //   }
+      // }
+
       if (isSwapUp && currLayerNum != 0) {
         upLayerNum = currLayerNum - 1;
         downLayerNum = currLayerNum;
@@ -1475,25 +1483,25 @@ export default {
       var reference = null,
         refernum = null;
       var differ = false;
-      // if (upLayerNum!=0) {
-      //   for (var item of header[upLayerNum-1].keys()) {
-      //     if (reference == null) {
-      //       reference = header[upLayerNum-1].get(item).children[0]
-      //       refernum = header[upLayerNum-1].get(item).children.length
-      //     }
-      //     if (refernum != header[upLayerNum-1].get(item).children.length) {
-      //       differ = true
-      //       return  // not fully-conn, can't swap
-      //     }
-      //     for (var i=0; i<header[upLayerNum-1].get(item).children.length; i++) {
-      //       if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum-1].get(item).children[i])) {
-      //         differ = true
-      //         return  // not fully-conn, can't swap
-      //       }
-      //     }
-      //   }
-      // }
-      // reference = null, refernum = null, differ = false
+      if (upLayerNum!=0) {
+        for (var item of header[upLayerNum-1].keys()) {
+          if (reference == null) {
+            reference = header[upLayerNum-1].get(item).children[0]
+            refernum = header[upLayerNum-1].get(item).children.length
+          }
+          if (refernum != header[upLayerNum-1].get(item).children.length) {
+            differ = true
+            return  // not fully-conn, can't swap
+          }
+          for (var i=0; i<header[upLayerNum-1].get(item).children.length; i++) {
+            if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum-1].get(item).children[i])) {
+              differ = true
+              return  // not fully-conn, can't swap
+            }
+          }
+        }
+      }
+      reference = null, refernum = null, differ = false
       for (var item of header[upLayerNum].keys()) {
         if (reference == null) {
           reference = header[upLayerNum].get(item).children[0];
