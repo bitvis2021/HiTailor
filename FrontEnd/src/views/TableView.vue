@@ -30,7 +30,7 @@
         @click="transform_transpose()"
         style="background-image:url('./icon/transpose.svg');">
       </button>
-      <span class="toolbar-label"> Transpose </span>
+      <div class="toolbar-label"> Transpose </div>
 
       <button
         class="button"
@@ -38,7 +38,7 @@
         style="background-image:url('./icon/swap.svg')"
       >
       </button>
-      <span class="toolbar-label"> Swap </span>
+      <div class="toolbar-label"> Swap </div>
 
       <button
         class="button"
@@ -46,7 +46,7 @@
         style="background-image:url('./icon/stack.svg')"
       >
       </button>
-      <span class="toolbar-label"> ToStacked </span>
+      <div class="toolbar-label"> ToStacked </div>
 
       <el-dropdown @command="handle_transform_2linear_dropdown" placement="bottom">
         <div class="drop-down-button">
@@ -61,7 +61,7 @@
           <el-dropdown-item command="min">Min</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <span class="toolbar-label"> ToLinear </span>
+      <div class="toolbar-label"> ToLinear </div>
 
       <button
         class="button"
@@ -69,7 +69,7 @@
         style="background-image:url('./icon/fold.svg')"
       >
       </button>
-      <span class="toolbar-label"> Fold </span>
+      <div class="toolbar-label"> Fold </div>
 
       <button
         class="button"
@@ -77,7 +77,7 @@
         style="background-image:url('./icon/unfold.svg')"
       >
       </button>
-      <span class="toolbar-label"> Unfold </span>
+      <div class="toolbar-label"> Unfold </div>
 
       <!-- <button
         type="primary"
@@ -3384,7 +3384,7 @@ export default {
 @padding:0.7rem;
 @toolbar-width: 5rem;
 // @transform-button-height: 2rem;
-@button-size: 4rem;
+@button-size: 3rem;
 .table-view {
   position: absolute;
   height: 100%;

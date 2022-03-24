@@ -86,7 +86,7 @@
 
     <div id="unit-config-panel">
       <el-divider content-position="left">Unit Config</el-divider>
-      <div style="margin-top: 25px">
+      <div style="margin-top: 25px; width:100%; margin-left:2%" >
         <div class="encoding-tags">
           <el-dropdown style="margin: 1%" @command="AddChannel">
             <el-button type="text" size="mini">
@@ -116,7 +116,7 @@
         </div>
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
-          <div class="property-text">shape:</div>
+          <div class="property-text" style="margin-right:10%">shape:</div>
           <el-select
             v-model="shape"
             placeholder="select"
@@ -133,7 +133,7 @@
         </el-row>
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
-          <div class="property-text">scale:</div>
+          <div class="property-text" style="margin-right:10%">scale:</div>
           <el-select
             v-model="scale"
             placeholder="select"
@@ -150,7 +150,7 @@
         </el-row>
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
-          <div class="property-text">color:</div>
+          <div class="property-text" style="margin-right:10%">color:</div>
           <el-color-picker v-model="color" @change="PreviewUnitConfig">
           </el-color-picker>
           <div class="color-legend" v-show="showColorLegend">
@@ -191,7 +191,7 @@
         </el-row>
 
         <el-row type="flex" class="row-bg unit-config-box" justify="start">
-          <div class="property-text">size:</div>
+          <div class="property-text" style="margin-right:10%">size:</div>
           <div style="width: 70%">
             <el-slider
               v-model="relativeSize"
@@ -336,7 +336,7 @@ export default {
       visData: this.visData_arr,
       showColorLegend: false,
 
-      prioritySliderValue: [0, 5],
+      prioritySliderValue: [0, 3],
       directionSelectValue: ["row", "column"],
       directionSelections: ["row", "column"],
     };
