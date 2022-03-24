@@ -20,7 +20,7 @@
         {{ operation }}
       </el-menu-item>
 
-      <el-menu-item @click="handle_zoom()">
+      <el-menu-item class="zoom-operator" @click="handle_zoom()">
         <img :src="get_zoom_icon()" class="icon"/>
       </el-menu-item>
 
@@ -218,6 +218,10 @@ export default {
 
 html {
   font-size: 100%;
+}
+.zoom-operator {
+  position: absolute !important;
+  right: 10px !important;
 }
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
