@@ -28,7 +28,7 @@
       <button
         class="button"
         @click="transform_transpose()"
-        style="background-image:url('./icon/transpose.svg'); margin-top:130px">
+        style="background-image:url('./icon/transpose.svg');">
       </button>
       <span class="toolbar-label"> Transpose </span>
 
@@ -39,7 +39,6 @@
       >
       </button>
       <span class="toolbar-label"> Swap </span>
-
 
       <button
         class="button"

@@ -91,7 +91,7 @@ export default {
   data() {
     return {
       appName: "HiTailor",
-      operationArray: ["Open Example Data", "Upload your data"],
+      operationArray: ["Open Example Data", "Upload Your Data"],
       iconPath: ["./icon/open-file.svg", "./icon/upload.svg"],
       // activeIndex: "",
       datasetDialogVisible: false,
