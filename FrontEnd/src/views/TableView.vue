@@ -1678,7 +1678,13 @@ export default {
 
       if (new1st.length != 0) {
         for (var item of header[upLayerNum - 1]) {
-          item[1].children = new Array(new1stChildNum).fill(new2nd);
+          var child = []
+          for (var i=0; i<new1stChildNum; i++) {
+            var arr = JSON.parse(JSON.stringify(new2nd))
+            child.push(arr)
+          }
+          item[1].children = child
+          // item[1].children = new Array(new1stChildNum).fill(new2nd);
           header[upLayerNum - 1].set(item[0], item[1]);
         }
       }
@@ -1686,8 +1692,15 @@ export default {
       for (var item of header[upLayerNum]) {
         item[1].parent = new2ndAsParent;
         if (new4th != null) {
-          item[1].children = new Array(new3rdChildNum).fill(new4th);
-        } else {
+          var child = []
+          for (var i=0; i<new3rdChildNum; i++) {
+            var arr = JSON.parse(JSON.stringify(new4th))
+            child.push(arr)
+          }
+          item[1].children = child
+          // item[1].children = new Array(new3rdChildNum).fill(new4th);
+        } 
+        else {
           item[1].children = [];
         }
         header[upLayerNum].set(item[0], item[1]);
@@ -1698,19 +1711,23 @@ export default {
         this.headerDistribution.set(item[0], tmp);
       }
       for (var item of header[downLayerNum]) {
-        item[1].parent = new1st;
-        item[1].children = new Array(new2ndChildNum).fill(new3rdAsChild);
+        item[1].parent = JSON.parse(JSON.stringify(new1st));
+        var child = []        
+        for (var i=0; i<new2ndChildNum; i++) {
+          var arr = JSON.parse(JSON.stringify(new3rdAsChild))
+          child.push(arr)
+        }
+        item[1].children = child
+        // item[1].children = new Array(new2ndChildNum).fill(new3rdAsChild);
         header[downLayerNum].set(item[0], item[1]);
-        var tmp = JSON.parse(
-          JSON.stringify(this.headerDistribution.get(item[0]))
-        );
+        var tmp = JSON.parse(JSON.stringify(this.headerDistribution.get(item[0])));
         tmp.layer -= 1;
         this.headerDistribution.set(item[0], tmp);
       }
 
       if (new4th != null && new4th.length != 0) {
         for (var item of header[downLayerNum + 1]) {
-          item[1].parent = new3rdAsParent;
+          item[1].parent = JSON.parse(JSON.stringify(new3rdAsParent))
           header[downLayerNum + 1].set(item[0], item[1]);
         }
       }
@@ -1934,7 +1951,17 @@ export default {
         cheaderInfo.parent = [{ name: name, ordinal: times }];
         cheaderInfo.isFullyConn = true;
       }
-      header[layer + 1].set(newChild, cheaderInfo);
+      var arrh = Array.from(header[layer + 1])
+      if (arrh[0][0] != newChild) {
+        arrh.unshift([newChild, cheaderInfo])
+      }
+      else {
+        arrh[0][1] = cheaderInfo
+      }
+      var newmp = new Map(arrh)
+      header[layer+1] = newmp
+      // header[layer + 1].set(newChild, cheaderInfo);
+      // console.log(header[layer+1])
 
       //add values
       if (isRow) {
@@ -2196,7 +2223,7 @@ export default {
         childrenCount = 0;
       for (var [key, value] of newHeader[newLayerNum - 1]) {
         for (var i = 0; i < value.range.length; i++) {
-          value.children.push(newChildren);
+          value.children.push(JSON.parse(JSON.stringify(newChildren)));
           value.cellNum = newChildrenNum;
           childrenCount += 1;
         }
@@ -2215,7 +2242,7 @@ export default {
         cobj["range"] = { start: null, end: null };
         cobj["cellNum"] = 1;
         cobj["children"] = [];
-        cobj["parent"] = newParent;
+        cobj["parent"] = JSON.parse(JSON.stringify(newParent));
         cobj["isFullyConn"] = true;
         newLayer.set(name, cobj);
       }
@@ -2354,8 +2381,8 @@ export default {
       }
 
       // change header
-      let temp = arrheader[oriLeftIndex];
-      arrheader[oriLeftIndex] = arrheader[oriRightIndex];
+      let temp = JSON.parse(JSON.stringify(arrheader[oriLeftIndex]));
+      arrheader[oriLeftIndex] = JSON.parse(JSON.stringify(arrheader[oriRightIndex]));
       arrheader[oriRightIndex] = temp
       var newmap = new Map(arrheader)
       header[layer] = newmap
@@ -2369,8 +2396,8 @@ export default {
             var righti = children[i].indexOf(oriright)
             if (lefti==-1 || righti==-1)   continue
 
-            var tmp = children[i][lefti]
-            children[i][lefti] = children[i][righti]
+            var tmp = JSON.parse(JSON.stringify(children[i][lefti]))
+            children[i][lefti] = JSON.parse(JSON.stringify(children[i][righti]))
             children[i][righti] = tmp
           }
         }
@@ -2380,16 +2407,19 @@ export default {
       if (layer != header.length-1) {
         for (var [key, value] of header[layer+1]) {
           var parent = value.parent
-          var lefti = -1
+          var lefti = -1, righti = -1
           for (var i=0; i<parent.length; i++) {
             if (parent[i].name == orileft) {
               lefti = i
-              break
             }
+            if (parent[i].name == oriright) {
+              righti = i
+            }
+
+            if (lefti != -1 && righti != -1)  break
           }
-          if (lefti == -1) continue
+          if (lefti == -1 || righti == -1) continue
           
-          righti = lefti + 1
           var tmp = JSON.parse(JSON.stringify(parent[lefti]))
           parent[lefti] = JSON.parse(JSON.stringify(parent[righti]))
           parent[righti] = tmp
@@ -3002,8 +3032,8 @@ export default {
                 .attr("y1", self.markHeight + self.heightRangeList[self.headerRange.bottom + 1])
                 .attr("y2", self.markHeight + self.heightRangeList[self.heightRangeList.length - 1]);
             } 
-            else if (layer == self.headerRange.bottom && d.y >= 0 
-                || layer == 0 && d.y <= 0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
+            else if (layer == self.headerRange.bottom && d.y >= 0 && d.x!=0
+                || layer == 0 && d.y <= 0 && d.x!=0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
               guideline.attr("y1", self.markHeight + self.heightRangeList[layer])
                 .attr("y2", self.markHeight + self.heightRangeList[layer+1])
 
@@ -3064,8 +3094,8 @@ export default {
                 false
               )
             } 
-            else if (layer == self.headerRange.bottom && d.y >= 0 
-                || layer == 0 && d.y <= 0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
+            else if (layer == self.headerRange.bottom && d.y >= 0 && d.x!=0
+                || layer == 0 && d.y <= 0 && d.x!=0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
               if (d.x < 0) {  // chg left
                 self.transform_chg_pos(name, self.colHeader, layer, true, false)
               }
@@ -3130,8 +3160,8 @@ export default {
                     self.heightRangeList[self.headerRange.bottom + 1]
                 );
             } 
-            else if (layer == self.headerRange.right && d.x >= 0 
-                || layer == 0 && d.x <= 0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
+            else if (layer == self.headerRange.right && d.x >= 0 && d.y!=0
+                || layer == 0 && d.x <= 0 && d.y!=0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
               guideline.attr("x1", self.markWidth + self.widthRangeList[layer])
                 .attr("x2", self.markWidth + self.widthRangeList[layer+1])
 
@@ -3174,8 +3204,8 @@ export default {
                 true
               );
             } 
-            else if (layer == self.headerRange.right && d.x >= 0 
-                || layer == 0 && d.x <= 0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
+            else if (layer == self.headerRange.right && d.x >= 0 && d.y!=0
+                || layer == 0 && d.x <= 0 && d.y!=0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
               if (d.y < 0) {  // chg up
                 self.transform_chg_pos(name, self.rowHeader, layer, true, false)
               }
