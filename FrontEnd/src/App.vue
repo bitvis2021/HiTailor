@@ -219,7 +219,6 @@ export default {
       this.$bus.$emit("change-zoom");
     },
     handle_zoom_scale(value) {
-      console.log(value);
       this.$bus.$emit("change-zoom", value);
     },
   },

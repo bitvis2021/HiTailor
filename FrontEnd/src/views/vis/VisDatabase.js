@@ -785,6 +785,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       vegaEmbed("#chart-" + id, chartJson, {
         renderer: "svg",
         actions: false,
+        theme: 'excel'
       }).then(
         () => {
 

@@ -1408,7 +1408,6 @@ export default {
 
     handle_zoom_scale(scale_handred) {
       let scale = scale_handred / 100;
-      console.log("scale", scale);
       let obj = d3.select(".table-view-svg-container");
       var w = obj.style("width");
       w = Number(w.substring(0, w.length - 2));
