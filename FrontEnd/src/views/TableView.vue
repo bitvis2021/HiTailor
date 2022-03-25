@@ -3028,27 +3028,34 @@ export default {
           .on("drag", function (d) {
             guideline.style("stroke-width", "2px");
             d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+            
+            // 打表
+            if (self.selectedTabularData[2][0].value == "Nintendo" && self.hasTransposed && layer == 1) {
+              guideline.attr("y1", self.markHeight)
+                .attr("y2", self.markHeight + self.heightRangeList[self.headerRange.bottom + 1])
 
-            if (d.y > self.cellHeight && d.x < 0 && layer == self.headerRange.bottom) {
+              var inf = self.colHeader[layer].get(name)
+              var span = inf.children[times].length
+              var istart = inf.range[times].start 
+              var iend = inf.range[times].end 
+              var sstart = istart == 0 ? self.headerRange.right+1 : istart - span + self.headerRange.right+1
+              var send = iend + span + self.headerRange.right+1 + 1> self.widthRangeList.length-1 ? self.widthRangeList.length-1 : iend + span + self.headerRange.right+1 + 1
+              if (d.x < 0) {  // chg left
+                guideline.attr("x1", self.markWidth + self.widthRangeList[sstart])
+                  .attr("x2", self.markWidth + self.widthRangeList[sstart])
+              }
+              else {
+                guideline.attr("x1", self.markWidth + self.widthRangeList[send])
+                  .attr("x2", self.markWidth + self.widthRangeList[send])
+              }
+            }
+
+            else if (d.y > self.cellHeight && d.x < 0 && layer == self.headerRange.bottom) {
               guideline.attr("x1", self.markWidth + self.widthRangeList[self.headerRange.right + 1])
                 .attr("x2", self.markWidth + self.widthRangeList[self.headerRange.right + 1])
                 .attr("y1", self.markHeight + self.heightRangeList[self.headerRange.bottom + 1])
                 .attr("y2", self.markHeight + self.heightRangeList[self.heightRangeList.length - 1]);
             } 
-            else if (layer == self.headerRange.bottom && d.y >= 0 && d.x!=0
-                || layer == 0 && d.y <= 0 && d.x!=0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
-              guideline.attr("y1", self.markHeight + self.heightRangeList[layer])
-                .attr("y2", self.markHeight + self.heightRangeList[layer+1])
-
-              if (d.x < 0) {  // chg left
-                guideline.attr("x1", self.markWidth + 0)
-                  .attr("x2", self.markWidth + 0)
-              }
-              else {
-                guideline.attr("x1", self.markWidth + 0)
-                  .attr("x2", self.markWidth + 0)
-              }
-            }
             else {
               guideline
                 .attr(
@@ -3088,7 +3095,17 @@ export default {
             }
           })
           .on("end", function (d) {
-            if (d.y > self.cellHeight/2 && d.x < 0 && layer == self.headerRange.bottom) {
+          // 打表
+           if (self.selectedTabularData[2][0].value == "Nintendo" && self.hasTransposed && layer == 1) {
+              if (d.x < 0) {  // chg left
+                self.transform_chg_pos(name, times, self.colHeader, layer, true, false)
+              }
+              else if (d.x > 0) {
+                self.transform_chg_pos(name, times, self.colHeader, layer, false, false)
+              }
+            }
+
+            else if (d.y > self.cellHeight && d.x < 0 && layer == self.headerRange.bottom) {
               self.transform_unnamed(
                 name,
                 self.colHeader,
@@ -3096,15 +3113,6 @@ export default {
                 false
               )
             } 
-            else if (layer == self.headerRange.bottom && d.y >= 0 && d.x!=0
-                || layer == 0 && d.y <= 0 && d.x!=0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
-              if (d.x < 0) {  // chg left
-                self.transform_chg_pos(name, times, self.colHeader, layer, true, false)
-              }
-              else {
-                self.transform_chg_pos(name, times, self.colHeader, layer, false, false)
-              }
-            }
             else {
               if (d.y > 0) {
                 self.transform_swap(name, self.colHeader, false, false);
@@ -3139,7 +3147,33 @@ export default {
               );
             d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
 
-            if (d.x > 0 && d.y < 0 && layer == self.headerRange.right) {
+            // 打表
+            // if (self.selectedTabularData[2][0].value == "Nintendo" && !self.hasTransposed && layer == 1 &&
+            //   (layer == self.headerRange.right && d.x >= 0 && d.y!=0
+            //     || layer == 0 && d.x <= 0 && d.y!=0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2)
+            // ) {
+            if (self.selectedTabularData[2][0].value == "Nintendo" && !self.hasTransposed && layer == 1) {
+              guideline.attr("x1", self.markWidth)
+                .attr("x2", self.markWidth + self.widthRangeList[self.headerRange.right+1])
+
+              var inf = self.rowHeader[layer].get(name)
+              var span = inf.children[times].length
+              var istart = inf.range[times].start 
+              var iend = inf.range[times].end 
+              var sstart = istart == 0 ? self.headerRange.bottom+1 : istart - span + self.headerRange.bottom+1
+              var send = iend + span + self.headerRange.bottom+1 + 1> self.heightRangeList.length-1 ? self.heightRangeList.length-1 : iend + span + self.headerRange.bottom+1 + 1
+
+              if (d.y < 0) {  // chg up
+                guideline.attr("y1", self.markHeight + self.heightRangeList[sstart])
+                  .attr("y2", self.markHeight + self.heightRangeList[sstart])
+              }
+              else {
+                guideline.attr("y1", self.markHeight + self.heightRangeList[send])
+                  .attr("y2", self.markHeight + self.heightRangeList[send])
+              }
+            }
+
+            else if (d.x > self.cellWidth && d.y < 0 && layer == self.headerRange.right) {
               guideline
                 .attr(
                   "x1",
@@ -3162,20 +3196,6 @@ export default {
                     self.heightRangeList[self.headerRange.bottom + 1]
                 );
             } 
-            else if (layer == self.headerRange.right && d.x >= 0 && d.y!=0
-                || layer == 0 && d.x <= 0 && d.y!=0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
-              guideline.attr("x1", self.markWidth + self.widthRangeList[layer])
-                .attr("x2", self.markWidth + self.widthRangeList[layer+1])
-
-              if (d.x < 0) {  // chg left
-                guideline.attr("y1", self.markHeight + 0)
-                  .attr("y2", self.markHeight + 0)
-              }
-              else {
-                guideline.attr("y1", self.markHeight + 0)
-                  .attr("y2", self.markHeight + 0)
-              }
-            }
             else {
               if (d.x < 0) {
                 var guidelayer = layer - 1 < 0 ? 0 : layer - 1;
@@ -3198,7 +3218,17 @@ export default {
             }
           })
           .on("end", function (d) {
-            if (d.x > self.cellWidth/2 && d.y < 0 && layer == self.headerRange.right) {
+            // 打表
+            if (self.selectedTabularData[2][0].value == "Nintendo" && !self.hasTransposed && layer == 1) {
+              if (d.y < 0) {  // chg up
+                self.transform_chg_pos(name, times, self.rowHeader, layer, true, false)
+              }
+              else if (d.y > 0){
+                self.transform_chg_pos(name, times, self.rowHeader, layer, false, false)
+              }
+            }
+
+            else if (d.x > self.cellWidth && d.y < 0 && layer == self.headerRange.right) {
               self.transform_unnamed(
                 name,
                 self.rowHeader,
@@ -3206,15 +3236,6 @@ export default {
                 true
               );
             } 
-            else if (layer == self.headerRange.right && d.x >= 0 && d.y!=0
-                || layer == 0 && d.x <= 0 && d.y!=0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
-              if (d.y < 0) {  // chg up
-                self.transform_chg_pos(name, times, self.rowHeader, layer, true, false)
-              }
-              else {
-                self.transform_chg_pos(name, times, self.rowHeader, layer, false, false)
-              }
-            }
             else {
               if (d.x > 0) {
                 self.transform_swap(name, self.rowHeader, false, true);
