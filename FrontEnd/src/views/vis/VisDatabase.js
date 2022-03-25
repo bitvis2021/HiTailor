@@ -731,7 +731,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
         () => {
 
           let content = document.getElementById("chart-" + id);
-          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
+          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart || chartJson.mark.type=="area") {
             content.removeAttribute("transform");   
             
             let offset=width/this.database[id].metaData.x.range;
