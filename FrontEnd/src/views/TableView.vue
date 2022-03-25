@@ -112,6 +112,7 @@
         class="table-view-svg"
         :height="markHeight + heightRangeList[heightRangeList.length - 1]"
         :width="markWidth + widthRangeList[widthRangeList.length - 1]"
+        :transform="`translate(${((markWidth + widthRangeList[widthRangeList.length - 1]) * (zoomScale - 1)) / 2}, ${((markHeight + heightRangeList[heightRangeList.length - 1]) * (zoomScale - 1)) / 2}) scale(${zoomScale})`"
         @mousemove="handle_mouse_move($event)"
         @mouseup.stop="handle_mouse_up()"
       >
@@ -727,7 +728,7 @@ export default {
       directionSelectValue: ["row", "column"],
 
       isZoomOut: false,
-      iconPath: "",
+      zoomScale: 1,
     };
   },
 
@@ -1039,7 +1040,7 @@ export default {
       if (this.mouseDownMarkLineState) {
         this.clear_selected_header();
         this.clear_selected_cell(true);
-        this.handle_zoom_in();
+        // this.handle_zoom_in();
         if (this.mouseDownMarkLine.type == "column") {
           this.columnWidthList = this.markColumnWidthList;
           this.widthChangeSignal = !this.widthChangeSignal;
@@ -1397,38 +1398,40 @@ export default {
         heightScale = h / y;
 
       let scale = Math.min(widthScale, heightScale);
+      this.zoomScale = scale
       this.$bus.$emit("change-zoomScale", Math.floor(scale * 100));
     },
     handle_zoom_in() {
       this.isZoomOut = false;
-      d3.select(".table-view-svg").attr("transform", null);
+      this.zoomScale = 1
+      // d3.select(".table-view-svg").attr("transform", null);
 
       this.$bus.$emit("change-zoomScale", 100);
     },
+    // handle_zoom_scale(scale_handred) {
+    //   let scale = scale_handred / 100;
+    //   this.zoomScale = scale
+      // let obj = d3.select(".table-view-svg-container");
+      // var w = obj.style("width");
+      // w = Number(w.substring(0, w.length - 2));
+      // var h = obj.style("height");
+      // h = Number(h.substring(0, h.length - 2));
 
-    handle_zoom_scale(scale_handred) {
-      let scale = scale_handred / 100;
-      let obj = d3.select(".table-view-svg-container");
-      var w = obj.style("width");
-      w = Number(w.substring(0, w.length - 2));
-      var h = obj.style("height");
-      h = Number(h.substring(0, h.length - 2));
+      // let x = d3.select(".table-view-svg").style("width");
+      // x = Number(x.substring(0, x.length - 2));
+      // let y = d3.select(".table-view-svg").style("height");
+      // y = Number(y.substring(0, y.length - 2));
 
-      let x = d3.select(".table-view-svg").style("width");
-      x = Number(x.substring(0, x.length - 2));
-      let y = d3.select(".table-view-svg").style("height");
-      y = Number(y.substring(0, y.length - 2));
-
-      d3.select(".table-view-svg").attr(
-        "transform",
-        `translate(${(x * (scale - 1)) / 2}, ${
-          (y * (scale - 1)) / 2
-        }) scale(${scale}, ${scale})`
-      );
-    },
+      // d3.select(".table-view-svg").attr(
+      //   "transform",
+      //   `translate(${(x * (scale - 1)) / 2}, ${
+      //     (y * (scale - 1)) / 2
+      //   }) scale(${scale}, ${scale})`
+      // );
+    // },
 
     transform_fold() {
-      this.handle_zoom_in();
+      // this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       this.isCurrFlat = true;
@@ -1470,7 +1473,7 @@ export default {
       this.clear_selected_header()
     },
     transform_unfold() {
-      this.handle_zoom_in();
+      // this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -1517,7 +1520,7 @@ export default {
       this.send_change_width_signal();
     },
     transform_transpose() {
-      this.handle_zoom_in();
+      // this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -1796,7 +1799,7 @@ export default {
       }
     },
     transform_2stacked(name, header, times, isRow) {
-      this.handle_zoom_in()
+      // this.handle_zoom_in()
       this.clear_selected_cell(true)
       this.clear_selected_header()
       this.$bus.$emit("change-header")
@@ -1910,7 +1913,7 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow, type) {
-      this.handle_zoom_in()
+      // this.handle_zoom_in()
       this.clear_selected_cell(true)
       this.clear_selected_header()
       this.$bus.$emit("change-header")
@@ -2174,7 +2177,7 @@ export default {
     //   this.$bus.$emit("change-header");
     // },
     transform_unnamed(name, oriHeader, newHeader, isRow) {
-      this.handle_zoom_in();
+      // this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -2354,7 +2357,7 @@ export default {
         );
       }
     },
-    transform_chg_pos(name, header, layer, isChgLeft, isRow) {
+    transform_chg_pos(name, ordinal, header, layer, isChgLeft, isRow) {
       var arrheader = Array.from(header[layer])
       var curindex
       for (var i=0; i<arrheader.length; i++) {
@@ -3045,7 +3048,6 @@ export default {
                 guideline.attr("x1", self.markWidth + 0)
                   .attr("x2", self.markWidth + 0)
               }
-
             }
             else {
               guideline
@@ -3097,10 +3099,10 @@ export default {
             else if (layer == self.headerRange.bottom && d.y >= 0 && d.x!=0
                 || layer == 0 && d.y <= 0 && d.x!=0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
               if (d.x < 0) {  // chg left
-                self.transform_chg_pos(name, self.colHeader, layer, true, false)
+                self.transform_chg_pos(name, times, self.colHeader, layer, true, false)
               }
               else {
-                self.transform_chg_pos(name, self.colHeader, layer, false, false)
+                self.transform_chg_pos(name, times, self.colHeader, layer, false, false)
               }
             }
             else {
@@ -3207,10 +3209,10 @@ export default {
             else if (layer == self.headerRange.right && d.x >= 0 && d.y!=0
                 || layer == 0 && d.x <= 0 && d.y!=0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
               if (d.y < 0) {  // chg up
-                self.transform_chg_pos(name, self.rowHeader, layer, true, false)
+                self.transform_chg_pos(name, times, self.rowHeader, layer, true, false)
               }
               else {
-                self.transform_chg_pos(name, self.rowHeader, layer, false, false)
+                self.transform_chg_pos(name, times, self.rowHeader, layer, false, false)
               }
             }
             else {
@@ -3529,8 +3531,10 @@ export default {
 
     this.$bus.$on("change-zoom", (value) => {
       if (value) {
-        this.handle_zoom_scale(value);
-      } else {
+        this.zoomScale = value / 100
+        // this.handle_zoom_scale(value);
+      } 
+      else {
         if (this.isZoomOut) {
           this.handle_zoom_in();
         } else {
