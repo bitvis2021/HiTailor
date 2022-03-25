@@ -729,7 +729,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       "http://www.w3.org/2000/svg",
       "rect"
     );
-    background.setAttribute("style", "fill:rgb(255,255,255,0.5); stroke:black; stroke-width:2px; cursor:pointer; filter:bulr(10px)");
+    background.setAttribute("style", "fill:rgb(255,255,255,0.8); stroke:#8a8a8a; stroke-width:0px; cursor:pointer; filter:bulr(10px)");
     background.setAttribute("width", width);
     let icon_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let icon = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -738,7 +738,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     );
     let minL = (height < width) ? height : width;
     let scale = minL / 1000;
-    icon.setAttribute("transform", "scale(" + scale + "," + scale + ")" + " translate(" + width*2 + "," +0+ ")");
+    icon.setAttribute("transform", "scale(" + scale + "," + scale + ")" + " translate(" + width * 2 + "," + 0 + ")");
     icon.setAttribute("style", "fill:#8b8a8a");
 
     // icon_box.append(icon);
