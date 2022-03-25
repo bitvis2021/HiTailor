@@ -28,30 +28,34 @@
       <button
         class="button"
         @click="transform_transpose()"
-        style="background-image:url('./icon/transpose.svg');">
-      </button>
-      <div class="toolbar-label"> Transpose </div>
+        style="background-image: url('./icon/transpose.svg')"
+      ></button>
+      <div class="toolbar-label">Transpose</div>
 
       <button
         class="button"
         @click="handle_transform_swap('FALL 2001', false)"
-        style="background-image:url('./icon/swap.svg')"
-      >
-      </button>
-      <div class="toolbar-label"> Swap </div>
+        style="background-image: url('./icon/swap.svg')"
+      ></button>
+      <div class="toolbar-label">Swap</div>
 
       <button
         class="button"
         @click="handle_transform_2stacked_button()"
-        style="background-image:url('./icon/stack.svg')"
-      >
-      </button>
-      <div class="toolbar-label"> ToStacked </div>
+        style="background-image: url('./icon/stack.svg')"
+      ></button>
+      <div class="toolbar-label">ToStacked</div>
 
-      <el-dropdown @command="handle_transform_2linear_dropdown" placement="bottom">
+      <el-dropdown
+        @command="handle_transform_2linear_dropdown"
+        placement="bottom"
+      >
         <div class="drop-down-button">
           <span class="el-dropdown-link">
-            <button style="background-image:url('./icon/linear.svg')" class="button"/>
+            <button
+              style="background-image: url('./icon/linear.svg')"
+              class="button"
+            />
           </span>
         </div>
         <el-dropdown-menu slot="dropdown">
@@ -61,23 +65,21 @@
           <el-dropdown-item command="min">Min</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
-      <div class="toolbar-label"> ToLinear </div>
+      <div class="toolbar-label">ToLinear</div>
 
       <button
         class="button"
         @click="transform_fold()"
-        style="background-image:url('./icon/fold.svg')"
-      >
-      </button>
-      <div class="toolbar-label"> Fold </div>
+        style="background-image: url('./icon/fold.svg')"
+      ></button>
+      <div class="toolbar-label">Fold</div>
 
       <button
         class="button"
         @click="transform_unfold()"
-        style="background-image:url('./icon/unfold.svg')"
-      >
-      </button>
-      <div class="toolbar-label"> Unfold </div>
+        style="background-image: url('./icon/unfold.svg')"
+      ></button>
+      <div class="toolbar-label">Unfold</div>
 
       <!-- <button
         type="primary"
@@ -100,11 +102,16 @@
         resume
       </button> -->
     </div>
-    
-    <div class="table-view-svg-container" @mousedown="handle_click_on_blank()" @mouseup.stop="handle_mouse_up()">
-      <svg class="table-view-svg" 
-        :height="markHeight + heightRangeList[heightRangeList.length-1]" 
-        :width="markWidth + widthRangeList[widthRangeList.length-1]"        
+
+    <div
+      class="table-view-svg-container"
+      @mousedown="handle_click_on_blank()"
+      @mouseup.stop="handle_mouse_up()"
+    >
+      <svg
+        class="table-view-svg"
+        :height="markHeight + heightRangeList[heightRangeList.length - 1]"
+        :width="markWidth + widthRangeList[widthRangeList.length - 1]"
         @mousemove="handle_mouse_move($event)"
         @mouseup.stop="handle_mouse_up()"
       >
@@ -228,20 +235,55 @@
         <g v-if="!isCurrFlat">
           <!-- column header-->
           <g v-if="headerFixedFlag.column">
-            <g v-for="(item, i) in num2header" :key="'col-header-group-'+ i">              
-              <g v-if="!headerDistribution.get(item[1].value).isRowHeader && item[1].times<headerDistribution.get(item[1].value).count"
-                :id="'column-header-'+i" :key="'column-header-'+i"
-                @mousedown.stop="before_header_interaction('column-header-'+i, false, item[1].value, item[1].times, headerDistribution.get(item[1].value).layer)">
-                <rect class="header-table-cell" :key="'rect-'+i"
-                  :x="cal_column_header_position(item[1].value, item[1].times).x"
-                  :y="cal_column_header_position(item[1].value, item[1].times).y"
-                  :width="cal_column_header_position(item[1].value, item[1].times).width"
-                  :height="cal_column_header_position(item[1].value, item[1].times).height">
-                </rect>
-                <text class="table-cell-text" :key="'text-'+i"
-                  :x="cal_column_header_position(item[1].value, item[1].times).x + textPaddingX" 
-                  :y="cal_column_header_position(item[1].value, item[1].times).y + textPaddingY">
-                  {{item[1].value[0]=='&' ? "" : item[1].value}}
+            <g v-for="(item, i) in num2header" :key="'col-header-group-' + i">
+              <g
+                v-if="
+                  !headerDistribution.get(item[1].value).isRowHeader &&
+                  item[1].times < headerDistribution.get(item[1].value).count
+                "
+                :id="'column-header-' + i"
+                :key="'column-header-' + i"
+                @mousedown.stop="
+                  before_header_interaction(
+                    'column-header-' + i,
+                    false,
+                    item[1].value,
+                    item[1].times,
+                    headerDistribution.get(item[1].value).layer
+                  )
+                "
+              >
+                <rect
+                  class="header-table-cell"
+                  :key="'rect-' + i"
+                  :x="
+                    cal_column_header_position(item[1].value, item[1].times).x
+                  "
+                  :y="
+                    cal_column_header_position(item[1].value, item[1].times).y
+                  "
+                  :width="
+                    cal_column_header_position(item[1].value, item[1].times)
+                      .width
+                  "
+                  :height="
+                    cal_column_header_position(item[1].value, item[1].times)
+                      .height
+                  "
+                ></rect>
+                <text
+                  class="table-cell-text"
+                  :key="'text-' + i"
+                  :x="
+                    cal_column_header_position(item[1].value, item[1].times).x +
+                    textPaddingX
+                  "
+                  :y="
+                    cal_column_header_position(item[1].value, item[1].times).y +
+                    textPaddingY
+                  "
+                >
+                  {{ item[1].value[0] == "&" ? "" : item[1].value }}
                 </text>
               </g>
             </g>
@@ -269,13 +311,25 @@
                   class="header-table-cell"
                   :x="cal_row_header_position(item[1].value, item[1].times).x"
                   :y="cal_row_header_position(item[1].value, item[1].times).y"
-                  :width="cal_row_header_position(item[1].value, item[1].times).width"
-                  :height="cal_row_header_position(item[1].value, item[1].times).height">
-                </rect>
-                <text class="table-cell-text"
-                  :x="cal_row_header_position(item[1].value, item[1].times).x + textPaddingX" 
-                  :y="cal_row_header_position(item[1].value, item[1].times).y + textPaddingY">
-                  {{item[1].value[0]=='&' ? "" : item[1].value}}
+                  :width="
+                    cal_row_header_position(item[1].value, item[1].times).width
+                  "
+                  :height="
+                    cal_row_header_position(item[1].value, item[1].times).height
+                  "
+                ></rect>
+                <text
+                  class="table-cell-text"
+                  :x="
+                    cal_row_header_position(item[1].value, item[1].times).x +
+                    textPaddingX
+                  "
+                  :y="
+                    cal_row_header_position(item[1].value, item[1].times).y +
+                    textPaddingY
+                  "
+                >
+                  {{ item[1].value[0] == "&" ? "" : item[1].value }}
                 </text>
               </g>
             </g>
@@ -673,7 +727,7 @@ export default {
       directionSelectValue: ["row", "column"],
 
       isZoomOut: false,
-      iconPath: ""
+      iconPath: "",
     };
   },
 
@@ -852,7 +906,6 @@ export default {
       // if (type == 'column') {
       //   this.selectByMark.column = true
       //   this.selectByMark.row = false
-
       //   this.selectedArea.top = 0
       //   this.selectedArea.bottom = this.rowHeightList.length - 1
       //   this.selectedArea.left = index
@@ -861,7 +914,6 @@ export default {
       // else {
       //   this.selectByMark.row = true
       //   this.selectByMark.column = false
-
       //   this.selectedArea.top = index
       //   this.selectedArea.bottom = index
       //   this.selectedArea.left = 0
@@ -870,7 +922,6 @@ export default {
       // this.selectedMark.index = index
       // this.selectedMark.type = type
       // this.mouseDownMarkState = true
-
     },
     handle_mouse_down_mark_line(index, type) {
       this.mouseDownMarkLine.index = index;
@@ -921,49 +972,74 @@ export default {
     handle_mouse_move(event) {
       if (this.mouseDownMarkLineState) {
         if (this.mouseDownMarkLine.type == "column") {
-          var offset = event.offsetX - this.markWidth - this.markWidthRangeList[this.mouseDownMarkLine.index]
-          if (offset < this.cellMin) offset = this.cellMin
-          this.markColumnWidthList[this.mouseDownMarkLine.index] = offset
-          this.markWidthChangeSignal = !this.markWidthChangeSignal
+          var offset =
+            event.offsetX -
+            this.markWidth -
+            this.markWidthRangeList[this.mouseDownMarkLine.index];
+          if (offset < this.cellMin) offset = this.cellMin;
+          this.markColumnWidthList[this.mouseDownMarkLine.index] = offset;
+          this.markWidthChangeSignal = !this.markWidthChangeSignal;
           // this.send_change_width_signal()
-        }
-        else if (this.mouseDownMarkLine.type == "row") {
-          var offset = event.offsetY - this.markHeight - this.markHeightRangeList[this.mouseDownMarkLine.index]
-          if (offset < this.cellMin) offset = this.cellMin
-          this.markRowHeightList[this.mouseDownMarkLine.index] = offset
-          this.markHeightChangeSignal = !this.markHeightChangeSignal
+        } else if (this.mouseDownMarkLine.type == "row") {
+          var offset =
+            event.offsetY -
+            this.markHeight -
+            this.markHeightRangeList[this.mouseDownMarkLine.index];
+          if (offset < this.cellMin) offset = this.cellMin;
+          this.markRowHeightList[this.mouseDownMarkLine.index] = offset;
+          this.markHeightChangeSignal = !this.markHeightChangeSignal;
           // this.send_change_height_signal()
         }
-      }
-      else if (this.mouseDownMarkState) {
-        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
-        if (this.selectedMark.type == 'column') {
-          this.selectedArea.left = this.selectedMark.index < this.mouseOverCell.ccurrent ? this.selectedMark.index : this.mouseOverCell.ccurrent
-          this.selectedArea.right = this.selectedMark.index > this.mouseOverCell.ccurrent ? this.selectedMark.index : this.mouseOverCell.ccurrent
+      } else if (this.mouseDownMarkState) {
+        this.cal_mouse_over_cell(event.offsetX, event.offsetY);
+        if (this.selectedMark.type == "column") {
+          this.selectedArea.left =
+            this.selectedMark.index < this.mouseOverCell.ccurrent
+              ? this.selectedMark.index
+              : this.mouseOverCell.ccurrent;
+          this.selectedArea.right =
+            this.selectedMark.index > this.mouseOverCell.ccurrent
+              ? this.selectedMark.index
+              : this.mouseOverCell.ccurrent;
+        } else {
+          this.selectedArea.top =
+            this.selectedMark.index < this.mouseOverCell.rcurrent
+              ? this.selectedMark.index
+              : this.mouseOverCell.rcurrent;
+          this.selectedArea.bottom =
+            this.selectedMark.index > this.mouseOverCell.rcurrent
+              ? this.selectedMark.index
+              : this.mouseOverCell.rcurrent;
         }
-        else {
-          this.selectedArea.top = this.selectedMark.index < this.mouseOverCell.rcurrent ? this.selectedMark.index : this.mouseOverCell.rcurrent
-          this.selectedArea.bottom = this.selectedMark.index > this.mouseOverCell.rcurrent ? this.selectedMark.index : this.mouseOverCell.rcurrent
-        }
-      }
-      else if (this.mouseDownState) {
-        this.cal_mouse_over_cell(event.offsetX, event.offsetY)
+      } else if (this.mouseDownState) {
+        this.cal_mouse_over_cell(event.offsetX, event.offsetY);
 
-        this.selectedArea.top = this.selectedCell.rstart < this.mouseOverCell.rstart ? this.selectedCell.rstart : this.mouseOverCell.rstart
-        this.selectedArea.bottom = this.selectedCell.rend > this.mouseOverCell.rend ? this.selectedCell.rend : this.mouseOverCell.rend
-        this.selectedArea.left = this.selectedCell.cstart < this.mouseOverCell.cstart ? this.selectedCell.cstart : this.mouseOverCell.cstart
-        this.selectedArea.right = this.selectedCell.cend > this.mouseOverCell.cend ? this.selectedCell.cend : this.mouseOverCell.cend   
-      }   
-       else  return  // ignore other mousemoves when mouse is not down 
+        this.selectedArea.top =
+          this.selectedCell.rstart < this.mouseOverCell.rstart
+            ? this.selectedCell.rstart
+            : this.mouseOverCell.rstart;
+        this.selectedArea.bottom =
+          this.selectedCell.rend > this.mouseOverCell.rend
+            ? this.selectedCell.rend
+            : this.mouseOverCell.rend;
+        this.selectedArea.left =
+          this.selectedCell.cstart < this.mouseOverCell.cstart
+            ? this.selectedCell.cstart
+            : this.mouseOverCell.cstart;
+        this.selectedArea.right =
+          this.selectedCell.cend > this.mouseOverCell.cend
+            ? this.selectedCell.cend
+            : this.mouseOverCell.cend;
+      } else return; // ignore other mousemoves when mouse is not down
     },
     handle_mouse_up() {
       this.mouseDownState = false;
       this.mouseDownMarkState = false;
 
       if (this.mouseDownMarkLineState) {
-        this.clear_selected_header()
-        this.clear_selected_cell(true)
-        this.handle_zoom_in()
+        this.clear_selected_header();
+        this.clear_selected_cell(true);
+        this.handle_zoom_in();
         if (this.mouseDownMarkLine.type == "column") {
           this.columnWidthList = this.markColumnWidthList;
           this.widthChangeSignal = !this.widthChangeSignal;
@@ -1158,7 +1234,7 @@ export default {
       // cancel recommend
       if (clearRecommend) {
         this.clear_recommendation_area();
-        this.$bus.$emit("close-VisView")
+        this.$bus.$emit("close-VisView");
       }
     },
     clear_selected_header() {
@@ -1170,7 +1246,7 @@ export default {
       d3.selectAll(".recommend-helper-both").remove();
       d3.selectAll(".recommend-helper-row").remove();
       d3.selectAll(".recommend-helper-col").remove();
-      this.$bus.$emit("close-VisView")
+      this.$bus.$emit("close-VisView");
     },
     hide_recommendation_area() {
       d3.selectAll(".recommend-helper-both").style("visibility", "hidden");
@@ -1236,20 +1312,19 @@ export default {
       var header = isRow ? this.rowHeader : this.colHeader;
 
       for (var [key, headerInfo] of header[layer]) {
-        if (key[0] == "&")  continue  // don't change linear nodes
-        var ranges = headerInfo.range
-        for (var times=0; times<ranges.length; times++) {
+        if (key[0] == "&") continue; // don't change linear nodes
+        var ranges = headerInfo.range;
+        for (var times = 0; times < ranges.length; times++) {
           if (isRow) {
             this.transform_2stacked(key, this.rowHeader, times, true);
             this.cal_range_list(this.markRowHeightList, "mark height");
             this.cal_range_list(this.rowHeightList, "height");
+          } else {
+            this.transform_2stacked(key, this.colHeader, times, false);
+            this.cal_range_list(this.markColumnWidthList, "mark width");
+            this.cal_range_list(this.columnWidthList, "width");
           }
-          else {
-            this.transform_2stacked(key, this.colHeader, times, false)
-            this.cal_range_list(this.markColumnWidthList, "mark width")
-            this.cal_range_list(this.columnWidthList, "width")
-          }
-          
+
           // recalculate value-cell position
           for (var item of this.num2seq) {
             this.cal_value_cell_position(item[1].seq);
@@ -1267,9 +1342,10 @@ export default {
       var header = isRow ? this.rowHeader : this.colHeader;
 
       for (var [key, headerInfo] of header[layer]) {
-        var ranges = headerInfo.range
-        for (var times=0; times<ranges.length; times++) {
-          if (headerInfo.children[times][0][0]!="&")  { // is stacked
+        var ranges = headerInfo.range;
+        for (var times = 0; times < ranges.length; times++) {
+          if (headerInfo.children[times][0][0] != "&") {
+            // is stacked
             if (isRow) {
               this.transform_2linear(
                 key,
@@ -1305,30 +1381,54 @@ export default {
       this.clear_selected_header();
     },
     handle_zoom_out() {
-      this.isZoomOut = true
-      let obj = d3.select(".table-view-svg-container")
-      var w = obj.style("width"); 
-      w = Number(w.substring(0, w.length-2))
-      var h = obj.style("height")
-      h = Number(h.substring(0, h.length-2))
-      
-      let x = d3.select(".table-view-svg").style("width")
-      x = Number(x.substring(0, x.length-2))
-      let y = d3.select(".table-view-svg").style("height")
-      y = Number(y.substring(0, y.length-2))
+      this.isZoomOut = true;
+      let obj = d3.select(".table-view-svg-container");
+      var w = obj.style("width");
+      w = Number(w.substring(0, w.length - 2));
+      var h = obj.style("height");
+      h = Number(h.substring(0, h.length - 2));
 
-      let widthScale = w / x, heightScale = h / y
-      
-      let scale = Math.min(widthScale, heightScale)
-      d3.select(".table-view-svg").attr("transform", `translate(${ x * (scale - 1) / 2}, ${ y * (scale - 1) / 2}) scale(${scale}, ${scale})`);
-    }, 
+      let x = d3.select(".table-view-svg").style("width");
+      x = Number(x.substring(0, x.length - 2));
+      let y = d3.select(".table-view-svg").style("height");
+      y = Number(y.substring(0, y.length - 2));
+
+      let widthScale = w / x,
+        heightScale = h / y;
+
+      let scale = Math.min(widthScale, heightScale);
+      this.$bus.$emit("change-zoomScale", Math.floor(scale * 100));
+    },
     handle_zoom_in() {
-      this.isZoomOut = false
-      d3.select(".table-view-svg").attr("transform", null)
+      this.isZoomOut = false;
+      d3.select(".table-view-svg").attr("transform", null);
+
+      this.$bus.$emit("change-zoomScale", 100);
+    },
+
+    handle_zoom_scale(scale_handred) {
+      let scale = scale_handred / 100;
+      let obj = d3.select(".table-view-svg-container");
+      var w = obj.style("width");
+      w = Number(w.substring(0, w.length - 2));
+      var h = obj.style("height");
+      h = Number(h.substring(0, h.length - 2));
+
+      let x = d3.select(".table-view-svg").style("width");
+      x = Number(x.substring(0, x.length - 2));
+      let y = d3.select(".table-view-svg").style("height");
+      y = Number(y.substring(0, y.length - 2));
+
+      d3.select(".table-view-svg").attr(
+        "transform",
+        `translate(${(x * (scale - 1)) / 2}, ${
+          (y * (scale - 1)) / 2
+        }) scale(${scale}, ${scale})`
+      );
     },
 
     transform_fold() {
-      this.handle_zoom_in()
+      this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
       this.isCurrFlat = true;
@@ -1370,7 +1470,7 @@ export default {
       this.clear_selected_header()
     },
     transform_unfold() {
-      this.handle_zoom_in()
+      this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -1417,7 +1517,7 @@ export default {
       this.send_change_width_signal();
     },
     transform_transpose() {
-      this.handle_zoom_in()
+      this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -1488,25 +1588,32 @@ export default {
       var reference = null,
         refernum = null;
       var differ = false;
-      if (upLayerNum!=0) {
-        for (var item of header[upLayerNum-1].keys()) {
+      if (upLayerNum != 0) {
+        for (var item of header[upLayerNum - 1].keys()) {
           if (reference == null) {
-            reference = header[upLayerNum-1].get(item).children[0]
-            refernum = header[upLayerNum-1].get(item).children.length
+            reference = header[upLayerNum - 1].get(item).children[0];
+            refernum = header[upLayerNum - 1].get(item).children.length;
           }
-          if (refernum != header[upLayerNum-1].get(item).children.length) {
-            differ = true
-            return  // not fully-conn, can't swap
+          if (refernum != header[upLayerNum - 1].get(item).children.length) {
+            differ = true;
+            return; // not fully-conn, can't swap
           }
-          for (var i=0; i<header[upLayerNum-1].get(item).children.length; i++) {
-            if (JSON.stringify(reference) != JSON.stringify(header[upLayerNum-1].get(item).children[i])) {
-              differ = true
-              return  // not fully-conn, can't swap
+          for (
+            var i = 0;
+            i < header[upLayerNum - 1].get(item).children.length;
+            i++
+          ) {
+            if (
+              JSON.stringify(reference) !=
+              JSON.stringify(header[upLayerNum - 1].get(item).children[i])
+            ) {
+              differ = true;
+              return; // not fully-conn, can't swap
             }
           }
         }
       }
-      reference = null, refernum = null, differ = false
+      (reference = null), (refernum = null), (differ = false);
       for (var item of header[upLayerNum].keys()) {
         if (reference == null) {
           reference = header[upLayerNum].get(item).children[0];
@@ -1797,10 +1904,13 @@ export default {
       if (headerInfo.children[times][0][0]=="&")  return // already linear
 
       // add child
-      var newChild = isRow && !this.hasTransposed || !isRow && this.hasTransposed ? ("&-row-"+(layer+1)+"-"+layer) : ("&-col-"+(layer+1)+"-"+layer)
-      headerInfo.children[times].unshift(newChild)
-      header[layer].set(name, headerInfo)
-      
+      var newChild =
+        (isRow && !this.hasTransposed) || (!isRow && this.hasTransposed)
+          ? "&-row-" + (layer + 1) + "-" + layer
+          : "&-col-" + (layer + 1) + "-" + layer;
+      headerInfo.children[times].unshift(newChild);
+      header[layer].set(name, headerInfo);
+
       // add parent
       var addIndex = headerInfo.range[times].start; // add before the first child
       var addRange = { start: addIndex, end: addIndex };
@@ -2037,7 +2147,7 @@ export default {
     //   this.$bus.$emit("change-header");
     // },
     transform_unnamed(name, oriHeader, newHeader, isRow) {
-      this.handle_zoom_in()
+      this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -2423,34 +2533,52 @@ export default {
 
       var vis = [];
       // add chosen value
-      var value = get_unit_data_for_transmission(this.selectedArea.top-this.headerRange.bottom-1,this.selectedArea.left-this.headerRange.right-1, this.valueDistribution, this.seq2num)
-      var pos = selectedPos
-      var obj = {position: pos, value: value, priority: 0}
-      vis.push(obj)
-      console.log("obj", obj)
-      for (var i=min-1; i<=max-1; i++) {
-        for (var j=0; j<data[i].length; j++) {
-          var area = data[i][j]
-          var value = get_unit_data_for_transmission(area.top, area.left, this.valueDistribution, this.seq2num)
+      var value = get_unit_data_for_transmission(
+        this.selectedArea.top - this.headerRange.bottom - 1,
+        this.selectedArea.left - this.headerRange.right - 1,
+        this.valueDistribution,
+        this.seq2num
+      );
+      var pos = selectedPos;
+      var obj = { position: pos, value: value, priority: 0 };
+      vis.push(obj);
+      console.log("obj", obj);
+      for (var i = min - 1; i <= max - 1; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+          var area = data[i][j];
+          var value = get_unit_data_for_transmission(
+            area.top,
+            area.left,
+            this.valueDistribution,
+            this.seq2num
+          );
 
-          var top = area.top+this.headerRange.bottom+1
-          var bottom = area.bottom+this.headerRange.bottom+1
-          var left = area.left+this.headerRange.right+1
-          var right = area.right+this.headerRange.right+1
-          var pos = get_pos_for_transmission(top, bottom, left, right,
-            this.markWidth, this.markHeight, this.widthRangeList, this.heightRangeList)
+          var top = area.top + this.headerRange.bottom + 1;
+          var bottom = area.bottom + this.headerRange.bottom + 1;
+          var left = area.left + this.headerRange.right + 1;
+          var right = area.right + this.headerRange.right + 1;
+          var pos = get_pos_for_transmission(
+            top,
+            bottom,
+            left,
+            right,
+            this.markWidth,
+            this.markHeight,
+            this.widthRangeList,
+            this.heightRangeList
+          );
 
-          var obj = {position: pos, value: value, priority: i+1}
-          vis.push(obj)
+          var obj = { position: pos, value: value, priority: i + 1 };
+          vis.push(obj);
         }
       }
-      var visdata = JSON.stringify(vis)
-      console.log("visdata", vis)
+      var visdata = JSON.stringify(vis);
+      console.log("visdata", vis);
 
-      var meta = {"x": {"range": 1}, "y": {"range": 1}}
-      var metadata = JSON.stringify(meta)
+      var meta = { x: { range: 1 }, y: { range: 1 } };
+      var metadata = JSON.stringify(meta);
 
-      this.$bus.$emit('visualize-selectedData', selectedPos, visdata, metadata)
+      this.$bus.$emit("visualize-selectedData", selectedPos, visdata, metadata);
     },
     // transmit_unit_recommendation_to_vis() {
     //   var dataArray = [], data
@@ -3312,10 +3440,12 @@ export default {
       if (data == null) {
         console.log("apply-null");
       }
-      if (!(
+      if (
+        !(
           this.selectedArea.left == this.selectedArea.right &&
           this.selectedArea.top == this.selectedArea.bottom
-        )) {
+        )
+      ) {
         this.transmit_recommendation_to_vis();
         console.log("not single unit");
         // this.show_recommend_element();
@@ -3326,19 +3456,22 @@ export default {
         //   this.selectedArea.right - this.headerRange.right - 1
         // );
         this.clear_selected_cell(false);
-      } 
-      else if (this.selectedArea.top != null && this.selectedArea.left == this.selectedArea.right && this.selectedArea.top == this.selectedArea.bottom) {
+      } else if (
+        this.selectedArea.top != null &&
+        this.selectedArea.left == this.selectedArea.right &&
+        this.selectedArea.top == this.selectedArea.bottom
+      ) {
         this.hide_recommend_element();
         this.clear_selected_cell(true);
       }
     });
 
     this.$bus.$on("cancel-dialog", (data) => {
-      this.clear_recommendation_area()
+      this.clear_recommendation_area();
     });
 
     this.$bus.$on("confirm-dialog", (data) => {
-      this.clear_recommendation_area()
+      this.clear_recommendation_area();
     });
 
     // Excplicitly use this instead of select canvas to cancel table selection.
@@ -3364,12 +3497,15 @@ export default {
       this.directionSelectValue = data;
     });
 
-    this.$bus.$on("change-zoom", () => {
-      if (this.isZoomOut) {
-        this.handle_zoom_in()
-      }
-      else {
-        this.handle_zoom_out()
+    this.$bus.$on("change-zoom", (value) => {
+      if (value) {
+        this.handle_zoom_scale(value);
+      } else {
+        if (this.isZoomOut) {
+          this.handle_zoom_in();
+        } else {
+          this.handle_zoom_out();
+        }
       }
     });
   },
@@ -3500,7 +3636,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="less">
-@padding:0.7rem;
+@padding: 0.7rem;
 @toolbar-width: 5rem;
 // @transform-button-height: 2rem;
 @button-size: 3rem;
@@ -3520,9 +3656,9 @@ export default {
     text-align: center;
   }
   .toolbar {
-    height:100%;
-    position:absolute;
-    width:@toolbar-width;
+    height: 100%;
+    position: absolute;
+    width: @toolbar-width;
     // padding-left: @padding;
     background: white;
     // align-items: center;
@@ -3553,7 +3689,7 @@ export default {
       border: none;
       cursor: pointer;
       user-select: none;
-      margin-top: 3*@padding;
+      margin-top: 3 * @padding;
     }
     .button:hover {
       background-color: #d3e1f0b6;
@@ -3611,7 +3747,7 @@ export default {
     //   transition: 0s;
     // }
   }
-  
+
   .table-view-svg-container {
     position: absolute;
     // height:100%;
@@ -3619,7 +3755,7 @@ export default {
     right: 0%;
     top: @padding;
     bottom: @padding;
-    overflow:auto;
+    overflow: auto;
     // margin-top:1%;
     // margin-left:1%;
     // margin-right:1%;

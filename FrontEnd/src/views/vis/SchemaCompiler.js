@@ -304,7 +304,14 @@ export let confTemplate = {
             "enumNames": selections_arr,
             default: df_selection
         }
-    }
+    },
+    switch: function (title_str, df_trueFalse) {
+        return {
+            "title": title_str,
+            "type": "boolean",
+            default: df_trueFalse
+        }
+    },
 }
 
 export let markConf = {
@@ -315,16 +322,13 @@ export let markConf = {
     },
     area: function () {
         this.properties = {};
-        this.properties.opacity = new confTemplate.opacity(0.6);
+        this.properties.opacity = new confTemplate.opacity(0.5);
         this.properties.interpolate = new confTemplate.select("interpolate", ["basis", "cardinal", "catmull-rom", "linear", "monotone", "natural", "step", "step-after", "step-before"], "monotone");
         this.properties.color = new confTemplate.color();
     },
     bar: function () {
         this.properties = {};
-        this.properties.opacity = new confTemplate.opacity(0.6);
-        this.properties.width = new confTemplate.width('width', 1, 100, undefined);
-        // this.properties.baseline = new confTemplate.select_radius("base line", ["alphabetic", "top", "middle", "bottom"], "alphabetic");
-        // this.properties.align = new confTemplate.select_radius("align", ["left", "center", "right"], df_align);
+        this.properties.opacity = new confTemplate.opacity(1);
     },
     boxplot: function (df_size, df_opacity, df_color, df_orient, df_extent) {
         this.properties = {};
@@ -341,8 +345,10 @@ export let markConf = {
     },
     point: function (df_size, df_shape) {
         this.properties = {};
-        this.properties.size = new confTemplate.width('point size', 1, 100, df_size);
-        this.properties.shape = new confTemplate.select("shape", ["circle", "square", "cross", "diamond", "triangle-up", "triangle-down", "triangle-right", "triangle-left", "stroke", "arrow", "arrow", "triangle"], df_shape);
+        this.properties.size = new confTemplate.width('size', 1, 1000, 10);
+        this.properties.strokeWidth = new confTemplate.width('stroke Width', 1, 100, 5);
+        this.properties.filled = new confTemplate.switch('filled', true);
+        this.properties.shape = new confTemplate.select("shape", ["circle", "square", "cross", "diamond", "triangle-up", "triangle-down", "triangle-right", "triangle-left", "stroke", "arrow", "arrow", "triangle"],);
     },
     tick: function () {
         this.properties = {};

@@ -556,7 +556,36 @@ VisDatabase.prototype.GenUnit = function (
   }
 
 };
+VisDatabase.prototype.DisableTableUnit = function (
+  height_num,
+  width_num,
+  x_num,
+  y_num
+) {
+  // 1. set json
+  // 2. append canvas
+  // 3. add canvas object to database
+  // 4. render
 
+  let canvas_id = this.GenID();
+
+  // add to db
+  let metaData = new visMetaData(
+    canvas_id,
+    x_num,
+    y_num,
+    height_num,
+    width_num,
+    undefined,
+    undefined,
+    undefined
+  );
+
+  this.database[canvas_id] = metaData;
+  this.database[canvas_id].type = "disabled";
+  this.RenderCanvas(canvas_id);
+  return canvas_id;
+};
 VisDatabase.prototype.GenRecommendFigs = function (
   recommendData_array,
   currentTemplate_obj,
@@ -689,7 +718,36 @@ VisDatabase.prototype.RenderCanvas = function (id) {
     canvas.append(vis);
     table.append(canvas);
     this.AddHiddenButton(id);
-  } else {
+  }
+  else if (this.database[id].type == "disabled") {
+    let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    canvas.setAttribute("id", id);
+    canvas.setAttribute("transform", "translate(" + x + "," + y + ")");
+    canvas.setAttribute("class", "vis-picture");
+    // add back ground
+    let background = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "rect"
+    );
+    background.setAttribute("style", "fill:rgb(255,255,255,0.8); stroke:#8a8a8a; stroke-width:0px; cursor:pointer; filter:bulr(10px)");
+    background.setAttribute("width", width);
+    let icon_box = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    let icon = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    icon.setAttribute(
+      "d", "M272.298667 812.032l-1.664 1.706667-60.330667-60.373334 1.664-1.664a384.042667 384.042667 0 0 1 539.733333-539.733333l1.664-1.706667 60.330667 60.373334-1.664 1.664a384.042667 384.042667 0 0 1-539.733333 539.733333z m0.469333-121.173333l418.133333-418.090667a298.752 298.752 0 0 0-418.133333 418.133333z m478.464-357.76l-418.133333 418.133333a298.752 298.752 0 0 0 418.133333-418.133333z"
+    );
+    let minL = (height < width) ? height : width;
+    let scale = minL / 1000;
+    icon.setAttribute("transform", "scale(" + scale + "," + scale + ")" + " translate(" + width * 2 + "," + 0 + ")");
+    icon.setAttribute("style", "fill:#8b8a8a");
+
+    // icon_box.append(icon);
+    canvas.append(icon_box);
+    background.addEventListener("click", () => document.getElementById(id).remove());
+    background.setAttribute("height", height); canvas.append(background);
+    table.append(canvas);
+  }
+  else {
     let canvas = document.createElementNS("http://www.w3.org/2000/svg", "g");
     let background = document.createElementNS(
       "http://www.w3.org/2000/svg",
@@ -727,29 +785,28 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       vegaEmbed("#chart-" + id, chartJson, {
         renderer: "svg",
         actions: false,
+        theme: 'excel'
       }).then(
         () => {
 
           let content = document.getElementById("chart-" + id);
-          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart) {
-            content.removeAttribute("transform");   
-            
-            let offset=width/this.database[id].metaData.x.range;
+          if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Horizon_Graph || this.database[id].vegaTemplate.name === supportedTemplate.ANQN_Multi_Series_Line_Chart || chartJson.mark.type == "area") {
+            content.removeAttribute("transform");
+
+            let offset = width / this.database[id].metaData.x.range;
             let xScale = width / (width - offset);
-            content.setAttribute("transform", "translate(" + (-(offset/2+5) * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
+            content.setAttribute("transform", "translate(" + (-(offset / 2 + 5) * xScale) + "," + -5 + ") scale(" + xScale + ",1)");
           }
-          else if(this.database[id].vegaTemplate.name === supportedTemplate.NQ_PieChart||this.database[id].vegaTemplate.name === supportedTemplate.NQ_RadialPlot)
-          {
+          else if (this.database[id].vegaTemplate.name === supportedTemplate.NQ_PieChart || this.database[id].vegaTemplate.name === supportedTemplate.NQ_RadialPlot) {
 
           }
-          else if(content.getBBox().width>width||content.getBBox().height>height)
-          {
-            let wScale=width/content.getBBox().width;
-            let hScale=height/content.getBBox().height;
-            let scale=wScale>hScale? hScale:wScale; // Use the smaller one 
-            console.log(content.getBBox()); 
-            content.removeAttribute("transform");   
-            content.setAttribute("transform", "translate(" + (-5) + "," + -5 + ") scale(" + scale + ","+ scale +")");
+          else if (content.getBBox().width > width || content.getBBox().height > height) {
+            let wScale = width / content.getBBox().width;
+            let hScale = height / content.getBBox().height;
+            let scale = wScale > hScale ? hScale : wScale; // Use the smaller one 
+            console.log(content.getBBox());
+            content.removeAttribute("transform");
+            content.setAttribute("transform", "translate(" + (-5) + "," + -5 + ") scale(" + scale + "," + scale + ")");
           }
 
         }
