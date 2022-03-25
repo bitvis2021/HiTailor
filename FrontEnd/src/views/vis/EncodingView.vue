@@ -241,6 +241,9 @@ export default {
 };
 </script>
 <style lang="less">
+.property-text {
+  width: 30px;
+}
 .encoding-card {
   border-style: none !important;
   padding: 10px 10px 0px 10px;

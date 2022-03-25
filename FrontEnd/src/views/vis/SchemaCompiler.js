@@ -328,7 +328,36 @@ export let markConf = {
     },
     bar: function () {
         this.properties = {};
-        this.properties.opacity = new confTemplate.opacity(1);
+        // this.properties.opacity = new confTemplate.opacity(1);
+
+        this.properties["width"] = {
+            "type": "object",
+            "properties": {
+                "band": {
+                    "title": "width",
+                    "type": "number",
+                    "ui:widget": "ElSlider",
+                    default: 1,
+                    multipleOf: 0.01,
+                    minimum: 0.1,
+                    maximum: 1.5,
+                }
+            }
+        };
+        this.properties["height"] = {
+            "type": "object",
+            "properties": {
+                "band": {
+                    "title": "height",
+                    "type": "number",
+                    "ui:widget": "ElSlider",
+                    default: 1,
+                    multipleOf: 0.01,
+                    minimum: 0.1,
+                    maximum: 1.5,
+                }
+            }
+        };
     },
     boxplot: function (df_size, df_opacity, df_color, df_orient, df_extent) {
         this.properties = {};
@@ -345,10 +374,11 @@ export let markConf = {
     },
     point: function (df_size, df_shape) {
         this.properties = {};
-        this.properties.size = new confTemplate.width('size', 1, 1000, 10);
-        this.properties.strokeWidth = new confTemplate.width('stroke Width', 1, 100, 5);
+        this.properties.size = new confTemplate.width('size', 1, 500, 30);
+        this.properties.strokeWidth = new confTemplate.width('stroke Width', 1, 20, 2);
         this.properties.filled = new confTemplate.switch('filled', true);
-        this.properties.shape = new confTemplate.select("shape", ["circle", "square", "cross", "diamond", "triangle-up", "triangle-down", "triangle-right", "triangle-left", "stroke", "arrow", "arrow", "triangle"],);
+        this.properties.shape = new confTemplate.select("shape", ["circle", "square", "cross", "diamond", "triangle-up", "triangle-down", "triangle-right", "triangle-left", "stroke", "arrow", "arrow", "triangle"], "circle");
+        this.properties.color = new confTemplate.color();
     },
     tick: function () {
         this.properties = {};

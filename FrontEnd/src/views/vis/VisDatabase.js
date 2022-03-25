@@ -764,7 +764,7 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       canvas.setAttribute("class", "vis-picture");
 
       // add back ground
-      background.setAttribute("style", "fill:rgb(255,255,255)");
+      background.setAttribute("style", "fill:rgb(255,255,255); stroke:#8a8a8a; stroke-width:1px;");
       background.setAttribute("width", width);
       background.setAttribute("height", height);
 
@@ -780,12 +780,15 @@ VisDatabase.prototype.RenderCanvas = function (id) {
       let chartJson = JSON.parse(
         JSON.stringify(this.GetVegaLite(id, height, width))
       );
+      if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Scatter_plot || this.database[id].vegaTemplate.name === supportedTemplate.NQ_Histogram_Heatmap || this.database[id].vegaTemplate.name === supportedTemplate.NQ_Histogram_Scatterplot) {
+        chartJson.width -= 30;
+        chartJson.height -= 30;
+      }
       console.log("render JSON", chartJson);
       // canvas.append(background);
       vegaEmbed("#chart-" + id, chartJson, {
         renderer: "svg",
         actions: false,
-        theme: 'excel'
       }).then(
         () => {
 
@@ -799,6 +802,11 @@ VisDatabase.prototype.RenderCanvas = function (id) {
           }
           else if (this.database[id].vegaTemplate.name === supportedTemplate.NQ_PieChart || this.database[id].vegaTemplate.name === supportedTemplate.NQ_RadialPlot) {
 
+          }
+          else if (this.database[id].vegaTemplate.name === supportedTemplate.Q2_Scatter_plot || this.database[id].vegaTemplate.name === supportedTemplate.NQ_Histogram_Heatmap || this.database[id].vegaTemplate.name === supportedTemplate.NQ_Histogram_Scatterplot) {
+
+            content.removeAttribute("transform");
+            content.setAttribute("transform", "translate(" + (10) + "," + 10 + ")");
           }
           else if (content.getBBox().width > width || content.getBBox().height > height) {
             let wScale = width / content.getBBox().width;
