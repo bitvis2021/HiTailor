@@ -6,7 +6,11 @@
 
     <div id="vis-view">
       <!-- return buttons -->
-      <el-row type="flex" justify="space-around" style="margin-left: 5px">
+      <el-row
+        type="flex"
+        justify="space-around"
+        style="margin-left: 5px; margin-bottom: 10px"
+      >
         <el-col :span="2">
           <el-button
             v-if="showPanelView && !showTemplates"
@@ -16,7 +20,31 @@
             ><i class="el-icon-back"></i
           ></el-button>
         </el-col>
-        <el-col :span="20"></el-col>
+        <el-col :span="20">
+          <el-button
+            @click="DisableTableUnit"
+            size="mini"
+            plain
+            style="margin-top: 5px; color: #d81e05"
+            >Disable Selected Cells
+            <svg
+              style="transform: translateY(3px); margin-top: -5px"
+              t="1648206142678"
+              class="icon"
+              viewBox="0 0 1024 1024"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              p-id="3218"
+              width="15"
+              height="15"
+            >
+              <path
+                d="M64 66.133333a42.496 42.496 0 0 0 0 60.16l55.04 55.466667v593.066667c0 46.933333 38.4 85.333333 85.333333 85.333333h593.066667l97.706667 97.706667a42.496 42.496 0 1 0 60.16-60.16L124.16 66.133333c-8.106667-8.106667-18.773333-12.373333-29.866667-12.373333s-22.186667 4.266667-30.293333 12.373333z m225.706667 708.693334h-85.333334v-85.333334h85.333334v85.333334z m0-170.666667h-85.333334v-85.333333h85.333334v85.333333z m-85.333334-170.666667v-85.333333h85.333334v85.333333h-85.333334z m256 341.333334h-85.333333v-85.333334h85.333333v85.333334z m-85.333333-170.666667v-85.333333h85.333333v85.333333h-85.333333z m170.666667 170.666667v-85.333334h81.066666l85.333334 85.333334h-166.4z m-170.666667-597.333334h85.333333v85.333334h-19.2l104.533334 104.533333v-19.2h298.666666c23.466667 0 42.666667 19.2 42.666667 42.666667v317.866666l85.333333 85.333334V348.16c0-46.933333-38.4-85.333333-85.333333-85.333333h-341.333333v-85.333334c0-46.933333-38.4-85.333333-85.333334-85.333333H270.506667l104.533333 104.533333v-19.2z m341.333333 256h85.333334v85.333334h-85.333334v-85.333334z"
+                p-id="3219"
+                fill="#d81e06"
+              ></path></svg
+          ></el-button>
+        </el-col>
         <el-col :span="4">
           <el-button @click="CloseVisPanel" type="text" size="medium"
             ><i class="el-icon-close"></i
@@ -118,9 +146,8 @@ export default {
     };
   },
   methods: {
-    CloseVisPanel()
-    {
-      this.$bus.$emit('close-VisView');
+    CloseVisPanel() {
+      this.$bus.$emit("close-VisView");
     },
     // User Operation events
 
@@ -166,6 +193,15 @@ export default {
     PreviewVegaConf(vegaConfig) {
       this.currentTemplate.CompileTweakedConfig(vegaConfig); // 可能有拷贝的问题
       this.$bus.$emit("preview-config"); // preview picture
+    },
+
+    DisableTableUnit() {
+      this.VisDB.DisableTableUnit(
+        this.position.height,
+        this.position.width,
+        this.position.x,
+        this.position.y
+      );
     },
 
     // Initially apply vega-lite config to the table, then register the config in database
