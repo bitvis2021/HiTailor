@@ -11,19 +11,29 @@
         {{ appName }}
       </el-menu-item>
 
-      <el-menu-item 
-        v-for="(operation,index) in operationArray"
+      <el-menu-item
+        v-for="(operation, index) in operationArray"
         :key="operation"
         @click="changeDialogVisible(operation)"
       >
-        <img :src="iconPath[index]" class="icon"/>
+        <img :src="iconPath[index]" class="icon" />
         {{ operation }}
       </el-menu-item>
-
-      <el-menu-item class="zoom-operator" @click="handle_zoom()">
-        <img :src="get_zoom_icon()" class="icon"/>
+      <el-menu-item
+        style="width: 15%; right: 50px !important"
+        class="zoom-operator"
+      >
+        <el-slider
+          v-model="zoomScale"
+          :min="10"
+          :max="150"
+          :step="10"
+          @input="handle_zoom_scale"
+        ></el-slider>
       </el-menu-item>
-
+      <el-menu-item class="zoom-operator" @click="handle_zoom()">
+        <img :src="get_zoom_icon()" class="icon" />
+      </el-menu-item>
     </el-menu>
 
     <!-- <div class="content-container">
@@ -86,8 +96,7 @@ export default {
     TableView,
     DataDialog,
   },
-  computed: {
-  },
+  computed: {},
   data() {
     return {
       appName: "HiTailor",
@@ -108,6 +117,8 @@ export default {
       dialogText: "",
 
       isZoomOut: false,
+
+      zoomScale: 100,
     };
   },
   beforeMount: function () {
@@ -175,6 +186,9 @@ export default {
     this.$bus.$on("close-VisView", () => {
       this.showVisPanel = false;
     });
+    this.$bus.$on("change-zoomScale", (value) => {
+      this.zoomScale=value;
+    });
   },
   methods: {
     iconClass(operation) {
@@ -197,15 +211,17 @@ export default {
     },
     get_zoom_icon() {
       if (this.isZoomOut) {
-        return "./icon/resume.svg"
-      }
-      else 
-        return "./icon/fitin.svg"
+        return "./icon/resume.svg";
+      } else return "./icon/fitin.svg";
     },
     handle_zoom() {
-      this.isZoomOut = !this.isZoomOut
-      this.$bus.$emit("change-zoom")
-    }
+      this.isZoomOut = !this.isZoomOut;
+      this.$bus.$emit("change-zoom");
+    },
+    handle_zoom_scale(value) {
+      console.log(value);
+      this.$bus.$emit("change-zoom", value);
+    },
   },
 };
 </script>
@@ -251,7 +267,9 @@ html {
       font-size: 115%;
     }
   }
-
+  .el-slider__runway {
+    background-color: white !important;
+  }
   .vis-panel-slide-in {
     animation: slide-in 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97);
     transform: translateX(0);
