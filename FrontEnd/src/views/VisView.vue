@@ -265,7 +265,6 @@ export default {
         vegaEmbed("#chart", data, {
           renderer: "svg",
           actions: false,
-          theme: "excel",
         }).then(() => {
           let content = document.getElementById("chart").childNodes[0];
           let width = document.getElementById("chart").clientWidth;
