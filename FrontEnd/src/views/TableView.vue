@@ -1366,10 +1366,13 @@ export default {
       );
       this.send_change_height_signal();
       this.send_change_width_signal();
+
+      this.clear_selected_header()
     },
     transform_unfold() {
       this.handle_zoom_in()
       this.clear_selected_cell(true);
+      this.clear_selected_header()
       this.$bus.$emit("change-header");
       this.isCurrFlat = false;
       if (!this.isHeaderFixed) {
@@ -1416,6 +1419,7 @@ export default {
     transform_transpose() {
       this.handle_zoom_in()
       this.clear_selected_cell(true);
+      this.clear_selected_header()
       this.$bus.$emit("change-header");
       this.hasTransposed = !this.hasTransposed;
       for (var i = 0; i < this.colHeader.length; i++) {
@@ -1459,6 +1463,7 @@ export default {
     transform_swap(name, header, isSwapUp, isRow) {
       // this.handle_zoom_in()
       this.clear_selected_cell(true);
+      this.clear_selected_header()
       this.$bus.$emit("change-header");
       var distributionInfo = this.headerDistribution.get(name);
       var currLayerNum = distributionInfo.layer;
@@ -1669,6 +1674,7 @@ export default {
     transform_2stacked(name, header, times, isRow) {
       this.handle_zoom_in()
       this.clear_selected_cell(true)
+      this.clear_selected_header()
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1782,6 +1788,7 @@ export default {
     transform_2linear(name, header, times, isRow, type) {
       this.handle_zoom_in()
       this.clear_selected_cell(true)
+      this.clear_selected_header()
       this.$bus.$emit("change-header")
       var distributionInfo = JSON.parse(JSON.stringify(this.headerDistribution.get(name)))
       var layer = distributionInfo.layer
@@ -1886,7 +1893,8 @@ export default {
           this.num2seq.set(this.valueIndex, { value: res, seq: seq });
           this.seq2num.set(seq, { value: res, num: this.valueIndex++ });
         }
-      } else {
+      } 
+      else {
         for (
           var i = 0;
           i < this.rowHeightList.length - this.headerRange.bottom - 1;
@@ -2031,6 +2039,7 @@ export default {
     transform_unnamed(name, oriHeader, newHeader, isRow) {
       this.handle_zoom_in()
       this.clear_selected_cell(true);
+      this.clear_selected_header()
       this.$bus.$emit("change-header");
       var distributionInfo = this.headerDistribution.get(name);
       var currLayerNum = distributionInfo.layer;
@@ -2207,6 +2216,84 @@ export default {
           ordList
         );
       }
+    },
+    transform_chg_pos(name, header, layer, isChgLeft, isRow) {
+      var arrheader = Array.from(header[layer])
+      var curindex
+      for (var i=0; i<arrheader.length; i++) {
+        if (arrheader[i][0] == name) {
+          curindex = i
+          break
+        }
+      }
+
+      if (curindex==0 && isChgLeft || curindex==arrheader.length-1 && !isChgLeft) return  // can't change
+
+      var orileft, oriright, oriLeftIndex, oriRightIndex
+      if (isChgLeft) {
+        orileft = arrheader[curindex-1][0]
+        oriLeftIndex = curindex - 1
+        oriright = name
+        oriRightIndex = curindex
+      }
+      else {
+        orileft = name
+        oriLeftIndex = curindex
+        oriright = arrheader[curindex+1][0]
+        oriRightIndex = curindex + 1
+      }
+
+      // change header
+      let temp = arrheader[oriLeftIndex];
+      arrheader[oriLeftIndex] = arrheader[oriRightIndex];
+      arrheader[oriRightIndex] = temp
+      var newmap = new Map(arrheader)
+      header[layer] = newmap
+
+      // change parent's children
+      if (layer != 0) {
+        for (var [key, value] of header[layer-1]) {
+          var children = value.children
+          for (var i=0; i<children.length; i++) {
+            var lefti = children[i].indexOf(orileft)
+            var righti = children[i].indexOf(oriright)
+            if (lefti==-1 || righti==-1)   continue
+
+            var tmp = children[i][lefti]
+            children[i][lefti] = children[i][righti]
+            children[i][righti] = tmp
+          }
+        }
+      }
+
+      // change child's parents
+      if (layer != header.length-1) {
+        for (var [key, value] of header[layer+1]) {
+          var parent = value.parent
+          var lefti = -1
+          for (var i=0; i<parent.length; i++) {
+            if (parent[i].name == orileft) {
+              lefti = i
+              break
+            }
+          }
+          if (lefti == -1) continue
+          
+          righti = lefti + 1
+          var tmp = JSON.parse(JSON.stringify(parent[lefti]))
+          parent[lefti] = JSON.parse(JSON.stringify(parent[righti]))
+          parent[righti] = tmp
+        }
+      }
+
+      for (var i = 0; i < header.length; i++) {
+        for (var item of header[i].values()) {
+          item.range = [];
+        }
+      }
+      cal_header_range(header);
+      this.send_change_width_signal()
+
     },
 
     transmit_chosen_to_vis(top, bottom, left, right) {
@@ -2781,29 +2868,28 @@ export default {
             guideline.style("stroke-width", "2px");
             d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
 
-            if (d.y > 0 && d.x < 0 && layer == self.headerRange.bottom) {
-              guideline
-                .attr(
-                  "x1",
-                  self.markWidth +
-                    self.widthRangeList[self.headerRange.right + 1]
-                )
-                .attr(
-                  "x2",
-                  self.markWidth +
-                    self.widthRangeList[self.headerRange.right + 1]
-                )
-                .attr(
-                  "y1",
-                  self.markHeight +
-                    self.heightRangeList[self.headerRange.bottom + 1]
-                )
-                .attr(
-                  "y2",
-                  self.markHeight +
-                    self.heightRangeList[self.heightRangeList.length - 1]
-                );
-            } else {
+            if (d.y > self.cellHeight && d.x < 0 && layer == self.headerRange.bottom) {
+              guideline.attr("x1", self.markWidth + self.widthRangeList[self.headerRange.right + 1])
+                .attr("x2", self.markWidth + self.widthRangeList[self.headerRange.right + 1])
+                .attr("y1", self.markHeight + self.heightRangeList[self.headerRange.bottom + 1])
+                .attr("y2", self.markHeight + self.heightRangeList[self.heightRangeList.length - 1]);
+            } 
+            else if (layer == self.headerRange.bottom && d.y >= 0 
+                || layer == 0 && d.y <= 0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
+              guideline.attr("y1", self.markHeight + self.heightRangeList[layer])
+                .attr("y2", self.markHeight + self.heightRangeList[layer+1])
+
+              if (d.x < 0) {  // chg left
+                guideline.attr("x1", self.markWidth + 0)
+                  .attr("x2", self.markWidth + 0)
+              }
+              else {
+                guideline.attr("x1", self.markWidth + 0)
+                  .attr("x2", self.markWidth + 0)
+              }
+
+            }
+            else {
               guideline
                 .attr(
                   "x1",
@@ -2815,7 +2901,7 @@ export default {
                   self.markWidth +
                     self.widthRangeList[self.widthRangeList.length - 1]
                 );
-              if (d.dy < 0) {
+              if (d.y < 0) {
                 var guidelayer = layer - 1 < 0 ? 0 : layer - 1;
                 guideline
                   .attr(
@@ -2826,11 +2912,9 @@ export default {
                     "y2",
                     self.markHeight + self.heightRangeList[guidelayer]
                   );
-              } else {
-                var guidelayer =
-                  layer + 1 > self.headerRange.bottom
-                    ? self.headerRange.bottom
-                    : layer + 1;
+              } 
+              else {
+                var guidelayer = layer + 1 > self.headerRange.bottom ? self.headerRange.bottom : layer + 1;
                 guideline
                   .attr(
                     "y1",
@@ -2844,14 +2928,24 @@ export default {
             }
           })
           .on("end", function (d) {
-            if (d.y > 0 && d.x < 0 && layer == self.headerRange.bottom) {
+            if (d.y > self.cellHeight/2 && d.x < 0 && layer == self.headerRange.bottom) {
               self.transform_unnamed(
                 name,
                 self.colHeader,
                 self.rowHeader,
                 false
-              );
-            } else {
+              )
+            } 
+            else if (layer == self.headerRange.bottom && d.y >= 0 
+                || layer == 0 && d.y <= 0 || d.x >= self.cellWidth/2  || d.x <= -1 * self.cellWidth/2) {
+              if (d.x < 0) {  // chg left
+                self.transform_chg_pos(name, self.colHeader, layer, true, false)
+              }
+              else {
+                self.transform_chg_pos(name, self.colHeader, layer, false, false)
+              }
+            }
+            else {
               if (d.y > 0) {
                 self.transform_swap(name, self.colHeader, false, false);
               } else if (d.y < 0) {
@@ -2865,7 +2959,9 @@ export default {
             d3.select("#interaction-helper-line").remove();
           });
         helper.datum({ y: 0, dy: 0, x: 0, dx: 0 }).call(drag);
-      } else {
+      } 
+      
+      else {
         const drag = d3
           .drag()
           .on("drag", function (d) {
@@ -2905,16 +3001,29 @@ export default {
                   self.markHeight +
                     self.heightRangeList[self.headerRange.bottom + 1]
                 );
-            } else {
-              if (d.dx < 0) {
+            } 
+            else if (layer == self.headerRange.right && d.x >= 0 
+                || layer == 0 && d.x <= 0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
+              guideline.attr("x1", self.markWidth + self.widthRangeList[layer])
+                .attr("x2", self.markWidth + self.widthRangeList[layer+1])
+
+              if (d.x < 0) {  // chg left
+                guideline.attr("y1", self.markHeight + 0)
+                  .attr("y2", self.markHeight + 0)
+              }
+              else {
+                guideline.attr("y1", self.markHeight + 0)
+                  .attr("y2", self.markHeight + 0)
+              }
+            }
+            else {
+              if (d.x < 0) {
                 var guidelayer = layer - 1 < 0 ? 0 : layer - 1;
                 guideline
                   .attr("x1", self.markWidth + self.widthRangeList[guidelayer])
                   .attr("x2", self.markWidth + self.widthRangeList[guidelayer]);
               } else {
-                var guidelayer =
-                  layer + 1 > self.headerRange.right
-                    ? self.headerRange.right
+                var guidelayer = layer + 1 > self.headerRange.right? self.headerRange.right
                     : layer + 1;
                 guideline
                   .attr(
@@ -2929,14 +3038,24 @@ export default {
             }
           })
           .on("end", function (d) {
-            if (d.x > 0 && d.y < 0 && layer == self.headerRange.right) {
+            if (d.x > self.cellWidth/2 && d.y < 0 && layer == self.headerRange.right) {
               self.transform_unnamed(
                 name,
                 self.rowHeader,
                 self.colHeader,
                 true
               );
-            } else {
+            } 
+            else if (layer == self.headerRange.right && d.x >= 0 
+                || layer == 0 && d.x <= 0 || d.y >= self.cellHeight/2  || d.y <= -1 * self.cellHeight/2) {
+              if (d.y < 0) {  // chg up
+                self.transform_chg_pos(name, self.rowHeader, layer, true, false)
+              }
+              else {
+                self.transform_chg_pos(name, self.rowHeader, layer, false, false)
+              }
+            }
+            else {
               if (d.x > 0) {
                 self.transform_swap(name, self.rowHeader, false, true);
               } else if (d.x < 0) {
