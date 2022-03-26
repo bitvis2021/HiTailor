@@ -32,11 +32,7 @@ export function get_data_from_chosen(top, bottom, left, right, headerRange, valu
             var value = seq2num.get(seq).value
             var arrseq = Array.from(seq)
             arrseq.push(value)
-            res.push(arrseq)      
-        res.push(arrseq)      
-            res.push(arrseq)      
-        res.push(arrseq)      
-            res.push(arrseq)      
+            res.push(arrseq)        
         }
     }
     return res

@@ -69,15 +69,15 @@
 
       <button
         class="button"
-        @click=""
         style="background-image: url('./icon/fold.svg')"
+        @click="transform_fold()"
       ></button>
       <div class="toolbar-label">Fold</div>
 
       <button
         class="button"
-        @click=""
         style="background-image: url('./icon/unfold.svg')"
+        @click="transform_unfold()"
       ></button>
       <div class="toolbar-label">Unfold</div>
 
@@ -125,7 +125,7 @@
           class="table-mark"
         />
 
-        <!-- <g v-if="isCurrFlat">
+        <g v-if="isCurrFlat">
           <g v-for="(item, i) in flatAttrName" :key="item.index">
             <rect
               class="header-table-cell"
@@ -173,7 +173,7 @@
               </text>
             </g>
           </g>
-        </g> -->
+        </g>
 
         <!-- cell before choosing header-->
         <!-- <g v-if="!isCurrFlat && !isHeaderFixed">
@@ -234,7 +234,7 @@
         </g> -->
 
         <!-- cell after choosing header-->
-        <!-- <g v-if="!isCurrFlat"> -->
+        <g v-if="!isCurrFlat">
           <!-- column header-->
           <g v-if="headerFixedFlag.column">
             <g v-for="(item, i) in num2header" :key="'col-header-group-' + i">
@@ -387,7 +387,7 @@
               </text>
             </g>
           </g>
-        <!-- </g> -->
+        </g>
 
         <!-- row mark -->
         <g v-for="(row, rowindex) in rowHeightList" :key="row.index">
@@ -575,7 +575,7 @@
 
         <g id="vis-container" />
 
-        <!-- <g v-if="!isCurrFlat"> -->
+        <g v-if="!isCurrFlat">
           <!-- row header line -->
           <line v-if="headerRange.right != null"
             class="header-line"
@@ -594,7 +594,7 @@
             :y1="markHeight + heightRangeList[headerRange.bottom + 1]"
             :y2="markHeight + heightRangeList[headerRange.bottom + 1]"
           ></line>
-        <!-- </g> -->
+        </g>
 
         <!-- selected area -->
         <rect
@@ -1440,6 +1440,7 @@ export default {
     // },
 
     transform_fold() {
+      if (this.isCurrFlat)  return
       // this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.$bus.$emit("change-header");
@@ -1454,6 +1455,7 @@ export default {
           this.valueDistribution,
           this.seq2num
         );
+        console.log("flatdata", this.flatData)
         if (this.flatAttrName == null) {
           this.flatAttrName = [];
           for (var i = 0; i < this.flatData[0].length; i++) {
@@ -1530,6 +1532,7 @@ export default {
     },
     transform_transpose() {
       // this.handle_zoom_in();
+      if (this.isCurrFlat)  return
       this.clear_selected_cell(true);
       this.clear_selected_header()
       this.$bus.$emit("change-header");
@@ -1573,6 +1576,7 @@ export default {
       this.send_change_width_signal();
     },
     transform_swap(name, header, isSwapUp, isRow) {
+      if (this.isCurrFlat)  return
       // this.handle_zoom_in()
       this.clear_selected_cell(true);
       this.clear_selected_header()
@@ -1808,6 +1812,7 @@ export default {
       }
     },
     transform_2stacked(name, header, times, isRow) {
+      if (this.isCurrFlat)  return
       // this.handle_zoom_in()
       this.clear_selected_cell(true)
       this.clear_selected_header()
@@ -1922,6 +1927,7 @@ export default {
       }
     },
     transform_2linear(name, header, times, isRow, type) {
+      if (this.isCurrFlat)  return
       // this.handle_zoom_in()
       this.clear_selected_cell(true)
       this.clear_selected_header()
@@ -2190,6 +2196,7 @@ export default {
     //   this.$bus.$emit("change-header");
     // },
     transform_unnamed(name, oriHeader, newHeader, isRow) {
+      if (this.isCurrFlat)  return
       // this.handle_zoom_in();
       this.clear_selected_cell(true);
       this.clear_selected_header()
@@ -2371,6 +2378,7 @@ export default {
       }
     },
     transform_chg_pos(name, ordinal, header, layer, isChgLeft, isRow) {
+      if (this.isCurrFlat)  return
       var arrheader = Array.from(header[layer])
       var curindex
       for (var i=0; i<arrheader.length; i++) {
@@ -3890,18 +3898,18 @@ export default {
         stroke: black;
         stroke-width: 0.4px;
       }
-      // .table-cell {
-      //   fill: white;
-      //   stroke: lightslategrey;
-      //   stroke-width: 0.2px;
-      //   cursor: cell;
-      // }
-      // .header-table-cell {
-      //   fill: rgb(245, 248, 250);
-      //   stroke: lightslategrey;
-      //   stroke-width: 0.2px;
-      //   cursor: cell;
-      // }
+      .table-cell {
+        fill: white;
+        stroke: lightslategrey;
+        stroke-width: 0.2px;
+        cursor: cell;
+      }
+      .header-table-cell {
+        fill: rgb(245, 248, 250);
+        stroke: lightslategrey;
+        stroke-width: 0.2px;
+        cursor: cell;
+      }
       .table-cell-text {
         text-anchor: start;
       }
