@@ -65,7 +65,6 @@
     >
       <DataDialog
         :datasetDialogKey="datasetDialogKey"
-        @closeDataDialog="closeDataDialog"
       >
       </DataDialog>
     </el-dialog>
@@ -190,6 +189,10 @@ export default {
       this.dialogText = data.text;
     });
 
+    this.$bus.$on("close-data-dialog" , () => {
+      this.datasetDialogVisible = false
+    })
+
     this.$bus.$on("close-VisView", () => {
       this.showVisPanel = false;
     });
@@ -201,11 +204,15 @@ export default {
     iconClass(operation) {
       return "icon-" + operation;
     },
-    closeDataDialog() {},
+    // closeDataDialog() {
+    //   this.datasetDialogVisible = false
+    // },
     changeDialogVisible(panel_name) {
       console.log("panel_name", panel_name);
       if (panel_name === "Open Example Data") {
         this.datasetDialogVisible = true;
+      }
+      if (panel_name === "Upload Your Data") {
       }
       if (panel_name === "Export") {
         this.exportDialogVisible = true;

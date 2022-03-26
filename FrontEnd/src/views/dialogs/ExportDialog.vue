@@ -83,8 +83,6 @@
 	        // let treeCanvasId = 'tree-dsl-canvas'
 	        // let treeSvg = d3.select(document.getElementById(treeCanvasSvgId))
 	        // let treeCanvasG = treeSvg.select('#' + treeCanvasId)
-
-			// let svg = d3.select('#table-view-svg')
 			// console.log(svg)
 			
 	        // // 暂时去除辅助线
@@ -96,21 +94,34 @@
 	        // treeCanvasG.select('.tree-g').selectAll('.resize-circle-g').attr('display', 'none')
 
 
-			d3.select("#table-view-svg-container").append("div").attr("id", "table-view-svg-copy")
-			$('svg#table-view-svg').clone().appendTo($("div#table-view-svg-copy"));
+			// d3.select("#table-view-svg-container").append("div").attr("id", "table-view-svg-copy")
+			// $('svg#table-view-svg').clone().appendTo($("div#table-view-svg-copy"));
 
-			let svg = d3.select('#table-view-svg-copy').select("#table-view-svg")
-			svg.selectAll('.table-mark').attr('display', 'none')
-			svg.selectAll('.table-mark-text').attr('display', 'none')
-			svg.selectAll('.row-mark-transparent-line').attr('display', 'none')
-			svg.selectAll('.column-mark-transparent-line').attr('display', 'none')
-			svg.select('#transparent-mask-for-choosing').remove()
+			// let svg = d3.select('#table-view-svg-copy').select("#table-view-svg")
+			// console.log("svg", svg.node())
 
-			saveSvgAsPng.saveSvgAsPng(svg.node(), imageName)
+			// let svg = d3.select('#table-view-svg')
+			// d3.selectAll('.table-mark').attr('display', 'none')
+			// d3.selectAll('.table-mark-text').attr('display', 'none')
+			// svg.selectAll('.row-mark-transparent-line').attr('display', 'none')
+			// svg.selectAll('.column-mark-transparent-line').attr('display', 'none')
+			// svg.select('#transparent-mask-for-choosing').remove()
+			// svg.select('#vis-container').remove()
+			// svg.select('#hover-helper-container').remove()
+			// svg.select('#recommendation-area-container').remove()
 
-			setTimeout(function() {
-				$('div#table-view-svg-copy').remove();
-			}, 1000)
+			let ssvg = document.getElementById("table-view-svg")
+			console.log(ssvg)
+
+			saveSvgAsPng.saveSvgAsPng(ssvg, imageName)
+			// .then(function () {
+	        // //   svg.selectAll('.table-mark').attr('display', null)
+	        // //   svg.selectAll('.table-mark-text').attr('display', null)
+	        // })
+
+			// setTimeout(function() {
+			// 	$('div#table-view-svg-copy').remove();
+			// }, 1000)
 
 			// svg.selectAll('.table-mark').attr('display', 'none')
 			// svg.selectAll('.table-mark-text').attr('display', 'none')

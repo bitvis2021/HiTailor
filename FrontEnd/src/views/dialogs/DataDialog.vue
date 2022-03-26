@@ -113,22 +113,29 @@
             this.setCurrent(fileName)
         },
         closeDataDialog: function() {
-            this.$emit('closeDataDialog')
+            this.$bus.$emit('close-data-dialog')
         },
         confirmSelection: function() {
-            let self = this
+            // let self = this
+
             //  confirm the selected tabular dataset
             if (this.tempSelection != null) {
-                let selectionExisted = (this.treeDataArray.map(function(e) { return e.filename; })
-                        .indexOf(this.tempSelection) !== -1)
-                if (selectionExisted) {
-                    this.selectedTabularDataName = this.tempSelection
-                    this.updateSelectedTreeDatasetName(this.selectedTabularDataName)
-                    this.tempSelection = null
-                    self.$cookies.set('selected-data-name', this.selectedTabularDataName)
-                }
+              // console.log("this.tempSelection", this.tempSelection)
+              //   let selectionExisted = (this.treeDataArray.map(function(e) { return e.filename; })
+              //     .indexOf(this.tempSelection) !== -1)
+              //   console.log("selectionExisted", selectionExisted)
+              //   if (selectionExisted) {
+              //       this.selectedTabularDataName = this.tempSelection
+              //       this.updateSelectedTabularDatasetName(this.selectedTabularDataName)
+              //       this.tempSelection = null
+              //       self.$cookies.set('selected-data-name', this.selectedTabularDataName)
+              //   }
+              this.selectedTabularDataName = this.tempSelection
+              this.updateSelectedTabularDatasetName(this.selectedTabularDataName)
+              this.tempSelection = null
+              // this.$cookies.set('selected-data-name', this.selectedTabularDataName)
             }
-            this.$emit('closeDataDialog')
+            this.$bus.$emit('close-data-dialog')
         },
         getFile: function() {
             console.log('upload file ok')
@@ -195,8 +202,9 @@
                 }
             }
         },
-        updateSelectedTreeDatasetName: function (selectedFileName) {
+        updateSelectedTabularDatasetName: function (selectedFileName) {
             sysDatasetObj.updateSelectedTabularDataset(selectedFileName)
+            this.$bus.$emit("update-selected-dataset")
         },
         promptMessage: function(type, message) {
             this.$message({

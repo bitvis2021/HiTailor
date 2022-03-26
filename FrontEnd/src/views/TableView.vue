@@ -3366,7 +3366,7 @@ export default {
 
   beforeMount: function () {
     this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"];
-    console.log("selectedTabularData", this.selectedTabularData);
+    // console.log("selectedTabularDataaaaaaaaaaaaaaaaaaaa", this.selectedTabularData);
     this.headerDistribution = new Map();
     this.valueDistribution = new Map();
     this.num2header = new Map();
@@ -3493,6 +3493,11 @@ export default {
     console.log("this.widthRangeList", this.widthRangeList);
     console.log("this.heightRangeList", this.heightRangeList);
     console.log("this.dataValueList", this.dataValueList);
+
+    this.$bus.$on("update-selected-dataset", () => {
+      this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"]
+      this.$forceUpdate()
+    })
 
     this.$bus.$on("apply-config", (data) => {
       if (data == null) {
