@@ -8,27 +8,24 @@ def load_tabular_dataset():
         read tabular dataset and process
     '''
     global tabular_dataset_list
-    s = parse_sheet("public/table1.xlsx", "Sheet1")
-    tabular_data_content = s.result()
-    print(type(tabular_data_content))
-    print(str(tabular_data_content))
-    tabular_data_obj = {}
-    tabular_data_obj["filename"] = "table1.xlsx"
-    tabular_data_obj["row"] = 10
-    tabular_data_obj["column"] = 20
-    tabular_data_obj["content"] = str(tabular_data_content)
-    tabular_dataset_list.append(tabular_data_obj)
+    namelist = ["Console Sales.xlsx", "Console Sales(cumulative).xlsx", "US Investment Abroad.xlsx", "School Curriculums.xlsx"]
+    rowlist = [42,42,41,17]
+    collist = [35,39,15,11]
+    for index in range(len(namelist)):
+        prefix = "public/"
+        sheet = "Sheet1"
+        filename = prefix + namelist[index]
+        s = parse_sheet(filename, sheet)
+        tabular_data_content = s.result()
+        print(type(tabular_data_content))
+        print(str(tabular_data_content))
+        tabular_data_obj = {}
+        tabular_data_obj["filename"] = namelist[index]
+        tabular_data_obj["row"] = rowlist[index]
+        tabular_data_obj["column"] = collist[index]
+        tabular_data_obj["content"] = str(tabular_data_content)
+        tabular_dataset_list.append(tabular_data_obj)
 
-    s = parse_sheet("public/table2.xlsx", "Sheet1")
-    tabular_data_content = s.result()
-    print(type(tabular_data_content))
-    print(str(tabular_data_content))
-    tabular_data_obj = {}
-    tabular_data_obj["filename"] = "table2.xlsx"
-    tabular_data_obj["row"] = 10
-    tabular_data_obj["column"] = 20
-    tabular_data_obj["content"] = str(tabular_data_content)
-    tabular_dataset_list.append(tabular_data_obj)
     # tabular_data_obj = {"content": s.result()}
     # tabular_dataset.append(tabular_data_obj)
 

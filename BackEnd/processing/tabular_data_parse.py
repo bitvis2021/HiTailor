@@ -42,7 +42,7 @@ class parse_sheet:
                     pc = parse_cell(c.column - 1, c.value, c.data_type, self.maxLen[c.column-1])
                     r.append(pc)    # 将当前单元格加入行
                 else:   # 当前是被合并的单元格
-                    if c.column < 5:    # 位于当前行开始部分，作为表头的MergedCell需要特殊考虑(设其坐标<3)
+                    if c.column < 4:    # 位于当前行开始部分，作为表头的MergedCell需要特殊考虑(设其坐标<3)
                         pc = parse_cell(c.column - 1, c.value, c.data_type, self.maxLen[c.column-1])
                         r.append(pc)
                     else:
