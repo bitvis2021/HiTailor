@@ -1,5 +1,5 @@
 <template>
-  <div class="table-view">
+  <div class="table-view" :key="viewKey">
     <div
       class="header-button-container"
       v-if="!isCurrFlat && !(headerFixedFlag.row && headerFixedFlag.column)"
@@ -737,6 +737,7 @@ export default {
 
       isZoomOut: false,
       zoomScale: 1,
+      viewKey: 1
     };
   },
 
@@ -3495,6 +3496,7 @@ export default {
   },
 
   mounted: function () {
+    let self = this
     this.hide_recommend_element();
     console.log("this.selectedTabularData", this.selectedTabularData);
     console.log("this.columnWidthList", this.columnWidthList);
@@ -3504,11 +3506,13 @@ export default {
     console.log("this.heightRangeList", this.heightRangeList);
     console.log("this.dataValueList", this.dataValueList);
 
-
-    this.$bus.$on("update-selected-dataset", () => {
-      this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"]
-      this.force_update_tableview()
-    })
+    // this.$bus.$on("update-selected-dataset", () => {
+    //   self.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"]
+    //   console.log('selectedTabularData', self.selectedTabularData)
+    //   self.$forceUpdate()
+    //   self.viewKey = (self.viewKey + 1) % 2
+    //   console.log('')
+    // })
 
     this.$bus.$on("apply-config", (data) => {
       if (data == null) {

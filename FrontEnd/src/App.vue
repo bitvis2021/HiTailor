@@ -44,7 +44,7 @@
       class="content-container"
       :class="{ 'content-container-right-margin': showVisPanel }"
     >
-      <TableView></TableView>
+      <TableView :key="tableViewKey"></TableView>
     </div>
 
     <div
@@ -125,6 +125,7 @@ export default {
       isZoomOut: false,
 
       zoomScale: 100,
+      tableViewKey: 1
     };
   },
   beforeMount: function () {
@@ -174,10 +175,16 @@ export default {
     );
   },
   mounted: function () {
+    let self = this
     this.$bus.$on("visualize-selectedData", () => {
       this.initializeVis = true;
       this.showVisPanel = true;
     });
+
+    this.$bus.$on("update-selected-dataset", () => {
+      self.tableViewKey = (self.tableViewKey + 1) % 2
+      console.log('update selected dataset')
+    })
 
     this.$bus.$on("select-canvas", () => {
       this.showVisPanel = true;
