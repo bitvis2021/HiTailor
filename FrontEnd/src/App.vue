@@ -77,6 +77,10 @@
         <el-button type="primary" @click="ConfirmDialog">Yes</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog title="Export" id="export-dialog" :visible.sync="exportDialogVisible">
+      <ExportDialog></ExportDialog>
+    </el-dialog>
   </div>
 </template>
 
@@ -87,6 +91,7 @@ import { getTabularDataset } from "@/communication/communicator.js";
 import { parseTabularData } from "@/utils/tabularDataParser.js";
 import { Dataset } from "@/dataset/dataset.js";
 import DataDialog from "@/views/dialogs/DataDialog.vue";
+import ExportDialog from "@/views/dialogs/ExportDialog.vue";
 import { mapState } from "vuex";
 
 export default {
@@ -95,15 +100,17 @@ export default {
     VisView,
     TableView,
     DataDialog,
+    ExportDialog
   },
   computed: {},
   data() {
     return {
       appName: "HiTailor",
-      operationArray: ["Open Example Data", "Upload Your Data"],
-      iconPath: ["./icon/open-file.svg", "./icon/upload.svg"],
+      operationArray: ["Open Example Data", "Upload Your Data", "Export"],
+      iconPath: ["./icon/open-file.svg", "./icon/upload.svg", "./icon/save.svg"],
       // activeIndex: "",
       datasetDialogVisible: false,
+      exportDialogVisible: false,
       datasetDialogKey: 0,
       loadingData: true,
 
@@ -199,6 +206,9 @@ export default {
       console.log("panel_name", panel_name);
       if (panel_name === "Open Example Data") {
         this.datasetDialogVisible = true;
+      }
+      if (panel_name === "Export") {
+        this.exportDialogVisible = true;
       }
     },
     ConfirmDialog() {

@@ -105,11 +105,12 @@
 
     <div
       class="table-view-svg-container"
+      id="table-view-svg-container"
       @mousedown="handle_click_on_blank()"
       @mouseup.stop="handle_mouse_up()"
     >
       <svg
-        class="table-view-svg"
+        class="table-view-svg" id="table-view-svg"
         :height="markHeight + heightRangeList[heightRangeList.length - 1]"
         :width="markWidth + widthRangeList[widthRangeList.length - 1]"
         :transform="`translate(${((markWidth + widthRangeList[widthRangeList.length - 1]) * (zoomScale - 1)) / 2}, ${((markHeight + heightRangeList[heightRangeList.length - 1]) * (zoomScale - 1)) / 2}) scale(${zoomScale})`"
@@ -2011,7 +2012,11 @@ export default {
             count += 1;
           }
           sum = Number(sum).toFixed(1);
+          if (sum == 0) sum = Number(sum).toFixed(0)
+
           avg = Number(sum / count).toFixed(1);
+          if (avg == 0) avg = Number(avg).toFixed(0)
+
           max = Number(Math.max.apply(null, tmpdata));
           min = Number(Math.min.apply(null, tmpdata));
 
