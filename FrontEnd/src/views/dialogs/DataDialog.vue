@@ -24,14 +24,14 @@
                 @row-dblclick="dataTableRowDBClick"
                 @row-click="dataTableRowClick"
                 :data="tabularDataObjList"
-                max-height="170"
+                max-height="200"
                 border
-                stripe
-                style="width: 100%">
+                >
                 <el-table-column
                   property="filename"
                   label="FileName"
                   sortable
+                  fixed
                   >
                 </el-table-column>
                 <el-table-column
@@ -97,7 +97,7 @@
     mounted: function() {
         this.search = ""
         this.selectedTabularDataName = this.initTreeDataName
-        this.setCurrent()
+        this.setCurrent("Console Sales.xlsx")
     },
     computed: {
         ...mapState([
@@ -196,9 +196,10 @@
         setCurrent(fileName) {
             for (let i = 0; i < this.tabularDataObjList.length; i++) {
                 let treeDataObj = this.tabularDataObjList[i]
-                if (treeDataObj.fileName === fileName) {
+                if (treeDataObj.filename === fileName) {
                     let row = this.tabularDataObjList[i]
                     this.$refs.treeDataTable.setCurrentRow(row);
+                    
                 }
             }
         },
