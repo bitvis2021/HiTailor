@@ -104,7 +104,7 @@
 			svg.selectAll('.table-mark-text').attr('display', 'none')
 			svg.selectAll('.row-mark-transparent-line').attr('display', 'none')
 			svg.selectAll('.column-mark-transparent-line').attr('display', 'none')
-			svg.selectAll('#transparent-mask-for-choosing').attr('display', 'none')
+			svg.select('#transparent-mask-for-choosing').remove()
 
 			saveSvgAsPng.saveSvgAsPng(svg.node(), imageName)
 

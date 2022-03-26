@@ -69,14 +69,14 @@
 
       <button
         class="button"
-        @click="transform_fold()"
+        @click=""
         style="background-image: url('./icon/fold.svg')"
       ></button>
       <div class="toolbar-label">Fold</div>
 
       <button
         class="button"
-        @click="transform_unfold()"
+        @click=""
         style="background-image: url('./icon/unfold.svg')"
       ></button>
       <div class="toolbar-label">Unfold</div>
@@ -125,7 +125,7 @@
           class="table-mark"
         />
 
-        <g v-if="isCurrFlat">
+        <!-- <g v-if="isCurrFlat">
           <g v-for="(item, i) in flatAttrName" :key="item.index">
             <rect
               class="header-table-cell"
@@ -173,10 +173,10 @@
               </text>
             </g>
           </g>
-        </g>
+        </g> -->
 
         <!-- cell before choosing header-->
-        <g v-if="!isCurrFlat && !isHeaderFixed">
+        <!-- <g v-if="!isCurrFlat && !isHeaderFixed">
           <g
             v-for="(row, rowindex) in rowDistributionList"
             :key="row.index"
@@ -231,10 +231,10 @@
               </text>
             </g>
           </g>
-        </g>
+        </g> -->
 
         <!-- cell after choosing header-->
-        <g v-if="!isCurrFlat">
+        <!-- <g v-if="!isCurrFlat"> -->
           <!-- column header-->
           <g v-if="headerFixedFlag.column">
             <g v-for="(item, i) in num2header" :key="'col-header-group-' + i">
@@ -383,7 +383,7 @@
               </text>
             </g>
           </g>
-        </g>
+        <!-- </g> -->
 
         <!-- row mark -->
         <g v-for="(row, rowindex) in rowHeightList" :key="row.index">
@@ -554,7 +554,7 @@
 
         <!-- transparent mask for choosing -->
         <rect
-          v-if="!isCurrFlat && isHeaderFixed"
+          v-if="isHeaderFixed"
           id="transparent-mask-for-choosing"
           :x="markWidth + widthRangeList[headerRange.right + 1]"
           :y="markHeight + heightRangeList[headerRange.bottom + 1]"
@@ -571,7 +571,7 @@
 
         <g id="vis-container" />
 
-        <g v-if="!isCurrFlat">
+        <!-- <g v-if="!isCurrFlat"> -->
           <!-- row header line -->
           <line
             :class="{ 'header-line': headerRange.right != null }"
@@ -588,7 +588,7 @@
             :y1="markHeight + heightRangeList[headerRange.bottom + 1]"
             :y2="markHeight + heightRangeList[headerRange.bottom + 1]"
           ></line>
-        </g>
+        <!-- </g> -->
 
         <!-- selected area -->
         <rect
