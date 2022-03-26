@@ -257,6 +257,7 @@
               >
                 <rect
                   class="header-table-cell"
+                  style="fill: rgb(245, 248, 250); stroke: lightslategrey; stroke-width: 0.2px; cursor: cell;"
                   :key="'rect-' + i"
                   :x="
                     cal_column_header_position(item[1].value, item[1].times).x
@@ -311,6 +312,7 @@
               >
                 <rect
                   class="header-table-cell"
+                  style="fill: rgb(245, 248, 250); stroke: lightslategrey; stroke-width: 0.2px; cursor: cell;"
                   :x="cal_row_header_position(item[1].value, item[1].times).x"
                   :y="cal_row_header_position(item[1].value, item[1].times).y"
                   :width="
@@ -341,6 +343,7 @@
             <!-- top-left corner -->
             <rect
               class="header-table-cell"
+              style="fill: rgb(245, 248, 250); stroke: lightslategrey; stroke-width: 0.2px; cursor: cell;"
               :x="markWidth"
               :y="markHeight"
               :width="widthRangeList[headerRange.right + 1]"
@@ -350,6 +353,7 @@
             <g v-for="item in num2seq" :key="item.index">
               <rect
                 class="table-cell"
+                style="fill: white; stroke: lightslategrey; stroke-width: 0.2px; cursor: cell"
                 :x="
                   markWidth +
                   widthRangeList[cal_value_cell_position(item[1].seq).col]
@@ -573,16 +577,18 @@
 
         <!-- <g v-if="!isCurrFlat"> -->
           <!-- row header line -->
-          <line
-            :class="{ 'header-line': headerRange.right != null }"
+          <line v-if="headerRange.right != null"
+            class="header-line"
+            style="stroke: rgb(43, 98, 134); stroke-width: 0.5px;"
             :x1="markWidth + widthRangeList[headerRange.right + 1]"
             :x2="markWidth + widthRangeList[headerRange.right + 1]"
             :y1="markHeight"
             :y2="markHeight + heightRangeList[heightRangeList.length - 1]"
           ></line>
           <!-- column header line -->
-          <line
-            :class="{ 'header-line': headerRange.bottom != null }"
+          <line v-if="headerRange.bottom != null"
+            class="header-line"
+            style="stroke: rgb(43, 98, 134); stroke-width: 0.5px;"
             :x1="markWidth"
             :x2="markWidth + widthRangeList[widthRangeList.length - 1]"
             :y1="markHeight + heightRangeList[headerRange.bottom + 1]"
@@ -594,6 +600,7 @@
         <rect
           v-if="selectedArea.top != null"
           class="selected-area"
+          style="stroke: steelblue; fill: rgb(186, 219, 228); fill-opacity: 20%; stroke-width: 1.5px;"
           :x="markWidth + widthRangeList[selectedArea.left]"
           :y="markHeight + heightRangeList[selectedArea.top]"
           :width="
@@ -3256,6 +3263,10 @@ export default {
         helper.datum({ x: 0, dx: 0, y: 0, dy: 0 }).call(drag);
       }
     },
+
+    force_update_tableview() {
+      this.$forceUpdate()
+    }
   },
 
   watch: {
@@ -3366,7 +3377,6 @@ export default {
 
   beforeMount: function () {
     this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"];
-    // console.log("selectedTabularDataaaaaaaaaaaaaaaaaaaa", this.selectedTabularData);
     this.headerDistribution = new Map();
     this.valueDistribution = new Map();
     this.num2header = new Map();
@@ -3494,9 +3504,10 @@ export default {
     console.log("this.heightRangeList", this.heightRangeList);
     console.log("this.dataValueList", this.dataValueList);
 
+
     this.$bus.$on("update-selected-dataset", () => {
       this.selectedTabularData = sysDatasetObj.selectedTabularDataObj["content"]
-      this.$forceUpdate()
+      this.force_update_tableview()
     })
 
     this.$bus.$on("apply-config", (data) => {
@@ -3875,18 +3886,18 @@ export default {
         stroke: black;
         stroke-width: 0.4px;
       }
-      .table-cell {
-        fill: white;
-        stroke: lightslategrey;
-        stroke-width: 0.2px;
-        cursor: cell;
-      }
-      .header-table-cell {
-        fill: rgb(245, 248, 250);
-        stroke: lightslategrey;
-        stroke-width: 0.2px;
-        cursor: cell;
-      }
+      // .table-cell {
+      //   fill: white;
+      //   stroke: lightslategrey;
+      //   stroke-width: 0.2px;
+      //   cursor: cell;
+      // }
+      // .header-table-cell {
+      //   fill: rgb(245, 248, 250);
+      //   stroke: lightslategrey;
+      //   stroke-width: 0.2px;
+      //   cursor: cell;
+      // }
       .table-cell-text {
         text-anchor: start;
       }
