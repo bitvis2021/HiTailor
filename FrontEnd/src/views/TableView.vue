@@ -1263,7 +1263,7 @@ export default {
       this.isRecommendState = false;
     },
     show_recommend_element(notShowButton = false) {
-      this.directionSelectValue = ["row", "column"];
+      // this.directionSelectValue = ["row", "column"];
       d3.selectAll(".recommend-element").style("visibility", "visible");
       if (notShowButton) {
         d3.selectAll("#recommend-apply-button").style("visibility", "hidden");
