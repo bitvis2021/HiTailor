@@ -1,7 +1,7 @@
 <template>
     <div id = 'dataset-dialog'>
         <div class = "content-container">
-            <el-upload
+            <!-- <el-upload
                 class="upload-demo"
                 drag
                 action="http://127.0.0.1:14452/"
@@ -15,8 +15,8 @@
                 :show-file-list="false"
                 multiple>
                 <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
-            </el-upload>
-            <span class = "inner-label">Your Dateset:</span>
+            </el-upload> -->
+            <!-- <span class = "inner-label">Your Dateset:</span> -->
             <el-table 
                 ref="treeDataTable"
                 highlight-current-row
@@ -46,7 +46,7 @@
                   sortable
                   show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column
+                <!-- <el-table-column
                   align="center">
                   <template slot="header" slot-scope="scope">
                     Delete
@@ -58,7 +58,7 @@
                         <i class="el-icon-delete"></i>
                     </el-button>
                   </template>
-                </el-table-column>
+                </el-table-column> -->
             </el-table>
         </div>
         <div slot="footer" class="dialog-footer">
