@@ -63,10 +63,7 @@
       id="dataset-dialog"
       :visible.sync="datasetDialogVisible"
     >
-      <DataDialog
-        :datasetDialogKey="datasetDialogKey"
-      >
-      </DataDialog>
+      <DataDialog :datasetDialogKey="datasetDialogKey"> </DataDialog>
     </el-dialog>
 
     <el-dialog :title="dialogTitle" :visible.sync="showDialog" width="30%">
@@ -77,7 +74,21 @@
       </span>
     </el-dialog>
 
-    <el-dialog title="Export" id="export-dialog" :visible.sync="exportDialogVisible">
+    <el-dialog :title="'User Guidance'" :visible.sync="showVideo" width="1080px">
+      <div style="color:red">必填！！！</div>
+      <a href="https://www.wjx.cn/vj/h4Ln1n6.aspx">用户问卷调查 https://www.wjx.cn/vj/h4Ln1n6.aspx</a>
+      <br>
+      <br>
+      <video height="540px" controls>
+        <source :src="videoPath" type="video/mp4">
+      </video>
+    </el-dialog>
+
+    <el-dialog
+      title="Export"
+      id="export-dialog"
+      :visible.sync="exportDialogVisible"
+    >
       <ExportDialog></ExportDialog>
     </el-dialog>
   </div>
@@ -99,14 +110,18 @@ export default {
     VisView,
     TableView,
     DataDialog,
-    ExportDialog
+    ExportDialog,
   },
   computed: {},
   data() {
     return {
       appName: "HiTailor",
       operationArray: ["Open Example Data", "Upload Your Data", "Export"],
-      iconPath: ["./icon/open-file.svg", "./icon/upload.svg", "./icon/save.svg"],
+      iconPath: [
+        "./icon/open-file.svg",
+        "./icon/upload.svg",
+        "./icon/save.svg",
+      ],
       // activeIndex: "",
       datasetDialogVisible: false,
       exportDialogVisible: false,
@@ -125,7 +140,10 @@ export default {
       isZoomOut: false,
 
       zoomScale: 100,
-      tableViewKey: 1
+      tableViewKey: 1,
+
+      showVideo: true,
+      videoPath:require("../public/video/guidance.mp4")
     };
   },
   beforeMount: function () {
@@ -175,16 +193,16 @@ export default {
     );
   },
   mounted: function () {
-    let self = this
+    let self = this;
     this.$bus.$on("visualize-selectedData", () => {
       this.initializeVis = true;
       this.showVisPanel = true;
     });
 
     this.$bus.$on("update-selected-dataset", () => {
-      self.tableViewKey = (self.tableViewKey + 1) % 2
-      console.log('update selected dataset')
-    })
+      self.tableViewKey = (self.tableViewKey + 1) % 2;
+      console.log("update selected dataset");
+    });
 
     this.$bus.$on("select-canvas", () => {
       this.showVisPanel = true;
@@ -196,15 +214,15 @@ export default {
       this.dialogText = data.text;
     });
 
-    this.$bus.$on("close-data-dialog" , () => {
-      this.datasetDialogVisible = false
-    })
+    this.$bus.$on("close-data-dialog", () => {
+      this.datasetDialogVisible = false;
+    });
 
     this.$bus.$on("close-VisView", () => {
       this.showVisPanel = false;
     });
     this.$bus.$on("change-zoomScale", (value) => {
-      this.zoomScale=value;
+      this.zoomScale = value;
     });
   },
   methods: {
