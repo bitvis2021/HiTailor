@@ -143,7 +143,7 @@ export default {
       tableViewKey: 1,
 
       showVideo: true,
-      videoPath:require("../public/video/guidance.mp4")
+      videoPath:"http://r9ea0k3fo.hb-bkt.clouddn.com/guidance.mp4"
     };
   },
   beforeMount: function () {
