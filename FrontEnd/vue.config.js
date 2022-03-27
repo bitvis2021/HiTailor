@@ -1,4 +1,4 @@
 module.exports = {
   publicPath: '',	
-  outputDir: 'dist'
+  outputDir: 'hitailor'
 }
