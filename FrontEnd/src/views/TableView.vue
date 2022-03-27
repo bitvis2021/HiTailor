@@ -2379,6 +2379,10 @@ export default {
     },
     transform_chg_pos(name, ordinal, header, layer, isChgLeft, isRow) {
       if (this.isCurrFlat)  return
+      // this.handle_zoom_in()
+      this.clear_selected_cell(true);
+      this.clear_selected_header()
+      this.$bus.$emit("change-header");
       var arrheader = Array.from(header[layer])
       var curindex
       for (var i=0; i<arrheader.length; i++) {
