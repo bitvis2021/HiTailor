@@ -76,7 +76,7 @@
     </div>
 
     <el-dialog
-      title="Dataset"
+      title="Example Dataset"
       id="dataset-dialog"
       :visible.sync="datasetDialogVisible"
     >
@@ -158,8 +158,6 @@ export default {
 
       initializeVis: false,
       showVisPanel: false,
-      // isHeaderFixed: false,
-      // currView: "Transformation",
 
       showDialog: false,
       dialogTitle: "",
@@ -195,28 +193,6 @@ export default {
         );
         sysDatasetObj.updateTabularDatasetList(processed_tabular_dataobj_list);
         tabularDataDeferObj.resolve();
-        // processed_tabular_datalist_str = processed_tabular_datalist_str.replace(/"/g, '?')
-        // console.log('processed_tabular_datalist_str', processed_tabular_datalist_str)
-        // processed_tabular_datalist_str = processed_tabular_datalist_str.replace(/'/g, '"')
-        // let processed_tabular_datalist = JSON.parse(
-        //   processed_tabular_datalist_str
-        // )
-        // for (let i = 0;i < processed_tabular_datalist.length;i++) {
-        //   let processed_tabular_dataobj = processed_tabular_datalist[i]
-        //   processed_tabular_dataobj['content'] = processed_tabular_dataobj['content'].replace(/[?=]/g, '"')
-        //   console.log('processed_tabular_datalist_str', processed_tabular_dataobj['content'])
-        //   processed_tabular_dataobj['content'] = JSON.parse(processed_tabular_dataobj['content'])
-        // }
-        // console.log("processed_tabular_datalist", processed_tabular_datalist);
-
-        // processed_tabular_datalist_str = processed_tabular_datalist_str.replace(/'/g, '"')
-        // console.log('processed_tabular_datalist_str', processed_tabular_datalist_str)
-        // let processed_tabular_datalist = JSON.parse(
-        //   processed_tabular_datalist_str
-        // );
-        // console.log("processed_tabular_datalist", processed_tabular_datalist);
-        // sysDatasetObj.updateTabularDatasetList(processed_tabular_datalist);
-        //
       }
     );
   },

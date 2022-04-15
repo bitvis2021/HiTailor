@@ -15,7 +15,7 @@ def load_tabular_dataset():
         prefix = "public/"
         sheet = "Sheet1"
         filename = prefix + namelist[index]
-        s = parse_sheet(filename, sheet)
+        s = parse_sheet(filename)
         tabular_data_content = s.result()
         print(type(tabular_data_content))
         print(str(tabular_data_content))
@@ -36,9 +36,8 @@ def get_tabular_dataset():
     return {"data": str(tabular_dataset_list)}
 
 def parse_upload_data(filename):
-    sheet = "Sheet1"
     filepath = "public/upload_" + filename
-    s = parse_sheet(filepath, sheet)
+    s = parse_sheet(filepath)
     tabular_data_content = s.result()
     tabular_data_obj = {}
     tabular_data_obj["filename"] = "upload_" + filename

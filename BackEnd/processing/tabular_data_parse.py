@@ -16,9 +16,9 @@ class parse_cell:
 
 
 class parse_sheet:
-    def __init__(self, path, name):
+    def __init__(self, path):
         wb = load_workbook(path)
-        self.sheet = wb[name]
+        self.sheet = wb.worksheets[0]
         self.parsedSheet = list()
         self.maxLen = list()
         self.parse()

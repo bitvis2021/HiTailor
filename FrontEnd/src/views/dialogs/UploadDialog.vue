@@ -22,13 +22,14 @@
           drag
           action="http://127.0.0.1:14450/getupload"
           :show-file-list="false"
+          :multiple="false"
           accept=".xlsx,.xls"
           name="file"
-          :on-success="handleUploadSuccess"
+          :on-success="handleUploadSuccess" 
           >
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
-          <!-- <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div> -->
+          <!-- <div class="el-upload__tip" slot="tip">Only xls/xlsx files</div> -->
         </el-upload>
 
             
@@ -217,6 +218,7 @@
             width: 100%;
             height: 200px;
             .el-upload__text {
+              font-size: 130%;
                 line-height: 100px;
                 width: 100%;
             }
