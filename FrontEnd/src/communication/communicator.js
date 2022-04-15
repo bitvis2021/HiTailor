@@ -16,3 +16,18 @@ export function getTabularDataset(tabularDataList, getTabularDataCallback) {
         getTabularDataCallback(tabularDatasetList)
     })
 }
+
+export function getUploadData(name, uploadDataCallback) {
+    axios({
+        methods: 'get',
+        url: server_address + '/uploadtabulardata',
+        params: {"name": name},
+        timeout: 5000
+    })
+    .then((res) => {
+        let tabularDataList = res['data']['data']
+        console.log('tabularDatasetList', tabularDataList)
+        // console.log("resssss", res['data']['data'])
+        uploadDataCallback(tabularDataList)
+    })
+}

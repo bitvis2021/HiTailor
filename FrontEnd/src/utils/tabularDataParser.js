@@ -1,6 +1,6 @@
 export function parseTabularData (processed_tabular_datalist_str) {
     processed_tabular_datalist_str = processed_tabular_datalist_str.replace(/"/g, '?')
-    console.log('processed_tabular_datalist_str', processed_tabular_datalist_str)
+    // console.log('processed_tabular_datalist_str', processed_tabular_datalist_str)
     processed_tabular_datalist_str = processed_tabular_datalist_str.replace(/'/g, '"')
     let processed_tabular_datalist = JSON.parse(
       processed_tabular_datalist_str

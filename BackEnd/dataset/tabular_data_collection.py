@@ -34,3 +34,17 @@ def get_tabular_dataset():
         read tabular dataset and process
     '''
     return {"data": str(tabular_dataset_list)}
+
+def parse_upload_data(filename):
+    sheet = "Sheet1"
+    filepath = "public/upload_" + filename
+    s = parse_sheet(filepath, sheet)
+    tabular_data_content = s.result()
+    tabular_data_obj = {}
+    tabular_data_obj["filename"] = "upload_" + filename
+    tabular_data_obj["row"] = 0
+    tabular_data_obj["column"] = 0
+    tabular_data_obj["content"] = str(tabular_data_content)
+
+    tabularlist = [tabular_data_obj]
+    return {"data": str(tabularlist)}

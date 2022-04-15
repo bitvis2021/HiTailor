@@ -11,6 +11,23 @@
         {{ appName }}
       </el-menu-item>
 
+      <!-- <el-menu-item>
+        <el-upload
+          class="upload-demo"
+          action="http://localhost:8080/"
+          :limit="1"
+          show-file-list="false"
+          :on-success="handleUploadSuccess"
+          :on-preview="handlePreview"
+          :on-remove="handleRemove"
+          :before-upload="onBeforeUpload"
+
+        >
+          <img :src="'./icon/upload.svg'" class="icon" />
+        Upload Your Data
+        </el-upload>
+      </el-menu-item> -->
+
       <el-menu-item
         v-for="(operation, index) in operationArray"
         :key="operation"
@@ -66,6 +83,14 @@
       <DataDialog :datasetDialogKey="datasetDialogKey"> </DataDialog>
     </el-dialog>
 
+    <el-dialog
+      title="Upload"
+      id="upload-dialog"
+      :visible.sync="uploadDialogVisible"
+    >
+      <UploadDialog> </UploadDialog>
+    </el-dialog>
+
     <el-dialog :title="dialogTitle" :visible.sync="showDialog" width="30%">
       <span>{{ dialogText }}</span>
       <span slot="footer" class="dialog-footer">
@@ -74,7 +99,7 @@
       </span>
     </el-dialog>
 
-    <el-dialog :title="'User Guidance'" :visible.sync="showVideo" width="1080px">
+    <!-- <el-dialog :title="'User Guidance'" :visible.sync="showVideo" width="1080px">
       <div style="color:red">必填！！！</div>
       <a href="https://www.wjx.cn/vj/h4Ln1n6.aspx">用户问卷调查 https://www.wjx.cn/vj/h4Ln1n6.aspx</a>
       <br>
@@ -82,7 +107,7 @@
       <video height="540px" controls>
         <source :src="videoPath" type="video/mp4">
       </video>
-    </el-dialog>
+    </el-dialog> -->
 
     <el-dialog
       title="Export"
@@ -101,6 +126,7 @@ import { getTabularDataset } from "@/communication/communicator.js";
 import { parseTabularData } from "@/utils/tabularDataParser.js";
 import { Dataset } from "@/dataset/dataset.js";
 import DataDialog from "@/views/dialogs/DataDialog.vue";
+import UploadDialog from "@/views/dialogs/UploadDialog.vue";
 import ExportDialog from "@/views/dialogs/ExportDialog.vue";
 import { mapState } from "vuex";
 
@@ -110,6 +136,7 @@ export default {
     VisView,
     TableView,
     DataDialog,
+    UploadDialog,
     ExportDialog,
   },
   computed: {},
@@ -124,6 +151,7 @@ export default {
       ],
       // activeIndex: "",
       datasetDialogVisible: false,
+      uploadDialogVisible: false,
       exportDialogVisible: false,
       datasetDialogKey: 0,
       loadingData: true,
@@ -218,6 +246,10 @@ export default {
       this.datasetDialogVisible = false;
     });
 
+    this.$bus.$on("close-upload-dialog", () => {
+      this.uploadDialogVisible = false;
+    });
+
     this.$bus.$on("close-VisView", () => {
       this.showVisPanel = false;
     });
@@ -238,6 +270,7 @@ export default {
         this.datasetDialogVisible = true;
       }
       if (panel_name === "Upload Your Data") {
+        this.uploadDialogVisible = true;
       }
       if (panel_name === "Export") {
         this.exportDialogVisible = true;

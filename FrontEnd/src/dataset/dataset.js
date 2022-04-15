@@ -26,5 +26,9 @@ Dataset.prototype = {
             this.selectedTabularDataObj = this.tabularDataObjList[index]
             console.log('newselectedTabularDataObj', this.selectedTabularDataObj)
         }
+    },
+    updateUploadData: function (uploadDataObj) {
+        this.selectedTabularDataObj = uploadDataObj
+        console.log('newUploadObj', this.selectedTabularDataObj)
     }
 }
