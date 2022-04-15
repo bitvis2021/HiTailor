@@ -26,6 +26,7 @@
           accept=".xlsx,.xls"
           name="file"
           :on-success="handleUploadSuccess" 
+          :before-upload="onBeforeUpload"
           >
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
@@ -75,76 +76,24 @@
         ])
     },
     methods: {
-        // dataTableRowDBClick: function() {
-        // },
-        // dataTableRowClick: function(row) {
-        //     let fileName = row.filename
-        //     this.tempSelection = fileName
-        //     //  update the selected tabular dataset
-        //     this.setCurrent(fileName)
-        // },
         closeUploadDialog: function() {
             this.$bus.$emit('close-upload-dialog')
         },
-        confirmSelection: function() {
-            // let self = this
-
-            //  confirm the selected tabular dataset
-            if (this.tempSelection != null) {
-              // console.log("this.tempSelection", this.tempSelection)
-              //   let selectionExisted = (this.treeDataArray.map(function(e) { return e.filename; })
-              //     .indexOf(this.tempSelection) !== -1)
-              //   console.log("selectionExisted", selectionExisted)
-              //   if (selectionExisted) {
-              //       this.selectedTabularDataName = this.tempSelection
-              //       this.updateSelectedTabularDatasetName(this.selectedTabularDataName)
-              //       this.tempSelection = null
-              //       self.$cookies.set('selected-data-name', this.selectedTabularDataName)
-              //   }
-              this.selectedTabularDataName = this.tempSelection
-              this.updateSelectedTabularDatasetName(this.selectedTabularDataName)
-              this.tempSelection = null
-              // this.$cookies.set('selected-data-name', this.selectedTabularDataName)
-            }
-            this.$bus.$emit('close-data-dialog')
-        },
-        // getFile: function() {
-        //     console.log('upload file ok')
-        // },
         onBeforeUpload: function(file) {
-            let self = this
-            console.log('file', file)
-            const isJSON = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            let fileNameArray = this.getExistedFileNameArray()
-            let notExisted = (fileNameArray.indexOf(file.name) === -1)
-            if (!isJSON) {
-              this.$message.error('The uploaded file must be JSON format!');
-              return
-            }
-            if (!isLt2M) {
-              this.$message.error('The file size can not exceed 2MB!');
-              return
-            }
-            if (!notExisted) {
-              this.$message.error('The file name is existed!');   
-              return 
-            }
-            var reader = new FileReader();
-            reader.readAsText(file, 'utf-8');
-            reader.onload = function(evt) {
-               let fileString = evt.target.result // content
-               console.log('fileString', fileString)
-            }
-            return (isJSON && isLt2M && notExisted);
+          let self = this
+          console.log('file', file)
+          const isXLS = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          const isLt2M = file.size / 1024 / 1024 < 2;
+          if (!isXLS) {
+            this.$message.error('The uploaded file must be XLS/XLSX format!');
+            return false
+          }
+          if (!isLt2M) {
+            this.$message.error('The file size can not exceed 2MB!');
+            return false
+          }
+          return true;
         },
-        // getExistedFileNameArray: function() {
-        //     // TODO
-        //     let fileNameArray = []
-        //     return fileNameArray
-        // },
-        // handlePreview: function(file) {
-        // },
         handleUploadSuccess: function(res, file) {
           let self = this
           if (res != "upload ok") {
@@ -158,46 +107,8 @@
             sysDatasetObj.updateUploadData(processed_upload_data);
             self.$bus.$emit("update-selected-dataset")
             self.$bus.$emit("close-upload-dialog")
-            // tabularDataDeferObj.resolve();
           })
         },
-        // addDataCallback: function(resData) {
-        // },
-        // handleRemove: function() {
-        // },
-        // handleDelete: function(index, row) {
-        //     this.tabularDataObjList.splice(index, 1)
-        //     let dataObj = {
-        //         username: row.username,
-        //         filename: row.filename,
-        //         depth: row.depth
-        //     }
-        //     this.selectedTabularDataName = null
-        //     this.tempSelection = null
-        // },
-        // removeDataCallback: function(resData) {
-        //     this.promptMessage(resData.type, resData.message)
-        // },
-        // setCurrent(fileName) {
-        //     for (let i = 0; i < this.tabularDataObjList.length; i++) {
-        //         let treeDataObj = this.tabularDataObjList[i]
-        //         if (treeDataObj.filename === fileName) {
-        //             let row = this.tabularDataObjList[i]
-        //             this.$refs.treeDataTable.setCurrentRow(row);
-                    
-        //         }
-        //     }
-        // },
-        updateSelectedTabularDatasetName: function (selectedFileName) {
-            sysDatasetObj.updateSelectedTabularDataset(selectedFileName)
-            this.$bus.$emit("update-selected-dataset")
-        },
-        promptMessage: function(type, message) {
-            this.$message({
-              type: type,
-              message: message
-            })
-        }
     }
   }
 </script>
