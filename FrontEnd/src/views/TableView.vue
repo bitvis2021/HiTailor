@@ -732,8 +732,12 @@ export default {
       recommendDataBoth: [[], [], [], [], []],
       recommendDataRow: [[], [], []],
       recommendDataCol: [[], [], []],
+      recommendDataTreeBoth: [[], [], [], [], []],
+      recommendDataTreeRow: [[], [], []],
+      recommendDataTreeCol: [[], [], []],
       prioritySliderValue: [0, 5],
       directionSelectValue: ["row", "column"],
+      typeSelectValue: "name",
 
       isZoomOut: false,
       zoomScale: 1,
@@ -1256,12 +1260,18 @@ export default {
       d3.selectAll(".recommend-helper-both").remove();
       d3.selectAll(".recommend-helper-row").remove();
       d3.selectAll(".recommend-helper-col").remove();
+      d3.selectAll(".recommend-helper-tree-both").remove();
+      d3.selectAll(".recommend-helper-tree-row").remove();
+      d3.selectAll(".recommend-helper-tree-col").remove();
       this.$bus.$emit("close-VisView");
     },
     hide_recommendation_area() {
       d3.selectAll(".recommend-helper-both").style("visibility", "hidden");
       d3.selectAll(".recommend-helper-row").style("visibility", "hidden");
       d3.selectAll(".recommend-helper-col").style("visibility", "hidden");
+      d3.selectAll(".recommend-helper-tree-both").style("visibility", "hidden");
+      d3.selectAll(".recommend-helper-tree-row").style("visibility", "hidden");
+      d3.selectAll(".recommend-helper-tree-col").style("visibility", "hidden");
     },
     hide_recommend_element() {
       d3.selectAll(".recommend-element").style("visibility", "hidden");
@@ -2490,6 +2500,7 @@ export default {
         this.heightRangeList
       );
       this.$bus.$emit("visualize-selectedData", pos, jsdata, metadata);
+      this.$bus.$emit("transmit-recommend-value-to-panel", this.prioritySliderValue, this.typeSelectValue, this.directionSelectValue)
 
       // // single unit, send recommendation too
       // if (top==bottom && left==right) {
@@ -2498,15 +2509,26 @@ export default {
       // }
     },
     transmit_recommendation_to_vis() {
-      var dataArray = [],
-        data;
-      if (this.directionSelectValue.length == 2) {
-        data = this.recommendDataBoth;
-      } else if (this.directionSelectValue[0] == "row") {
-        data = this.recommendDataRow;
-      } else {
-        data = this.recommendDataCol;
+      var dataArray = [], data;
+      if (this.typeSelectValue == "name") {
+        if (this.directionSelectValue.length == 2) {
+          data = this.recommendDataBoth;
+        } else if (this.directionSelectValue[0] == "row") {
+          data = this.recommendDataRow;
+        } else {
+          data = this.recommendDataCol;
+        }
       }
+      else if (this.typeSelectValue == "subtree") {
+        if (this.directionSelectValue.length == 2) {
+          data = this.recommendDataTreeBoth;
+        } else if (this.directionSelectValue[0] == "row") {
+          data = this.recommendDataTreeRow;
+        } else {
+          data = this.recommendDataTreeCol;
+        }
+      }
+      
 
       var min = this.prioritySliderValue[0],
         max = this.prioritySliderValue[1];
@@ -2566,16 +2588,31 @@ export default {
       if (min == 0) min = 1;
 
       var data;
-      if (this.directionSelectValue.length == 2) {
-        data = this.recommendDataBoth;
-      } else if (this.directionSelectValue[0] == "row") {
-        data = this.recommendDataRow;
-        max = max > 3 ? 3 : max;
-      } else if (this.directionSelectValue[0] == "column") {
-        data = this.recommendDataCol;
-        max = max > 3 ? 3 : max;
-      } else {
-        return;
+      if (this.typeSelectValue == "name") {
+        if (this.directionSelectValue.length == 2) {
+          data = this.recommendDataBoth;
+        } else if (this.directionSelectValue[0] == "row") {
+          data = this.recommendDataRow;
+          max = max > 3 ? 3 : max;
+        } else if (this.directionSelectValue[0] == "column") {
+          data = this.recommendDataCol;
+          max = max > 3 ? 3 : max;
+        } else {
+          return;
+        }
+      }
+      else if (this.typeSelectValue == "subtree") {
+        if (this.directionSelectValue.length == 2) {
+          data = this.recommendDataTreeBoth;
+        } else if (this.directionSelectValue[0] == "row") {
+          data = this.recommendDataTreeRow;
+          max = max > 3 ? 3 : max;
+        } else if (this.directionSelectValue[0] == "column") {
+          data = this.recommendDataTreeCol;
+          max = max > 3 ? 3 : max;
+        } else {
+          return;
+        }
       }
 
       var selectedPos = get_pos_for_transmission(
@@ -2637,6 +2674,7 @@ export default {
       var metadata = JSON.stringify(meta);
 
       this.$bus.$emit("visualize-selectedData", selectedPos, visdata, metadata);
+      this.$bus.$emit("transmit-recommend-value-to-panel", this.prioritySliderValue, this.typeSelectValue, this.directionSelectValue)
     },
     // transmit_unit_recommendation_to_vis() {
     //   var dataArray = [], data
@@ -2678,6 +2716,9 @@ export default {
       this.recommendDataBoth = [[], [], [], [], []];
       this.recommendDataRow = [[], [], []];
       this.recommendDataCol = [[], [], []];
+      this.recommendDataTreeBoth = [[], [], [], [], []];
+      this.recommendDataTreeRow = [[], [], []];
+      this.recommendDataTreeCol = [[], [], []];
       var colRefer = get_reference_node(
         this.colHeader,
         left,
@@ -2692,8 +2733,8 @@ export default {
         true,
         this.hasTransposed
       );
-      console.log("colRefer", colRefer);
-      console.log("rowRefer", rowRefer);
+      // console.log("colRefer", colRefer);
+      // console.log("rowRefer", rowRefer);
       if (colRefer.length == 0 && rowRefer.length == 0) {
         console.log("can't recommend!");
         return;
@@ -2703,6 +2744,10 @@ export default {
         { row: [], column: [] },
         { row: [], column: [] },
       ];
+      var headerPriorityTree = [
+        { row: [], column: [] },
+        { row: [], column: [] },
+      ]
 
       // BOTH priority1(row:p0, col:p1) && priority2(row:p0, col:p2)
       // COL priority2(row:p0, col:p1) && priority3(row:p0, col:p2)
@@ -2727,6 +2772,27 @@ export default {
           this.headerRange,
           this.prioritySliderValue,
           this.directionSelectValue
+        );
+        cal_recommendation_by_one_reference(
+          colRefer,
+          top,
+          bottom,
+          left,
+          right,
+          this.colHeader,
+          false,
+          headerPriorityTree,
+          this.recommendDataTreeBoth,
+          this.recommendDataTreeRow,
+          this.recommendDataTreeCol,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList,
+          this.headerRange,
+          this.prioritySliderValue,
+          this.directionSelectValue,
+          true
         );
       }
 
@@ -2754,6 +2820,27 @@ export default {
           this.prioritySliderValue,
           this.directionSelectValue
         );
+        cal_recommendation_by_one_reference(
+          rowRefer,
+          top,
+          bottom,
+          left,
+          right,
+          this.rowHeader,
+          true,
+          headerPriorityTree,
+          this.recommendDataTreeBoth,
+          this.recommendDataTreeRow,
+          this.recommendDataTreeCol,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList,
+          this.headerRange,
+          this.prioritySliderValue,
+          this.directionSelectValue,
+          true
+        );
       }
 
       if (colRefer.length != 0 && rowRefer.length != 0) {
@@ -2778,6 +2865,25 @@ export default {
           this.prioritySliderValue,
           this.directionSelectValue
         );
+        cal_recommendation_by_two_references(
+          headerPriorityTree,
+          0,
+          0,
+          3,
+          2,
+          2,
+          this.recommendDataTreeBoth,
+          this.recommendDataTreeRow,
+          this.recommendDataTreeCol,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList,
+          this.headerRange,
+          this.prioritySliderValue,
+          this.directionSelectValue,
+          true
+        );
 
         // BOTH priority4(row:p1, col:p2)
         // ROW priority2
@@ -2799,6 +2905,25 @@ export default {
           this.headerRange,
           this.prioritySliderValue,
           this.directionSelectValue
+        );
+        cal_recommendation_by_two_references(
+          headerPriorityTree,
+          0,
+          1,
+          4,
+          2,
+          3,
+          this.recommendDataTreeBoth,
+          this.recommendDataTreeRow,
+          this.recommendDataTreeCol,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList,
+          this.headerRange,
+          this.prioritySliderValue,
+          this.directionSelectValue,
+          true
         );
 
         // BOTH priority4(row:p2, col:p1)
@@ -2822,6 +2947,25 @@ export default {
           this.prioritySliderValue,
           this.directionSelectValue
         );
+        cal_recommendation_by_two_references(
+          headerPriorityTree,
+          1,
+          0,
+          4,
+          3,
+          2,
+          this.recommendDataTreeBoth,
+          this.recommendDataTreeRow,
+          this.recommendDataTreeCol,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList,
+          this.headerRange,
+          this.prioritySliderValue,
+          this.directionSelectValue,
+          true
+        );
 
         // BOTH priority5(row:p2, col:p2)
         // ROW priority3
@@ -2844,8 +2988,27 @@ export default {
           this.prioritySliderValue,
           this.directionSelectValue
         );
+        cal_recommendation_by_two_references(
+          headerPriorityTree,
+          1,
+          1,
+          5,
+          3,
+          3,
+          this.recommendDataTreeBoth,
+          this.recommendDataTreeRow,
+          this.recommendDataTreeCol,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList,
+          this.headerRange,
+          this.prioritySliderValue,
+          this.directionSelectValue,
+          true
+        );
       }
-      console.log("this.recommendDataBoth", this.recommendDataBoth[1]);
+      // console.log("this.recommendDataBoth", this.recommendDataBoth[1]);
     },
 
     get_header_index(headers, headerlist) {
@@ -2931,14 +3094,27 @@ export default {
     handle_recommend_hover_field(offset, chosenindex, isRow) {
       // direction
       var data;
-      if (this.directionSelectValue.length == 2) data = this.recommendDataBoth;
-      else if (this.directionSelectValue[0] == "row")
-        data = this.recommendDataRow;
-      else if (this.directionSelectValue[0] == "column")
-        data = this.recommendDataCol;
-      else {
-        console.log("recommend data error!");
-        return;
+      if (this.typeSelectValue == "name") {
+        if (this.directionSelectValue.length == 2) data = this.recommendDataBoth;
+        else if (this.directionSelectValue[0] == "row")
+          data = this.recommendDataRow;
+        else if (this.directionSelectValue[0] == "column")
+          data = this.recommendDataCol;
+        else {
+          console.log("recommend data error!");
+          return;
+        }
+      }
+      else if (this.typeSelectValue == "subtree") {
+        if (this.directionSelectValue.length == 2) data = this.recommendDataTreeBoth;
+        else if (this.directionSelectValue[0] == "row")
+          data = this.recommendDataTreeRow;
+        else if (this.directionSelectValue[0] == "column")
+          data = this.recommendDataTreeCol;
+        else {
+          console.log("recommend data error!");
+          return;
+        }
       }
 
       // priority
@@ -3326,8 +3502,10 @@ export default {
         var direct = this.directionSelectValue,
           min = data[0],
           max = data[1];
-        var prefix = "#recommend-helper-",
-          name;
+        var prefix = "#recommend-helper-"
+        var type = this.typeSelectValue
+        if (type == "subtree")  prefix += "tree-"
+        var name
 
         if (direct.length == 0) {
           return;
@@ -3359,8 +3537,10 @@ export default {
         var slider = this.prioritySliderValue;
         var min = slider[0],
           max = slider[1];
-        var prefix = "#recommend-helper-",
-          name;
+        var prefix = "#recommend-helper-"
+        var type = this.typeSelectValue
+        if (type == "subtree")  prefix += "tree-"
+        var name
 
         if (data.length == 0) {
           return;
@@ -3370,6 +3550,40 @@ export default {
           if (data[0] == "row") prefix += "row";
           else if (data[0] == "column") prefix += "col";
           max = max > 3 ? 3 : max;
+        }
+
+        for (var i = min; i <= max; i++) {
+          name = prefix + "-" + i;
+          d3.selectAll(name).style("visibility", "visible");
+        }
+
+        if (
+          this.selectedArea.top != null &&
+          this.selectedArea.top == this.selectedArea.bottom &&
+          this.selectedArea.left == this.selectedArea.right
+        ) {
+          this.transmit_unit_recommendation_to_vis();
+        }
+      },
+    },
+    typeSelectValue: {
+      deep: true,
+      handler: function (data) {
+        this.hide_recommendation_area();
+        var slider = this.prioritySliderValue
+        var min = slider[0], max = slider[1]
+        var direct = this.directionSelectValue
+        var prefix = "#recommend-helper-"
+        if (data == "subtree")  prefix += "tree-"
+        var name
+
+        if (direct.length == 0) {
+          return;
+        } else if (direct.length == 2) {
+          prefix += "both";
+        } else {
+          if (direct[0] == "row") prefix += "row";
+          else if (direct[0] == "column") prefix += "col";
         }
 
         for (var i = min; i <= max; i++) {
@@ -3585,6 +3799,9 @@ export default {
     });
     this.$bus.$on("transmit-directionSelectValue", (data) => {
       this.directionSelectValue = data;
+    });
+    this.$bus.$on("transmit-typeSelectValue", (data) => {
+      this.typeSelectValue = data;
     });
 
     this.$bus.$on("change-zoom", (value) => {

@@ -51,7 +51,7 @@
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 2px;"
+                style="font-size: 5px; margin-top: 4px;width:38px"
                 >priority:</label
               >
               <div class="slider">
@@ -67,7 +67,22 @@
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 2px;"
+                style="font-size: 5px; margin-top: 5px;width:35px"
+                >type:</label
+              >
+              <el-radio-group v-model="typeSelectValue" size="mini"
+                ><el-radio-button
+                  v-for="type in typeSelections"
+                  :key="type"
+                  :label="type"
+                  >{{type}}</el-radio-button
+                >
+              </el-radio-group>
+            </div>
+            <div class="recommend-box" style="margin-top: 7px">
+              <label
+                class="property-text"
+                style="font-size: 5px; margin-top: 4px;width:35px"
                 >direction:</label
               >
               <el-checkbox-group v-model="directionSelectValue" size="mini">
@@ -305,7 +320,7 @@ import { UnitCompiler, getColorFunction } from "./UnitCompiler";
 export default {
   name: "UnitView",
   components: {},
-  props: ["visData_arr", "figID", "newUnit"],
+  props: ["visData_arr", "figID", "newUnit", "recommendValue"],
   data() {
     return {
       shapes: [
@@ -336,9 +351,11 @@ export default {
       visData: this.visData_arr,
       showColorLegend: false,
 
-      prioritySliderValue: [0, 3],
-      directionSelectValue: ["row", "column"],
+      prioritySliderValue: this.recommendValue.priority,
+      directionSelectValue: this.recommendValue.direction,
       directionSelections: ["row", "column"],
+      typeSelectValue: this.recommendValue.type,
+      typeSelections: ["name", "subtree"]
     };
   },
   watch: {
@@ -350,6 +367,9 @@ export default {
     },
     directionSelectValue(newVal, oldVal) {
       this.$bus.$emit("transmit-directionSelectValue", newVal);
+    },
+    typeSelectValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-typeSelectValue", newVal);
     },
   },
   methods: {
@@ -513,7 +533,13 @@ export default {
       this.$bus.$emit("apply-config");
     },
   },
-  mounted() {},
+  mounted() {
+    // this.$bus.$on("transmit-recommend-value-to-panel", (priority, type, direction) => {
+    //   this.prioritySliderValue = priority
+    //   this.typeSelectValue = type
+    //   this.directionSelectValue = direction
+    // })
+  },
   beforeDestroy() {},
 };
 </script>
@@ -597,6 +623,13 @@ export default {
       height: 8px !important;
     }
     .el-checkbox-button__inner {
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      // font-size: 1px !important;
+    }
+    .el-radio-button__inner {
       padding-top: 4px !important;
       padding-bottom: 4px !important;
       padding-left: 8px !important;

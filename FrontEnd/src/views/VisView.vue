@@ -53,7 +53,7 @@
       </el-row>
 
       <div v-if="showUnitPanel">
-        <unit-view :visData_arr="unitData_arr" :figID="this.figID"></unit-view>
+        <unit-view :visData_arr="unitData_arr" :figID="this.figID" :recommendValue="recommendValue"></unit-view>
       </div>
       <div v-else-if="showTemplates">
         <templates-view
@@ -70,6 +70,7 @@
           <panel-view
             :selections="this.ECSelections"
             :vegaConfig="this.vegaConfig"
+            :recommendValue="recommendValue"
             v-on:apply-config="PreviewVegaConf"
             v-on:apply-vis="ApplyVis2Table"
           ></panel-view>
@@ -143,6 +144,8 @@ export default {
 
       unitData_arr: [],
       recommendData_arr: [],
+
+      recommendValue: {priority: [0, 5], type: "name", direction:["row", "column"]}
     };
   },
   methods: {
@@ -231,6 +234,12 @@ export default {
     },
   },
   mounted() {
+    this.$bus.$on("transmit-recommend-value-to-panel", (priority, type, direction) => {
+      this.recommendValue.priority = priority
+      this.recommendValue.type = type
+      this.recommendValue.direction= direction
+    });
+
     this.$bus.$on("select-cell", () => this.VisDB.CancelAllSelections());
     this.$bus.$on("change-header", () => this.VisDB.RemoveAllCanvas());
 

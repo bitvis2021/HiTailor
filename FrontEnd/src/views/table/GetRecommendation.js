@@ -125,18 +125,42 @@ export function get_reference_node(header, start, end, isRow, hasTransposed) {
 
 export function cal_recommendation_by_one_reference(refer, top, bottom, left, right, header, isRow, headerPriority, 
     recommendDataBoth, recommendDataRow, recommendDataCol, 
-    markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue) {
+    markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree=false) {
     var layer = refer[0].layer
     var hasLinear = refer[0].hasLinear
     var isLinear = refer[0].isLinear
     if (refer.length == 1) { // single reference
         var refername = refer[0].name
         var refertimes = refer[0].times
+
+        var referParent, referParentRange
+        if (layer!=0 && isSubtree) {
+            referParent = header[layer].get(refername).parent[refertimes] // {name:xx, ordinal:xx}
+            var pName = referParent.name, pOrd = referParent.ordinal
+            referParentRange = header[layer-1].get(pName).range[pOrd]
+        }
+        
         for (var [key, value] of header[layer]) {
             var ranges = value.range
-            var priority = key==refername ? 1 : 2
+            var priority = 0
+            // two types of priority methods: same name
+            if (!isSubtree)  priority = key==refername ? 1 : 2
+            
             for (var i=0; i<ranges.length; i++) {
                 if (key==refername && i == refertimes) continue // don't recommend itself
+
+                if (isSubtree) {    // two types of priority methods: same subtree
+                    if (layer == 0) priority = 1    // first layer all same subtree
+                    else {
+                        if (ranges[i].start >= referParentRange.start && ranges[i].end <= referParentRange.end) {
+                            priority = 1
+                        }
+                        else {
+                            priority = 2
+                        }
+                    }
+                }
+
                 var pos = {top:null, bottom:null, right:null, left:null}
                 if (isRow) {
                     if (isLinear && !hasLinear) {
@@ -157,9 +181,9 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
                     recommendDataBoth[priority-1].push(pos)
                     recommendDataRow[priority].push(pos)
                     recommendDataCol[0].push(pos)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "both", priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "row", priority+1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "col", 1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "both", priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "row", priority+1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "col", 1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
                 }
                 else {
                     pos.top = top
@@ -180,14 +204,14 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
                     recommendDataBoth[priority-1].push(pos)
                     recommendDataCol[priority].push(pos)
                     recommendDataRow[0].push(pos)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "both", priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "col", priority+1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
-                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "row", 1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "both", priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "col", priority+1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
+                    draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "row", 1, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
                 }
             }
         }
     }
-    else { // multiple references
+    else if (!isSubtree) { // multiple references (same subtree don't have multiple references)
         var resRanges = []
         var priority = 1
         for (var i=0; i<refer.length; i++) {
@@ -263,7 +287,7 @@ export function cal_recommendation_by_one_reference(refer, top, bottom, left, ri
 
 export function cal_recommendation_by_two_references(headerPriority, rpri, cpri, priorityb, priorityr, priorityc, 
     recommendDataBoth, recommendDataRow, recommendDataCol, 
-    markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue) {
+    markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree=false) {
 
     for (var i=0; i<headerPriority[rpri].row.length; i++) {
       for (var j=0; j<headerPriority[cpri].column.length; j++) {
@@ -276,14 +300,14 @@ export function cal_recommendation_by_two_references(headerPriority, rpri, cpri,
         recommendDataBoth[priorityb-1].push(pos)
         recommendDataRow[priorityr-1].push(pos)
         recommendDataCol[priorityc-1].push(pos)
-        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "both", priorityb, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
-        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "row", priorityr, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
-        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "col", priorityc, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue)
+        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "both", priorityb, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
+        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "row", priorityr, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
+        draw_recommendation_area(pos.top, pos.bottom, pos.left, pos.right, "col", priorityc, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree)
       }
     }
 }
 
-function draw_recommendation_area(top, bottom, left, right, type, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue) {
+function draw_recommendation_area(top, bottom, left, right, type, priority, markWidth, markHeight, widthRangeList, heightRangeList, headerRange, prioritySliderValue, directionSelectValue, isSubtree=false) {
     var color
     if (type == "both") {
         switch(priority) {  // choose color by priority
@@ -319,8 +343,11 @@ function draw_recommendation_area(top, bottom, left, right, type, priority, mark
 
     }
     
+    var prefix = "recommend-helper-"
+    if (isSubtree) prefix += "tree-"
+
     var area = d3.select("#recommendation-area-container")
-    area.append("rect").attr("class", "recommend-helper-"+type).attr("id", "recommend-helper-"+type+"-"+priority).datum({priority:priority, type:type})
+    area.append("rect").attr("class", prefix+type).attr("id", prefix+type+"-"+priority).datum({priority:priority, type:type, isSubtree:isSubtree})
         .attr("x", markWidth + widthRangeList[left+headerRange.right+1])
         .attr("y", markHeight + heightRangeList[top+headerRange.bottom+1])
         .attr("width", widthRangeList[right+1+headerRange.right+1] - widthRangeList[left+headerRange.right+1])
@@ -330,17 +357,18 @@ function draw_recommendation_area(top, bottom, left, right, type, priority, mark
         .style("fill", color)
         .style("fill-opacity", "40%")
         .style("visibility", function(d) { 
-          if (d.priority >= prioritySliderValue[0] && d.priority <= prioritySliderValue[1]) {
-            if (type=="both"&&directionSelectValue.includes("row")&&directionSelectValue.includes("column") 
-                || type=="row"&&directionSelectValue.includes("row")&&!directionSelectValue.includes("column") 
-                || type=="col"&&!directionSelectValue.includes("row")&&directionSelectValue.includes("column"))
-                return "visible"
+            if (d.isSubtree)  return "hidden"
+            else if (d.priority >= prioritySliderValue[0] && d.priority <= prioritySliderValue[1]) {
+                if (type=="both"&&directionSelectValue.includes("row")&&directionSelectValue.includes("column") 
+                    || type=="row"&&directionSelectValue.includes("row")&&!directionSelectValue.includes("column") 
+                    || type=="col"&&!directionSelectValue.includes("row")&&directionSelectValue.includes("column"))
+                    return "visible"
+                else {
+                    return "hidden" 
+                }
+            }      
             else {
                 return "hidden" 
             }
-          }      
-          else {
-            return "hidden" 
-          }
         });
 }

@@ -12,7 +12,7 @@
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 2px;"
+                style="font-size: 5px; margin-top: 4px; width:38px"
                 >priority:</label
               >
               <div class="slider">
@@ -28,7 +28,22 @@
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 2px;"
+                style="font-size: 5px; margin-top: 5px;width:35px"
+                >type:</label
+              >
+              <el-radio-group v-model="typeSelectValue" size="mini"
+                ><el-radio-button
+                  v-for="type in typeSelections"
+                  :key="type"
+                  :label="type"
+                  >{{type}}</el-radio-button
+                >
+              </el-radio-group>
+            </div>
+            <div class="recommend-box" style="margin-top: 7px">
+              <label
+                class="property-text"
+                style="font-size: 5px; margin-top: 4px;width:35px"
                 >direction:</label
               >
               <el-checkbox-group v-model="directionSelectValue" size="mini"
@@ -64,15 +79,17 @@ import EncodingView from "./EncodingView.vue";
 export default {
   name: "PanelView",
   components: { MarkView, EncodingView },
-  props: ["vegaConfig", "selections"],
+  props: ["vegaConfig", "selections", "recommendValue"],
   data() {
     return {
       visData: this.vegaConfig.data,
       markJson: this.vegaConfig.mark,
       encodingJson: this.vegaConfig.encoding,
-      prioritySliderValue: [0, 5],
-      directionSelectValue: ["row", "column"],
+      prioritySliderValue: this.recommendValue.priority,
+      directionSelectValue: this.recommendValue.direction,
       directionSelections: ["row", "column"],
+      typeSelectValue: this.recommendValue.type,
+      typeSelections: ["name", "subtree"],
     };
   },
   watch: {
@@ -88,6 +105,9 @@ export default {
     },
     directionSelectValue(newVal, oldVal) {
       this.$bus.$emit("transmit-directionSelectValue", newVal);
+    },
+    typeSelectValue(newVal, oldVal) {
+      this.$bus.$emit("transmit-typeSelectValue", newVal);
     },
   },
   methods: {
@@ -111,7 +131,13 @@ export default {
       });
     },
   },
-  mounted() {},
+  mounted() {
+    // this.$bus.$on("transmit-recommend-value-to-panel", (priority, type, direction) => {
+    //   this.prioritySliderValue = priority
+    //   this.typeSelectValue = type
+    //   this.directionSelectValue = direction
+    // })
+  },
 };
 </script>
 <style lang="less">
@@ -192,7 +218,17 @@ export default {
       padding-right: 8px !important;
       // font-size: 1px !important;
     }
+    .el-radio-button__inner {
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      // font-size: 1px !important;
+    }
     .el-checkbox-group {
+      display: inline;
+    }
+    .el-radio-group {
       display: inline;
     }
     .slider {
