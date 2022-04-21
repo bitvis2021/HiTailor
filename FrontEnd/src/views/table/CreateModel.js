@@ -268,7 +268,7 @@ export function cal_cell_num(key, value, layer, distribution, headerList) {
     value.cellNum = 0
     for (var i=0; i<value.children[countindex].length; i++) {
       var name = value.children[countindex][i]
-      value.cellNum += cal_cell_num(name, headerList[layer+1].get(name), layer+1, distribution,headerList)
+      value.cellNum += cal_cell_num(name, headerList[layer+1].get(name), layer+1, distribution, headerList)
     }
     value.range[value.range.length-1].end = value.range[value.range.length-1].start + value.cellNum - 1 // change header's end
     headerList[layer].set(key, value)

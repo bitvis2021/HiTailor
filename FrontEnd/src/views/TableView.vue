@@ -1365,6 +1365,11 @@ export default {
         var ranges = headerInfo.range;
         for (var times = 0; times < ranges.length; times++) {
           if (headerInfo.children[times][0][0] != "&") {
+
+            // //test
+            // if (key != name)  continue
+
+
             // is stacked
             if (isRow) {
               this.transform_2linear(
@@ -1936,6 +1941,283 @@ export default {
         this.send_change_width_signal();
       }
     },
+    transform_2linear_supplement(name, header, times, isRow, curLayer, headerRange, resArr) {
+      if (curLayer == headerRange) {
+        var tmpList
+        if (isRow)  tmpList = this.columnWidthList
+        else tmpList = this.rowHeightList
+
+        var curcoord = header[curLayer].get(name).range[times].start
+        for (var j=0; j<tmpList.length-headerRange-1; j++) {
+          var range = isRow ? [curcoord, j] : [j, curcoord]
+          var set = this.valueDistribution.get(range.toString());
+          var value = this.seq2num.get(set).value
+          resArr[j].push(value)
+        }
+        return
+      }
+      var headerInfo = header[curLayer].get(name)
+      var linearFlag = false
+      for (var i=0; i<headerInfo.children[times].length; i++) {
+        var cname = headerInfo.children[times][i]
+        if (cname[0] == "&") {  // first child is &, already linear
+          linearFlag = true
+          break
+        }
+
+        // search for child's times
+        var ctimes = null
+        var pinfo = header[curLayer+1].get(cname).parent
+        for (var j=0; j<pinfo.length; j++) {
+          if (pinfo[j].name == name && pinfo[j].ordinal == times) {
+            ctimes = j
+            break
+          }
+        }
+
+        this.transform_2linear_supplement(cname, header, ctimes, isRow, curLayer+1, headerRange, resArr)
+      }
+
+      if (linearFlag == true) {
+        var tmpList
+        if (isRow)  tmpList = this.columnWidthList
+        else tmpList = this.rowHeightList
+
+        var curcoord = header[curLayer].get(name).range[times].start
+        for (var j=0; j<tmpList.length-headerRange-1; j++) {
+          var range = isRow ? [curcoord, j] : [j, curcoord]
+          var set = this.valueDistribution.get(range.toString());
+          var value = this.seq2num.get(set).value
+          resArr[j].push(value)
+        }
+        return
+      }
+
+    },
+    transform_2linear_advanced(name, header, times, isRow, type, headerange, layer) {
+      var tmpList
+      if (isRow)  tmpList = this.columnWidthList
+      else tmpList = this.rowHeightList
+
+      var resArr = []
+      for (var j=0; j<tmpList.length-headerange-1; j++) {
+        var tmp = []
+        resArr.push(tmp)
+      }
+      this.transform_2linear_supplement(name, header, times, isRow, layer, headerange, resArr)
+
+      // calculate values
+      var sumArr = [], avgArr = [], minArr = [], maxArr = [];
+      for (var i=0; i<resArr.length; i++) {
+        var sum = 0, count = 0, avg, min, max;
+        for (var j=0; j<resArr[i].length; j++) {
+          var v = resArr[i][j]
+          sum += Number(v);
+          count += 1;
+        }
+        sum = Number(sum).toFixed(1);
+        if (sum == 0) sum = Number(sum).toFixed(0)
+        avg = Number(sum / count).toFixed(1);
+        if (avg == 0) avg = Number(avg).toFixed(0)
+        max = Number(Math.max.apply(null, resArr[i]));
+        min = Number(Math.min.apply(null, resArr[i]));
+
+        sumArr.push(sum)
+        avgArr.push(avg)
+        maxArr.push(max)
+        minArr.push(min)
+      }
+      
+      var res
+      switch (type) {
+        case "sum":
+          res = sumArr;
+          break;
+        case "avg":
+          res = avgArr;
+          break;
+        case "max":
+          res = maxArr;
+          break;
+        case "min":
+          res = minArr;
+          break;
+      }
+      console.log("resarr", res)
+
+      // new child name list
+      var newChildPrefix = (isRow && !this.hasTransposed) || (!isRow && this.hasTransposed) ? "&-row-" : "&-col-" 
+      var newChildNameList = []
+      for (var i=layer+1; i<=headerange; i++) {
+        var newName = newChildPrefix + i + "-" + layer
+        newChildNameList.push({layer:i, name:newName})
+      }
+
+      // calculate sequence
+      var coorda = header[layer].get(name).range[times].start
+      var coordb = header[layer].get(name).range[times].end
+      // for (var [key, value] of header[layer]) {
+      //   if (coorda == null)
+      //     coorda = value.range[0].start
+      //   else if (coordb == null)
+      //     coordb = value.range[0].ends
+      //   else
+      //     break
+      //   // attention! may have bugs here!
+      // }
+
+      for (var j=0; j<tmpList.length-headerange-1; j++) {
+        var rangea = isRow ? [coorda, j] : [j, coorda]
+        var rangeb = isRow ? [coordb, j] : [j, coordb]
+        var seta = this.valueDistribution.get(rangea.toString());
+        var setb = this.valueDistribution.get(rangeb.toString());
+        var seq = new Set([...seta].filter((x) => setb.has(x)));
+        var arra = Array.from(seta);
+        var arrseq = Array.from(seq);
+        // find the different index
+        var flag=[];
+        for (var t = 0; t < arra.length; t++) {
+          if (arrseq.indexOf(arra[t]) == -1) {
+            flag.push(t);
+          }
+        }
+        for (var t=0; t<flag.length; t++) {
+          arrseq.splice(flag[t], 0, newChildNameList[t].name);
+        }
+        seq = new Set(arrseq);
+        this.num2seq.set(this.valueIndex, {value: res[j], seq: seq });
+        this.seq2num.set(seq, { value: res[j], num: this.valueIndex++ });
+      }
+
+      //modify header2num/num2header/headerDistribution
+      var nname=name, ttimes=times
+      for (var t=0; t<newChildNameList.length; t++) {
+        var newChild = newChildNameList[t].name
+        var newChildLayer = newChildNameList[t].layer
+        // add child to parent
+        var hi = header[newChildLayer-1].get(nname).children
+        if (hi.length == ttimes) {
+          hi.push([newChild])
+        }
+        else {
+          hi[ttimes].unshift(newChild)
+        }
+        
+        // add parent to child
+        var addIndex = header[newChildLayer-1].get(nname).range[ttimes].start; // add before the first child
+        var addRange = { start: addIndex, end: addIndex };
+        var cheaderInfo, pindex;
+        if (header[newChildLayer].has(newChild)) {
+          cheaderInfo = JSON.parse(
+            JSON.stringify(header[newChildLayer].get(newChild))
+          );
+          for (pindex = 0; pindex < cheaderInfo.range.length; pindex++) {
+            if (cheaderInfo.range[pindex].start > addIndex) {
+              break;
+            }
+          }
+          cheaderInfo.parent.splice(pindex, 0, { name: nname, ordinal: ttimes });
+          cheaderInfo.range.splice(pindex, 0, addRange);
+          ttimes = cheaderInfo.range.length-1
+        } 
+        else {
+          cheaderInfo = new Object();
+          cheaderInfo.range = [addRange];
+          cheaderInfo.cellNum = 1;
+          cheaderInfo.children = [];
+          cheaderInfo.parent = [{ name: nname, ordinal: ttimes }];
+          cheaderInfo.isFullyConn = true;
+          ttimes = 0
+        }
+        var arrh = Array.from(header[newChildLayer])
+        if (arrh[0][0] != newChild) {
+          arrh.unshift([newChild, cheaderInfo])
+        }
+        else {
+          arrh[0][1] = cheaderInfo
+        }
+        var newmp = new Map(arrh)
+        header[newChildLayer] = newmp
+
+
+        if (this.headerDistribution.has(newChild)) {
+          var hinfo = JSON.parse(JSON.stringify(this.headerDistribution.get(newChild)));
+          var ttt = JSON.parse(JSON.stringify(this.header2num.get(newChild)));
+          ttt.push(this.newHeaderIndex);
+          this.header2num.set(newChild, ttt);
+          var tt = { value: newChild, times: hinfo.count++ };
+          this.num2header.set(this.newHeaderIndex++, tt);
+          this.headerDistribution.set(newChild, hinfo);
+        } 
+        else {
+          this.header2num.set(newChild, [this.newHeaderIndex]);
+          this.num2header.set(this.newHeaderIndex++, {
+            value: newChild,
+            times: 0,
+          });
+          this.headerDistribution.set(newChild, {
+            isRowHeader: isRow,
+            layer: newChildLayer,
+            count: 1,
+          });
+        }
+
+        // // modify 'ranges' and 'cellNum'
+        // for (var i = 0; i < header.length; i++) {
+        //   for (var item of header[i]) {
+        //     var info = item[1];
+        //     var ranges = info.range;
+        //     for (var r = 0; r < ranges.length; r++) {
+        //       if (ranges[r].start >= addIndex) {
+        //         if (
+        //           ranges[r].start == addIndex &&
+        //           (i <= layer || item[0] == newChild)
+        //         ) {
+        //           // do nothing
+        //         } else {
+        //           ranges[r].start += 1;
+        //         }
+        //       }
+        //       if (ranges[r].end >= addIndex) {
+        //         if (ranges[r].end == addIndex && item[0] == newChild) {
+        //           // do nothing
+        //         } else {
+        //           ranges[r].end += 1;
+        //         }
+        //       }
+        //     }
+        //     info.range = ranges;
+        //     header[i].set(item[0], info);
+        //   }
+        // }
+
+        nname = newChild
+      }
+
+      // modify heightList/widthList
+      if (isRow) {
+        this.markRowHeightList = this.set_list_length(
+          this.markRowHeightList,
+          this.markRowHeightList.length + 1,
+          this.cellHeight
+        );
+        this.send_change_height_signal();
+      } else {
+        this.markColumnWidthList = this.set_list_length(
+          this.markColumnWidthList,
+          this.markColumnWidthList.length + 1,
+          this.cellWidth
+        );
+        this.send_change_width_signal();
+      }
+
+      for (var i = 0; i < header.length; i++) {
+        for (var item of header[i].values()) {
+          item.range = [];
+        }
+      }
+      cal_header_range(header)
+    },
     transform_2linear(name, header, times, isRow, type) {
       if (this.isCurrFlat)  return
       // this.handle_zoom_in()
@@ -1946,7 +2228,20 @@ export default {
       var layer = distributionInfo.layer
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
       if (headerInfo.children[times].length == 0)  return // no child
-      if (headerInfo.children[times][0][0]=="&")  return // already linear
+      if (headerInfo.children[times][0][0]=="&")  { // already linear
+        return
+      }
+
+      var headerange
+      if (isRow)  headerange = this.headerRange.right
+      else headerange = this.headerRange.bottom
+      
+      // not second last layer
+      if (layer < headerange-1) { 
+        console.log("not second last layer, 2linear supplement.")
+        this.transform_2linear_advanced(name, header, times, isRow, type, headerange, layer)
+        return
+      }
 
       // add child
       var newChild =
@@ -1993,14 +2288,8 @@ export default {
 
       //add values
       if (isRow) {
-        for (
-          var j = 0;
-          j < this.columnWidthList.length - this.headerRange.right - 1;
-          j++
-        ) {
-          var range = JSON.parse(
-            JSON.stringify(header[layer].get(name).range[times])
-          );
+        for (var j = 0; j < this.columnWidthList.length - this.headerRange.right - 1; j++) {
+          var range = JSON.parse(JSON.stringify(header[layer].get(name).range[times]));
 
           // calculate seq
           var rangea = [range.start, j];
