@@ -1826,6 +1826,139 @@ export default {
           item[1].parent.length == 0 ? 1 : item[1].parent.length;
       }
     },
+    transform_2stacked_advanced(name, header, times, isRow, headerange, layer) {
+      // delete child
+      var movingChildren = []
+      var movingChildPrefix = (isRow && !this.hasTransposed) || (!isRow && this.hasTransposed) ? "&-row-" : "&-col-"
+      for (var i=layer+1; i<=headerange; i++) {
+        var cname = movingChildPrefix + i + "-" + layer
+        movingChildren.push(cname)
+      }
+
+      var nname = name, ttimes = times
+      for (var kkk=0; kkk<movingChildren.length; kkk++) {
+        // delete child
+        var movingChild = movingChildren[kkk]
+        header[layer+kkk].get(nname).children[ttimes].shift()
+        if (header[layer+kkk].get(nname).children[ttimes].length == 0) {
+          header[layer+kkk].get(nname).children.splice(ttimes, 1)
+        }
+        // headerInfo.cellNum -= 1;
+        // header[layer].set(name, headerInfo);
+        
+        // delete parent
+        var cheaderInfo = JSON.parse(JSON.stringify(header[layer + kkk + 1].get(movingChild)));
+        // var pindex = cheaderInfo.parent.indexOf(name)
+        var pindex;
+        for (var i = 0; i < cheaderInfo.parent.length; i++) {
+          if (
+            cheaderInfo.parent[i].name == nname &&
+            cheaderInfo.parent[i].ordinal == ttimes
+          ) {
+            pindex = i;
+            break;
+          }
+        }
+        cheaderInfo.parent.splice(pindex, 1);
+        // var deleteRange = cheaderInfo.range.splice(pindex, 1);
+        // var deleteIndex = deleteRange[0].start;
+        if (cheaderInfo.parent.length == 0  && cheaderInfo.children.length == 0) {
+          header[layer + kkk + 1].delete(movingChild);
+        } else {
+          header[layer + kkk + 1].set(movingChild, cheaderInfo);
+        }
+        ttimes = pindex
+
+        // // modify 'ranges'
+        // for (var i = 0; i < header.length; i++) {
+        //   for (var item of header[i]) {
+        //     var info = item[1];
+        //     var ranges = info.range;
+        //     for (var r = 0; r < ranges.length; r++) {
+        //       if (ranges[r].start > deleteIndex) {
+        //         ranges[r].start -= 1;
+        //       }
+        //       if (ranges[r].end > deleteIndex) {
+        //         ranges[r].end -= 1;
+        //       }
+        //       info.range = ranges;
+        //       header[i].set(item[0], info);
+        //     }
+        //   }
+        // }
+
+        //modify header2num/num2header/headerDistribution
+        var t = JSON.parse(JSON.stringify(this.header2num.get(movingChild)));
+        var tt = t.splice(pindex, 1);
+        if (t.length == 0) {
+          this.header2num.delete(movingChild);
+        } else {
+          this.header2num.set(movingChild, t);
+        }
+        this.num2header.delete(tt[0]);
+        for (var i = pindex; i < t.length; i++) {
+          var hinfo = JSON.parse(JSON.stringify(this.num2header.get(t[i])));
+          hinfo.times -= 1;
+          this.num2header.set(t[i], hinfo);
+        }
+        var hinfo = JSON.parse(
+          JSON.stringify(this.headerDistribution.get(movingChild))
+        );
+        hinfo.count -= 1;
+        if (hinfo.count == 0) {
+          this.headerDistribution.delete(movingChild);
+        } else {
+          this.headerDistribution.set(movingChild, hinfo);
+        }
+
+        nname = movingChild 
+      } 
+
+      //modify num2seq/seq2num
+      var headerInfo = header[layer].get(name)
+      for (var item of this.seq2num) {
+        var shouldDel = true
+        for (var i=0; i<movingChildren.length; i++) {
+          if (!item[0].has(movingChildren[i])) {
+            shouldDel = false
+            break
+          }
+        }
+        
+        // MAY HAVE BUGS HERE!!!!ATTENTION!!!   
+        if (shouldDel && item[0].has(name) && 
+            (headerInfo.parent.length == 0 || 
+            (headerInfo.parent.length != 0 && item[0].has(headerInfo.parent[times].name)))) {
+          this.num2seq.delete(item[1].num);
+          this.seq2num.delete(item[0]);
+        } 
+      }
+
+      // modify heightList/widthList
+      if (isRow) {
+        this.markRowHeightList = this.set_list_length(
+          this.markRowHeightList,
+          this.markRowHeightList.length - 1,
+          0
+        );
+        this.send_change_height_signal();
+      } else {
+        this.markColumnWidthList = this.set_list_length(
+          this.markColumnWidthList,
+          this.markColumnWidthList.length - 1,
+          0
+        );
+        this.send_change_width_signal();
+      }
+
+      // modify ranges
+      for (var i = 0; i < header.length; i++) {
+        for (var item of header[i].values()) {
+          item.range = [];
+        }
+      }
+      cal_header_range(header)
+    },
     transform_2stacked(name, header, times, isRow) {
       if (this.isCurrFlat)  return
       // this.handle_zoom_in()
@@ -1837,8 +1970,17 @@ export default {
       var headerInfo = JSON.parse(JSON.stringify(header[layer].get(name)))
       if (headerInfo.children[times].length == 0)  return // no child
       if (headerInfo.children[times][0][0]!="&")  return // already stacked
-      
 
+      var headerange
+      if (isRow)  headerange = this.headerRange.right
+      else headerange = this.headerRange.bottom
+      // not second last layer
+      if (layer < headerange-1) { 
+        console.log("not second last layer, 2stacked supplement.")
+        this.transform_2stacked_advanced(name, header, times, isRow, headerange, layer)
+        return
+      }
+      
       // delete child
       var movingChild = headerInfo.children[times].shift();
       headerInfo.cellNum -= 1;
