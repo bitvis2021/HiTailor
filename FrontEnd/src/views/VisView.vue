@@ -145,7 +145,7 @@ export default {
       unitData_arr: [],
       recommendData_arr: [],
 
-      recommendValue: {priority: [0, 5], type: "name", direction:["row", "column"]}
+      recommendValue: {priority: [0, 2], type: "name", direction:"column"}
     };
   },
   methods: {

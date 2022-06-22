@@ -12,26 +12,26 @@
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 4px; width:38px"
-                >priority:</label
+                style="font-size: 5px; margin-top: 5px;width:35px"
+                >direction:</label
               >
-              <div class="slider">
-                <el-slider
-                  v-model="prioritySliderValue"
-                  range
-                  show-stops
-                  :min="0"
-                  :max="5"
-                ></el-slider>
-              </div>
+              <el-radio-group v-model="directionSelectValue" size="mini"
+                ><el-radio-button
+                  v-for="direction in directionSelections"
+                  :key="direction"
+                  :label="direction"
+                  >{{ direction.substring(0, 3) }}</el-radio-button
+                >
+              </el-radio-group>
             </div>
+            
             <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 5px;width:35px"
+                style="font-size: 5px; margin-top: 12px;width:35px"
                 >type:</label
               >
-              <el-radio-group v-model="typeSelectValue" size="mini"
+              <el-radio-group v-model="typeSelectValue" size="mini" style="margin-top: 11px"
                 ><el-radio-button
                   v-for="type in typeSelections"
                   :key="type"
@@ -40,21 +40,24 @@
                 >
               </el-radio-group>
             </div>
-            <div class="recommend-box" style="margin-top: 7px">
+
+            <div class="recommend-box">
               <label
                 class="property-text"
-                style="font-size: 5px; margin-top: 4px;width:35px"
-                >direction:</label
+                style="font-size: 5px; margin-top: 10px; width:38px"
+                >priority:</label
               >
-              <el-checkbox-group v-model="directionSelectValue" size="mini"
-                ><el-checkbox-button
-                  v-for="direction in directionSelections"
-                  :key="direction"
-                  :label="direction"
-                  >{{ direction.substring(0, 3) }}</el-checkbox-button
-                >
-              </el-checkbox-group>
+              <div class="slider">
+                <el-slider
+                  v-model="prioritySliderValue"  style="margin-top: 8px"
+                  range
+                  show-stops
+                  :min="0"
+                  :max="2"
+                ></el-slider>
+              </div>
             </div>
+            
           </div>
         </el-col>
       </el-row>
@@ -137,6 +140,10 @@ export default {
     //   this.typeSelectValue = type
     //   this.directionSelectValue = direction
     // })
+    this.$bus.$on("transmit-value-after-changing-recommend-direction", (priority, type) => {
+      this.prioritySliderValue = priority
+      this.typeSelectValue = type
+    })
   },
 };
 </script>

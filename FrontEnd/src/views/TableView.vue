@@ -729,14 +729,22 @@ export default {
       isChoosingUnit: false,
       isRecommendState: false,
 
+      recommendData: [],
+      rowPriority: {name: [[], [], []], subtree: [[], [], []]},
+      colPriority: {name: [[], [], []], subtree: [[], [], []]},
+      rowType: "subtree",
+      colType: "name",
+      rowPriorityRange: [0, 1],
+      colPriorityRange: [0, 2],
+
       recommendDataBoth: [[], [], [], [], []],
       recommendDataRow: [[], [], []],
       recommendDataCol: [[], [], []],
       recommendDataTreeBoth: [[], [], [], [], []],
       recommendDataTreeRow: [[], [], []],
       recommendDataTreeCol: [[], [], []],
-      prioritySliderValue: [0, 5],
-      directionSelectValue: ["row", "column"],
+      prioritySliderValue: [0, 2],
+      directionSelectValue: "column",
       typeSelectValue: "name",
 
       isZoomOut: false,
@@ -901,6 +909,8 @@ export default {
     },
 
     handle_mouse_down(row, column) {
+      if (this.isCurrFlat) return
+
       this.selectByMark.row = false;
       this.selectByMark.column = false;
 
@@ -984,6 +994,8 @@ export default {
       this.handle_mouse_down_mask(event);
     },
     handle_mouse_move(event) {
+      if (this.isCurrFlat) return
+
       if (this.mouseDownMarkLineState) {
         if (this.mouseDownMarkLine.type == "column") {
           var offset =
@@ -1047,6 +1059,8 @@ export default {
       } else return; // ignore other mousemoves when mouse is not down
     },
     handle_mouse_up() {
+      if (this.isCurrFlat) return
+
       this.mouseDownState = false;
       this.mouseDownMarkState = false;
 
@@ -1120,6 +1134,7 @@ export default {
               this.selectedArea.right - this.headerRange.right - 1
             );
           } else {
+            // not single unit
             this.isChoosingUnit = false;
             // this.hide_recommend_element();
             this.show_recommend_element(true);
@@ -1148,17 +1163,17 @@ export default {
       this.hide_recommend_element();
     },
     handle_mouse_over_mark(index, type) {
-      if (
-        this.mouseDownState ||
-        this.mouseDownMarkState ||
-        this.mouseDownMarkLineState
-      )
-        return;
-      this.mouseOverMark.index = index;
-      this.mouseOverMark.type = type;
+      // if (
+      //   this.mouseDownState ||
+      //   this.mouseDownMarkState ||
+      //   this.mouseDownMarkLineState
+      // )
+      //   return;
+      // this.mouseOverMark.index = index;
+      // this.mouseOverMark.type = type;
     },
     handle_mouse_out_mark() {
-      this.mouseOverMark = { index: null, type: null };
+      // this.mouseOverMark = { index: null, type: null };
     },
 
     choose_header(type) {
@@ -1257,21 +1272,25 @@ export default {
       d3.select("#interaction-helper-line").remove();
     },
     clear_recommendation_area() {
-      d3.selectAll(".recommend-helper-both").remove();
-      d3.selectAll(".recommend-helper-row").remove();
-      d3.selectAll(".recommend-helper-col").remove();
-      d3.selectAll(".recommend-helper-tree-both").remove();
-      d3.selectAll(".recommend-helper-tree-row").remove();
-      d3.selectAll(".recommend-helper-tree-col").remove();
+      // d3.selectAll(".recommend-helper-both").remove();
+      // d3.selectAll(".recommend-helper-row").remove();
+      // d3.selectAll(".recommend-helper-col").remove();
+      // d3.selectAll(".recommend-helper-tree-both").remove();
+      // d3.selectAll(".recommend-helper-tree-row").remove();
+      // d3.selectAll(".recommend-helper-tree-col").remove();
+
+      d3.selectAll(".recommend-area").remove()
       this.$bus.$emit("close-VisView");
     },
     hide_recommendation_area() {
-      d3.selectAll(".recommend-helper-both").style("visibility", "hidden");
-      d3.selectAll(".recommend-helper-row").style("visibility", "hidden");
-      d3.selectAll(".recommend-helper-col").style("visibility", "hidden");
-      d3.selectAll(".recommend-helper-tree-both").style("visibility", "hidden");
-      d3.selectAll(".recommend-helper-tree-row").style("visibility", "hidden");
-      d3.selectAll(".recommend-helper-tree-col").style("visibility", "hidden");
+      // d3.selectAll(".recommend-helper-both").style("visibility", "hidden");
+      // d3.selectAll(".recommend-helper-row").style("visibility", "hidden");
+      // d3.selectAll(".recommend-helper-col").style("visibility", "hidden");
+      // d3.selectAll(".recommend-helper-tree-both").style("visibility", "hidden");
+      // d3.selectAll(".recommend-helper-tree-row").style("visibility", "hidden");
+      // d3.selectAll(".recommend-helper-tree-col").style("visibility", "hidden");
+
+      // d3.selectAll(".recommend-helper").style("visibility", "hidden")
     },
     hide_recommend_element() {
       d3.selectAll(".recommend-element").style("visibility", "hidden");
@@ -1471,16 +1490,19 @@ export default {
           this.seq2num
         );
         console.log("flatdata", this.flatData)
+
         if (this.flatAttrName == null) {
           this.flatAttrName = [];
+          var tmpAttrName = []
           for (var i = 0; i < this.flatData[0].length; i++) {
             if (i == this.flatData[0].length - 1) {
-              this.flatAttrName.push("value");
+              tmpAttrName.push("value");
             } else {
               var name = "attr" + (i + 1);
-              this.flatAttrName.push(name);
+              tmpAttrName.push(name);
             }
           }
+          this.flatAttrName = tmpAttrName
         }
       }
       this.markColumnWidthList = this.set_list_length(
@@ -2940,72 +2962,74 @@ export default {
       // }
     },
     transmit_recommendation_to_vis() {
-      var dataArray = [], data;
-      if (this.typeSelectValue == "name") {
-        if (this.directionSelectValue.length == 2) {
-          data = this.recommendDataBoth;
-        } else if (this.directionSelectValue[0] == "row") {
-          data = this.recommendDataRow;
-        } else {
-          data = this.recommendDataCol;
-        }
-      }
-      else if (this.typeSelectValue == "subtree") {
-        if (this.directionSelectValue.length == 2) {
-          data = this.recommendDataTreeBoth;
-        } else if (this.directionSelectValue[0] == "row") {
-          data = this.recommendDataTreeRow;
-        } else {
-          data = this.recommendDataTreeCol;
-        }
-      }
+      var dataArray = [], data = this.recommendData;
+
+      // if (this.typeSelectValue == "name") {
+      //   if (this.directionSelectValue.length == 2) {
+      //     data = this.recommendDataBoth;
+      //   } else if (this.directionSelectValue[0] == "row") {
+      //     data = this.recommendDataRow;
+      //   } else {
+      //     data = this.recommendDataCol;
+      //   }
+      // }
+      // else if (this.typeSelectValue == "subtree") {
+      //   if (this.directionSelectValue.length == 2) {
+      //     data = this.recommendDataTreeBoth;
+      //   } else if (this.directionSelectValue[0] == "row") {
+      //     data = this.recommendDataTreeRow;
+      //   } else {
+      //     data = this.recommendDataTreeCol;
+      //   }
+      // }
       
 
-      var min = this.prioritySliderValue[0],
-        max = this.prioritySliderValue[1];
-      if (min == 0) min = 1;
+      // var min = this.prioritySliderValue[0],
+      //   max = this.prioritySliderValue[1];
+      // if (min == 0) min = 1;
+      
+      // for (var i = min - 1; i <= max - 1; i++) {
+      //   for (var j = 0; j < data[i].length; j++) {
+      //     // if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
+      //     var area = data[i][j];
+      for (var i = 0; i < data.length; i++) {
+        var area = data[i]
+        var top = area.top + this.headerRange.bottom + 1;
+        var bottom = area.bottom + this.headerRange.bottom + 1;
+        var left = area.left + this.headerRange.right + 1;
+        var right = area.right + this.headerRange.right + 1;
 
-      for (var i = min - 1; i <= max - 1; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-          // if (typeArray.indexOf(data[i][j].type) == -1) continue  // not in right direction
-          var area = data[i][j];
-          var top = area.top + this.headerRange.bottom + 1;
-          var bottom = area.bottom + this.headerRange.bottom + 1;
-          var left = area.left + this.headerRange.right + 1;
-          var right = area.right + this.headerRange.right + 1;
-
-          var [jsdata, metadata] = get_data_for_transmission(
-            top,
-            bottom,
-            left,
-            right,
-            this.headerRange,
-            this.valueDistribution,
-            this.seq2num,
-            this.rowHeader.length,
-            this.colHeader.length,
-            this.headerDistribution,
-            this.colHeader,
-            this.rowHeader
-          );
-          var pos = get_pos_for_transmission(
-            top,
-            bottom,
-            left,
-            right,
-            this.markWidth,
-            this.markHeight,
-            this.widthRangeList,
-            this.heightRangeList
-          );
-          var obj = {
-            position: pos,
-            visData: jsdata,
-            metaData: metadata,
-            priority: i + 1,
-          };
-          dataArray.push(obj);
-        }
+        var [jsdata, metadata] = get_data_for_transmission(
+          top,
+          bottom,
+          left,
+          right,
+          this.headerRange,
+          this.valueDistribution,
+          this.seq2num,
+          this.rowHeader.length,
+          this.colHeader.length,
+          this.headerDistribution,
+          this.colHeader,
+          this.rowHeader
+        );
+        var pos = get_pos_for_transmission(
+          top,
+          bottom,
+          left,
+          right,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList
+        );
+        var obj = {
+          position: pos,
+          visData: jsdata,
+          metaData: metadata,
+          priority: 0,
+        };
+        dataArray.push(obj);
       }
       console.log("recommend-data-to-send", dataArray);
 
@@ -3014,37 +3038,37 @@ export default {
     },
     transmit_unit_recommendation_to_vis() {
       console.log("transmit unit recommendation!!!!!");
-      var min = this.prioritySliderValue[0],
-        max = this.prioritySliderValue[1];
-      if (min == 0) min = 1;
+      // var min = this.prioritySliderValue[0],
+      //   max = this.prioritySliderValue[1];
+      // if (min == 0) min = 1;
 
-      var data;
-      if (this.typeSelectValue == "name") {
-        if (this.directionSelectValue.length == 2) {
-          data = this.recommendDataBoth;
-        } else if (this.directionSelectValue[0] == "row") {
-          data = this.recommendDataRow;
-          max = max > 3 ? 3 : max;
-        } else if (this.directionSelectValue[0] == "column") {
-          data = this.recommendDataCol;
-          max = max > 3 ? 3 : max;
-        } else {
-          return;
-        }
-      }
-      else if (this.typeSelectValue == "subtree") {
-        if (this.directionSelectValue.length == 2) {
-          data = this.recommendDataTreeBoth;
-        } else if (this.directionSelectValue[0] == "row") {
-          data = this.recommendDataTreeRow;
-          max = max > 3 ? 3 : max;
-        } else if (this.directionSelectValue[0] == "column") {
-          data = this.recommendDataTreeCol;
-          max = max > 3 ? 3 : max;
-        } else {
-          return;
-        }
-      }
+      var data = this.recommendData;
+      // if (this.typeSelectValue == "name") {
+      //   if (this.directionSelectValue.length == 2) {
+      //     data = this.recommendDataBoth;
+      //   } else if (this.directionSelectValue[0] == "row") {
+      //     data = this.recommendDataRow;
+      //     max = max > 3 ? 3 : max;
+      //   } else if (this.directionSelectValue[0] == "column") {
+      //     data = this.recommendDataCol;
+      //     max = max > 3 ? 3 : max;
+      //   } else {
+      //     return;
+      //   }
+      // }
+      // else if (this.typeSelectValue == "subtree") {
+      //   if (this.directionSelectValue.length == 2) {
+      //     data = this.recommendDataTreeBoth;
+      //   } else if (this.directionSelectValue[0] == "row") {
+      //     data = this.recommendDataTreeRow;
+      //     max = max > 3 ? 3 : max;
+      //   } else if (this.directionSelectValue[0] == "column") {
+      //     data = this.recommendDataTreeCol;
+      //     max = max > 3 ? 3 : max;
+      //   } else {
+      //     return;
+      //   }
+      // }
 
       var selectedPos = get_pos_for_transmission(
         this.selectedArea.top,
@@ -3069,34 +3093,36 @@ export default {
       var obj = { position: pos, value: value, priority: 0 };
       vis.push(obj);
       console.log("obj", obj);
-      for (var i = min - 1; i <= max - 1; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-          var area = data[i][j];
-          var value = get_unit_data_for_transmission(
-            area.top,
-            area.left,
-            this.valueDistribution,
-            this.seq2num
-          );
 
-          var top = area.top + this.headerRange.bottom + 1;
-          var bottom = area.bottom + this.headerRange.bottom + 1;
-          var left = area.left + this.headerRange.right + 1;
-          var right = area.right + this.headerRange.right + 1;
-          var pos = get_pos_for_transmission(
-            top,
-            bottom,
-            left,
-            right,
-            this.markWidth,
-            this.markHeight,
-            this.widthRangeList,
-            this.heightRangeList
-          );
+      // for (var i = min - 1; i <= max - 1; i++) {
+      //   for (var j = 0; j < data[i].length; j++) {
+      //     var area = data[i][j];
+      for (var i = 0; i < data.length; i++) {
+        var area = data[i]
+        var value = get_unit_data_for_transmission(
+          area.top,
+          area.left,
+          this.valueDistribution,
+          this.seq2num
+        );
 
-          var obj = { position: pos, value: value, priority: i + 1 };
-          vis.push(obj);
-        }
+        var top = area.top + this.headerRange.bottom + 1;
+        var bottom = area.bottom + this.headerRange.bottom + 1;
+        var left = area.left + this.headerRange.right + 1;
+        var right = area.right + this.headerRange.right + 1;
+        var pos = get_pos_for_transmission(
+          top,
+          bottom,
+          left,
+          right,
+          this.markWidth,
+          this.markHeight,
+          this.widthRangeList,
+          this.heightRangeList
+        );
+
+        var obj = { position: pos, value: value, priority: 0};
+        vis.push(obj);
       }
       var visdata = JSON.stringify(vis);
       console.log("visdata", vis);
@@ -3150,6 +3176,11 @@ export default {
       this.recommendDataTreeBoth = [[], [], [], [], []];
       this.recommendDataTreeRow = [[], [], []];
       this.recommendDataTreeCol = [[], [], []];
+
+      this.rowPriority = {name: [[], [], []], subtree: [[], [], []]}
+      this.colPriority = {name: [[], [], []], subtree: [[], [], []]}
+      this.recommendData = []
+
       var colRefer = get_reference_node(
         this.colHeader,
         left,
@@ -3180,11 +3211,10 @@ export default {
         { row: [], column: [] },
       ]
 
-      // BOTH priority1(row:p0, col:p1) && priority2(row:p0, col:p2)
-      // COL priority2(row:p0, col:p1) && priority3(row:p0, col:p2)
-      // ROW priority1(row:p0, col:p1; row:p0, col:p2)
       if (colRefer.length != 0) {
-        cal_recommendation_by_one_reference(
+        cal_recommendation_by_one_reference( // same name
+          this.rowPriority,
+          this.colPriority,
           colRefer,
           top,
           bottom,
@@ -3204,7 +3234,9 @@ export default {
           this.prioritySliderValue,
           this.directionSelectValue
         );
-        cal_recommendation_by_one_reference(
+        cal_recommendation_by_one_reference(  // same subtree
+          this.rowPriority,
+          this.colPriority,
           colRefer,
           top,
           bottom,
@@ -3227,11 +3259,10 @@ export default {
         );
       }
 
-      // BOTH priority1(row:p1, col:p0) && priority2(row:p2, col:p0)
-      // ROW priority2(row:p1, col:p0) && priority3(row:p2, col:p0)
-      // COL priority1(row:p1, col:p0; row:p2, col:p0)
       if (rowRefer.length != 0) {
-        cal_recommendation_by_one_reference(
+        cal_recommendation_by_one_reference(  // same name
+          this.rowPriority,
+          this.colPriority,
           rowRefer,
           top,
           bottom,
@@ -3251,7 +3282,9 @@ export default {
           this.prioritySliderValue,
           this.directionSelectValue
         );
-        cal_recommendation_by_one_reference(
+        cal_recommendation_by_one_reference(  // same subtree
+          this.rowPriority,
+          this.colPriority,
           rowRefer,
           top,
           bottom,
@@ -3273,173 +3306,215 @@ export default {
           true
         );
       }
+
+      this.draw_recommendation_area()
 
       if (colRefer.length != 0 && rowRefer.length != 0) {
-        // BOTH priority3(row:p1, col:p1)
-        // ROW priority2
-        // COL priority2
-        cal_recommendation_by_two_references(
-          headerPriority,
-          0,
-          0,
-          3,
-          2,
-          2,
-          this.recommendDataBoth,
-          this.recommendDataRow,
-          this.recommendDataCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue
-        );
-        cal_recommendation_by_two_references(
-          headerPriorityTree,
-          0,
-          0,
-          3,
-          2,
-          2,
-          this.recommendDataTreeBoth,
-          this.recommendDataTreeRow,
-          this.recommendDataTreeCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue,
-          true
-        );
+      //   // BOTH priority3(row:p1, col:p1)
+      //   // ROW priority2
+      //   // COL priority2
+      //   cal_recommendation_by_two_references(
+      //     headerPriority,
+      //     0,
+      //     0,
+      //     3,
+      //     2,
+      //     2,
+      //     this.recommendDataBoth,
+      //     this.recommendDataRow,
+      //     this.recommendDataCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue
+      //   );
+      //   cal_recommendation_by_two_references(
+      //     headerPriorityTree,
+      //     0,
+      //     0,
+      //     3,
+      //     2,
+      //     2,
+      //     this.recommendDataTreeBoth,
+      //     this.recommendDataTreeRow,
+      //     this.recommendDataTreeCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue,
+      //     true
+      //   );
 
-        // BOTH priority4(row:p1, col:p2)
-        // ROW priority2
-        // COL priority3
-        cal_recommendation_by_two_references(
-          headerPriority,
-          0,
-          1,
-          4,
-          2,
-          3,
-          this.recommendDataBoth,
-          this.recommendDataRow,
-          this.recommendDataCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue
-        );
-        cal_recommendation_by_two_references(
-          headerPriorityTree,
-          0,
-          1,
-          4,
-          2,
-          3,
-          this.recommendDataTreeBoth,
-          this.recommendDataTreeRow,
-          this.recommendDataTreeCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue,
-          true
-        );
+      //   // BOTH priority4(row:p1, col:p2)
+      //   // ROW priority2
+      //   // COL priority3
+      //   cal_recommendation_by_two_references(
+      //     headerPriority,
+      //     0,
+      //     1,
+      //     4,
+      //     2,
+      //     3,
+      //     this.recommendDataBoth,
+      //     this.recommendDataRow,
+      //     this.recommendDataCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue
+      //   );
+      //   cal_recommendation_by_two_references(
+      //     headerPriorityTree,
+      //     0,
+      //     1,
+      //     4,
+      //     2,
+      //     3,
+      //     this.recommendDataTreeBoth,
+      //     this.recommendDataTreeRow,
+      //     this.recommendDataTreeCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue,
+      //     true
+      //   );
 
-        // BOTH priority4(row:p2, col:p1)
-        // ROW priority3
-        // COL priority2
-        cal_recommendation_by_two_references(
-          headerPriority,
-          1,
-          0,
-          4,
-          3,
-          2,
-          this.recommendDataBoth,
-          this.recommendDataRow,
-          this.recommendDataCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue
-        );
-        cal_recommendation_by_two_references(
-          headerPriorityTree,
-          1,
-          0,
-          4,
-          3,
-          2,
-          this.recommendDataTreeBoth,
-          this.recommendDataTreeRow,
-          this.recommendDataTreeCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue,
-          true
-        );
+      //   // BOTH priority4(row:p2, col:p1)
+      //   // ROW priority3
+      //   // COL priority2
+      //   cal_recommendation_by_two_references(
+      //     headerPriority,
+      //     1,
+      //     0,
+      //     4,
+      //     3,
+      //     2,
+      //     this.recommendDataBoth,
+      //     this.recommendDataRow,
+      //     this.recommendDataCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue
+      //   );
+      //   cal_recommendation_by_two_references(
+      //     headerPriorityTree,
+      //     1,
+      //     0,
+      //     4,
+      //     3,
+      //     2,
+      //     this.recommendDataTreeBoth,
+      //     this.recommendDataTreeRow,
+      //     this.recommendDataTreeCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue,
+      //     true
+      //   );
 
-        // BOTH priority5(row:p2, col:p2)
-        // ROW priority3
-        // COL priority3
-        cal_recommendation_by_two_references(
-          headerPriority,
-          1,
-          1,
-          5,
-          3,
-          3,
-          this.recommendDataBoth,
-          this.recommendDataRow,
-          this.recommendDataCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue
-        );
-        cal_recommendation_by_two_references(
-          headerPriorityTree,
-          1,
-          1,
-          5,
-          3,
-          3,
-          this.recommendDataTreeBoth,
-          this.recommendDataTreeRow,
-          this.recommendDataTreeCol,
-          this.markWidth,
-          this.markHeight,
-          this.widthRangeList,
-          this.heightRangeList,
-          this.headerRange,
-          this.prioritySliderValue,
-          this.directionSelectValue,
-          true
-        );
+      //   // BOTH priority5(row:p2, col:p2)
+      //   // ROW priority3
+      //   // COL priority3
+      //   cal_recommendation_by_two_references(
+      //     headerPriority,
+      //     1,
+      //     1,
+      //     5,
+      //     3,
+      //     3,
+      //     this.recommendDataBoth,
+      //     this.recommendDataRow,
+      //     this.recommendDataCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue
+      //   );
+      //   cal_recommendation_by_two_references(
+      //     headerPriorityTree,
+      //     1,
+      //     1,
+      //     5,
+      //     3,
+      //     3,
+      //     this.recommendDataTreeBoth,
+      //     this.recommendDataTreeRow,
+      //     this.recommendDataTreeCol,
+      //     this.markWidth,
+      //     this.markHeight,
+      //     this.widthRangeList,
+      //     this.heightRangeList,
+      //     this.headerRange,
+      //     this.prioritySliderValue,
+      //     this.directionSelectValue,
+      //     true
+      //   );
       }
-      // console.log("this.recommendDataBoth", this.recommendDataBoth[1]);
+      // console.log("this.recommendDataBoth", this.recommendDataBoth[1]);    
+    },
+
+    draw_recommendation_area() {
+      this.recommendData = []
+      d3.selectAll(".recommend-area").remove()
+
+      let rData = this.rowType=="name" ? this.rowPriority.name : this.rowPriority.subtree
+      let cData = this.colType=="name" ? this.colPriority.name : this.colPriority.subtree
+      let rPri = this.rowPriorityRange
+      let cPri = this.colPriorityRange
+
+
+      let recData = []
+      for (let r=rPri[0]; r<=rPri[1]; r++) {
+        for (let c=cPri[0]; c<cPri[1]; c++) {
+          if (r==0 && c==0) continue
+
+          for (let ri=0; ri<rData[r].length; ri++) {
+            for (let ci=0; ci<cData[c].length; ci++) {
+              let top = rData[r][ri].start, bottom = rData[r][ri].end
+              let left = cData[c][ci].start, right = cData[c][ci].end
+
+              var pos = {top:top, bottom:bottom, left:left, right:right}
+              recData.push(pos)
+              
+              d3.select("#recommendation-area-container").append("rect")
+                .attr("class", "recommend-area")
+                .attr("x", this.markWidth + this.widthRangeList[left+this.headerRange.right+1])
+                .attr("y", this.markHeight + this.heightRangeList[top+this.headerRange.bottom+1])
+                .attr("width", this.widthRangeList[right+1+this.headerRange.right+1] - this.widthRangeList[left+this.headerRange.right+1])
+                .attr("height", this.heightRangeList[bottom+1+this.headerRange.bottom+1] - this.heightRangeList[top+this.headerRange.bottom+1])
+                .style("stroke", "grey")
+                .style("stroke-width", "0.3px")
+                .style("fill", "#9ebee1")
+                .style("fill-opacity", "40%")
+            }
+          }
+        }
+      }
+      this.recommendData = recData
     },
 
     get_header_index(headers, headerlist) {
@@ -3518,7 +3593,7 @@ export default {
           var offset = index - refer;
           this.handle_recommend_hover_field(offset, index, isrow);
         }
-      } else {
+      } else {typeSelectValue
         this.draw_hover_helper_area(type, index);
       }
     },
@@ -3929,28 +4004,34 @@ export default {
     prioritySliderValue: {
       deep: true,
       handler: function (data) {
-        this.hide_recommendation_area();
-        var direct = this.directionSelectValue,
-          min = data[0],
-          max = data[1];
-        var prefix = "#recommend-helper-"
-        var type = this.typeSelectValue
-        if (type == "subtree")  prefix += "tree-"
-        var name
-
-        if (direct.length == 0) {
-          return;
-        } else if (direct.length == 2) {
-          prefix += "both";
-        } else {
-          if (direct[0] == "row") prefix += "row";
-          else if (direct[0] == "column") prefix += "col";
+        // this.hide_recommendation_area();
+        var direct = this.directionSelectValue
+        if (direct == "row") {
+          this.rowPriorityRange = data
+        }
+        else {
+          this.colPriorityRange = data
         }
 
-        for (var i = min; i <= max; i++) {
-          name = prefix + "-" + i;
-          d3.selectAll(name).style("visibility", "visible");
-        }
+        this.draw_recommendation_area()
+        // var prefix = "#recommend-helper-"
+        // var type = this.typeSelectValue
+        // if (type == "subtree")  prefix += "tree-"
+        // var name
+
+        // if (direct.length == 0) {
+        //   return;
+        // } else if (direct.length == 2) {
+        //   prefix += "both";
+        // } else {
+        //   if (direct[0] == "row") prefix += "row";
+        //   else if (direct[0] == "column") prefix += "col";
+        // }
+
+        // for (var i = min; i <= max; i++) {
+        //   name = prefix + "-" + i;
+        //   d3.selectAll(name).style("visibility", "visible");
+        // }
 
         if (
           this.selectedArea.top != null &&
@@ -3964,63 +4045,81 @@ export default {
     directionSelectValue: {
       deep: true,
       handler: function (data) {
-        this.hide_recommendation_area();
-        var slider = this.prioritySliderValue;
-        var min = slider[0],
-          max = slider[1];
-        var prefix = "#recommend-helper-"
-        var type = this.typeSelectValue
-        if (type == "subtree")  prefix += "tree-"
-        var name
-
-        if (data.length == 0) {
-          return;
-        } else if (data.length == 2) {
-          prefix += "both";
-        } else {
-          if (data[0] == "row") prefix += "row";
-          else if (data[0] == "column") prefix += "col";
-          max = max > 3 ? 3 : max;
+        if (data == "row") {
+          this.prioritySliderValue = this.rowPriorityRange
+          this.typeSelectValue = this.rowType
         }
-
-        for (var i = min; i <= max; i++) {
-          name = prefix + "-" + i;
-          d3.selectAll(name).style("visibility", "visible");
+        else {
+          this.prioritySliderValue = this.colPriorityRange
+          this.typeSelectValue = this.colType
         }
+        // this.hide_recommendation_area();
+        // var slider = this.prioritySliderValue;
+        // var min = slider[0],
+        //   max = slider[1];
+        // var prefix = "#recommend-helper-"
+        // var type = this.typeSelectValue
+        // if (type == "subtree")  prefix += "tree-"
+        // var name
 
-        if (
-          this.selectedArea.top != null &&
-          this.selectedArea.top == this.selectedArea.bottom &&
-          this.selectedArea.left == this.selectedArea.right
-        ) {
-          this.transmit_unit_recommendation_to_vis();
-        }
+        // if (data.length == 0) {
+        //   return;
+        // } else if (data.length == 2) {
+        //   prefix += "both";
+        // } else {
+        //   if (data[0] == "row") prefix += "row";
+        //   else if (data[0] == "column") prefix += "col";
+        //   max = max > 3 ? 3 : max;
+        // }
+
+        // for (var i = min; i <= max; i++) {
+        //   name = prefix + "-" + i;
+        //   d3.selectAll(name).style("visibility", "visible");
+        // }
+
+        // if (
+        //   this.selectedArea.top != null &&
+        //   this.selectedArea.top == this.selectedArea.bottom &&
+        //   this.selectedArea.left == this.selectedArea.right
+        // ) {
+        //   this.transmit_unit_recommendation_to_vis();
+        // }
       },
     },
     typeSelectValue: {
       deep: true,
       handler: function (data) {
-        this.hide_recommendation_area();
-        var slider = this.prioritySliderValue
-        var min = slider[0], max = slider[1]
+        // this.hide_recommendation_area();
+        // var slider = this.prioritySliderValue
+        // var min = slider[0], max = slider[1]
+        // var direct = this.directionSelectValue
+        // var prefix = "#recommend-helper-"
+        // if (data == "subtree")  prefix += "tree-"
+        // var name
+
+        // if (direct.length == 0) {
+        //   return;
+        // } else if (direct.length == 2) {
+        //   prefix += "both";
+        // } else {
+        //   if (direct[0] == "row") prefix += "row";
+        //   else if (direct[0] == "column") prefix += "col";
+        // }
+
+        // for (var i = min; i <= max; i++) {
+        //   name = prefix + "-" + i;
+        //   d3.selectAll(name).style("visibility", "visible");
+        // }
+
         var direct = this.directionSelectValue
-        var prefix = "#recommend-helper-"
-        if (data == "subtree")  prefix += "tree-"
-        var name
-
-        if (direct.length == 0) {
-          return;
-        } else if (direct.length == 2) {
-          prefix += "both";
-        } else {
-          if (direct[0] == "row") prefix += "row";
-          else if (direct[0] == "column") prefix += "col";
+        if (direct == "row") {
+          this.rowType = data
+        }
+        else {
+          this.colType = data
         }
 
-        for (var i = min; i <= max; i++) {
-          name = prefix + "-" + i;
-          d3.selectAll(name).style("visibility", "visible");
-        }
+        this.draw_recommendation_area()
 
         if (
           this.selectedArea.top != null &&
@@ -4227,12 +4326,58 @@ export default {
     // visView remotely send value
     this.$bus.$on("transmit-prioritySliderValue", (data) => {
       this.prioritySliderValue = data;
+      var direct = this.directionSelectValue
+        if (direct == "row") {
+          this.rowPriorityRange = data
+        }
+        else {
+          this.colPriorityRange = data
+        }
+
+        this.draw_recommendation_area()
+
+        if (
+        this.selectedArea.top != null &&
+        this.selectedArea.top == this.selectedArea.bottom &&
+        this.selectedArea.left == this.selectedArea.right
+      ) {
+        this.transmit_unit_recommendation_to_vis();
+      }
+
     });
+    
     this.$bus.$on("transmit-directionSelectValue", (data) => {
       this.directionSelectValue = data;
+      if (data == "row") {
+        this.prioritySliderValue = this.rowPriorityRange
+        this.typeSelectValue = this.rowType
+      }
+      else {
+        this.prioritySliderValue = this.colPriorityRange
+        this.typeSelectValue = this.colType
+      }
+      this.$bus.$emit("transmit-value-after-changing-recommend-direction", this.prioritySliderValue, this.typeSelectValue)
     });
+    
     this.$bus.$on("transmit-typeSelectValue", (data) => {
       this.typeSelectValue = data;
+      var direct = this.directionSelectValue
+      if (direct == "row") {
+        this.rowType = data
+      }
+      else {
+        this.colType = data
+      }
+
+      this.draw_recommendation_area()
+
+      if (
+        this.selectedArea.top != null &&
+        this.selectedArea.top == this.selectedArea.bottom &&
+        this.selectedArea.left == this.selectedArea.right
+      ) {
+        this.transmit_unit_recommendation_to_vis();
+      }
     });
 
     this.$bus.$on("change-zoom", (value) => {
