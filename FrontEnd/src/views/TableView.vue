@@ -3489,7 +3489,7 @@ export default {
 
       let recData = []
       for (let r=rPri[0]; r<=rPri[1]; r++) {
-        for (let c=cPri[0]; c<cPri[1]; c++) {
+        for (let c=cPri[0]; c<=cPri[1]; c++) {
           if (r==0 && c==0) continue
 
           for (let ri=0; ri<rData[r].length; ri++) {
