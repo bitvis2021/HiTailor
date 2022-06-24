@@ -1151,6 +1151,14 @@ export default {
             this.selectedArea.left,
             this.selectedArea.right
           );
+
+          if (
+            this.selectedArea.top != null &&
+            this.selectedArea.top == this.selectedArea.bottom &&
+            this.selectedArea.left == this.selectedArea.right
+          ) {
+            this.transmit_unit_recommendation_to_vis();
+          }
         }
         this.mouseDownMaskState = false;
       }
@@ -4001,135 +4009,135 @@ export default {
       },
       deep: true,
     },
-    prioritySliderValue: {
-      deep: true,
-      handler: function (data) {
-        // this.hide_recommendation_area();
-        var direct = this.directionSelectValue
-        if (direct == "row") {
-          this.rowPriorityRange = data
-        }
-        else {
-          this.colPriorityRange = data
-        }
+    // prioritySliderValue: {
+    //   // deep: true,
+    //   // handler: function (data) {
+    //   //   // this.hide_recommendation_area();
+    //   //   var direct = this.directionSelectValue
+    //   //   if (direct == "row") {
+    //   //     this.rowPriorityRange = data
+    //   //   }
+    //   //   else {
+    //   //     this.colPriorityRange = data
+    //   //   }
 
-        this.draw_recommendation_area()
-        // var prefix = "#recommend-helper-"
-        // var type = this.typeSelectValue
-        // if (type == "subtree")  prefix += "tree-"
-        // var name
+    //   //   this.draw_recommendation_area()
+    //   //   // var prefix = "#recommend-helper-"
+    //   //   // var type = this.typeSelectValue
+    //   //   // if (type == "subtree")  prefix += "tree-"
+    //   //   // var name
 
-        // if (direct.length == 0) {
-        //   return;
-        // } else if (direct.length == 2) {
-        //   prefix += "both";
-        // } else {
-        //   if (direct[0] == "row") prefix += "row";
-        //   else if (direct[0] == "column") prefix += "col";
-        // }
+    //   //   // if (direct.length == 0) {
+    //   //   //   return;
+    //   //   // } else if (direct.length == 2) {
+    //   //   //   prefix += "both";
+    //   //   // } else {
+    //   //   //   if (direct[0] == "row") prefix += "row";
+    //   //   //   else if (direct[0] == "column") prefix += "col";
+    //   //   // }
 
-        // for (var i = min; i <= max; i++) {
-        //   name = prefix + "-" + i;
-        //   d3.selectAll(name).style("visibility", "visible");
-        // }
+    //   //   // for (var i = min; i <= max; i++) {
+    //   //   //   name = prefix + "-" + i;
+    //   //   //   d3.selectAll(name).style("visibility", "visible");
+    //   //   // }
 
-        if (
-          this.selectedArea.top != null &&
-          this.selectedArea.top == this.selectedArea.bottom &&
-          this.selectedArea.left == this.selectedArea.right
-        ) {
-          this.transmit_unit_recommendation_to_vis();
-        }
-      },
-    },
-    directionSelectValue: {
-      deep: true,
-      handler: function (data) {
-        if (data == "row") {
-          this.prioritySliderValue = this.rowPriorityRange
-          this.typeSelectValue = this.rowType
-        }
-        else {
-          this.prioritySliderValue = this.colPriorityRange
-          this.typeSelectValue = this.colType
-        }
-        // this.hide_recommendation_area();
-        // var slider = this.prioritySliderValue;
-        // var min = slider[0],
-        //   max = slider[1];
-        // var prefix = "#recommend-helper-"
-        // var type = this.typeSelectValue
-        // if (type == "subtree")  prefix += "tree-"
-        // var name
+    //   //   if (
+    //   //     this.selectedArea.top != null &&
+    //   //     this.selectedArea.top == this.selectedArea.bottom &&
+    //   //     this.selectedArea.left == this.selectedArea.right
+    //   //   ) {
+    //   //     this.transmit_unit_recommendation_to_vis();
+    //   //   }
+    //   // },
+    // },
+    // directionSelectValue: {
+    //   // deep: true,
+    //   // handler: function (data) {
+    //   //   if (data == "row") {
+    //   //     this.prioritySliderValue = this.rowPriorityRange
+    //   //     this.typeSelectValue = this.rowType
+    //   //   }
+    //   //   else {
+    //   //     this.prioritySliderValue = this.colPriorityRange
+    //   //     this.typeSelectValue = this.colType
+    //   //   }
+    //   //   // this.hide_recommendation_area();
+    //   //   // var slider = this.prioritySliderValue;
+    //   //   // var min = slider[0],
+    //   //   //   max = slider[1];
+    //   //   // var prefix = "#recommend-helper-"
+    //   //   // var type = this.typeSelectValue
+    //   //   // if (type == "subtree")  prefix += "tree-"
+    //   //   // var name
 
-        // if (data.length == 0) {
-        //   return;
-        // } else if (data.length == 2) {
-        //   prefix += "both";
-        // } else {
-        //   if (data[0] == "row") prefix += "row";
-        //   else if (data[0] == "column") prefix += "col";
-        //   max = max > 3 ? 3 : max;
-        // }
+    //   //   // if (data.length == 0) {
+    //   //   //   return;
+    //   //   // } else if (data.length == 2) {
+    //   //   //   prefix += "both";
+    //   //   // } else {
+    //   //   //   if (data[0] == "row") prefix += "row";
+    //   //   //   else if (data[0] == "column") prefix += "col";
+    //   //   //   max = max > 3 ? 3 : max;
+    //   //   // }
 
-        // for (var i = min; i <= max; i++) {
-        //   name = prefix + "-" + i;
-        //   d3.selectAll(name).style("visibility", "visible");
-        // }
+    //   //   // for (var i = min; i <= max; i++) {
+    //   //   //   name = prefix + "-" + i;
+    //   //   //   d3.selectAll(name).style("visibility", "visible");
+    //   //   // }
 
-        // if (
-        //   this.selectedArea.top != null &&
-        //   this.selectedArea.top == this.selectedArea.bottom &&
-        //   this.selectedArea.left == this.selectedArea.right
-        // ) {
-        //   this.transmit_unit_recommendation_to_vis();
-        // }
-      },
-    },
-    typeSelectValue: {
-      deep: true,
-      handler: function (data) {
-        // this.hide_recommendation_area();
-        // var slider = this.prioritySliderValue
-        // var min = slider[0], max = slider[1]
-        // var direct = this.directionSelectValue
-        // var prefix = "#recommend-helper-"
-        // if (data == "subtree")  prefix += "tree-"
-        // var name
+    //   //   // if (
+    //   //   //   this.selectedArea.top != null &&
+    //   //   //   this.selectedArea.top == this.selectedArea.bottom &&
+    //   //   //   this.selectedArea.left == this.selectedArea.right
+    //   //   // ) {
+    //   //   //   this.transmit_unit_recommendation_to_vis();
+    //   //   // }
+    //   // },
+    // },
+    // typeSelectValue: {
+    // //   deep: true,
+    // //   handler: function (data) {
+    // //     // this.hide_recommendation_area();
+    // //     // var slider = this.prioritySliderValue
+    // //     // var min = slider[0], max = slider[1]
+    // //     // var direct = this.directionSelectValue
+    // //     // var prefix = "#recommend-helper-"
+    // //     // if (data == "subtree")  prefix += "tree-"
+    // //     // var name
 
-        // if (direct.length == 0) {
-        //   return;
-        // } else if (direct.length == 2) {
-        //   prefix += "both";
-        // } else {
-        //   if (direct[0] == "row") prefix += "row";
-        //   else if (direct[0] == "column") prefix += "col";
-        // }
+    // //     // if (direct.length == 0) {
+    // //     //   return;
+    // //     // } else if (direct.length == 2) {
+    // //     //   prefix += "both";
+    // //     // } else {
+    // //     //   if (direct[0] == "row") prefix += "row";
+    // //     //   else if (direct[0] == "column") prefix += "col";
+    // //     // }
 
-        // for (var i = min; i <= max; i++) {
-        //   name = prefix + "-" + i;
-        //   d3.selectAll(name).style("visibility", "visible");
-        // }
+    // //     // for (var i = min; i <= max; i++) {
+    // //     //   name = prefix + "-" + i;
+    // //     //   d3.selectAll(name).style("visibility", "visible");
+    // //     // }
 
-        var direct = this.directionSelectValue
-        if (direct == "row") {
-          this.rowType = data
-        }
-        else {
-          this.colType = data
-        }
+    // //     var direct = this.directionSelectValue
+    // //     if (direct == "row") {
+    // //       this.rowType = data
+    // //     }
+    // //     else {
+    // //       this.colType = data
+    // //     }
 
-        this.draw_recommendation_area()
+    // //     this.draw_recommendation_area()
 
-        if (
-          this.selectedArea.top != null &&
-          this.selectedArea.top == this.selectedArea.bottom &&
-          this.selectedArea.left == this.selectedArea.right
-        ) {
-          this.transmit_unit_recommendation_to_vis();
-        }
-      },
-    },
+    // //     if (
+    // //       this.selectedArea.top != null &&
+    // //       this.selectedArea.top == this.selectedArea.bottom &&
+    // //       this.selectedArea.left == this.selectedArea.right
+    // //     ) {
+    // //       this.transmit_unit_recommendation_to_vis();
+    // //     }
+    // //   },
+    // },
   },
 
   beforeMount: function () {
