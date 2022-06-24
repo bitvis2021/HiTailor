@@ -732,7 +732,7 @@ export default {
       recommendData: [],
       rowPriority: {name: [[], [], []], subtree: [[], [], []]},
       colPriority: {name: [[], [], []], subtree: [[], [], []]},
-      rowType: "subtree",
+      rowType: "name",
       colType: "name",
       rowPriorityRange: [0, 1],
       colPriorityRange: [0, 2],
