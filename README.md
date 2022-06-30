@@ -1,4 +1,4 @@
-# tablevis
+# HiTailor
 The repository of visualizations for complex tablular data
 
 # The backend of this project
