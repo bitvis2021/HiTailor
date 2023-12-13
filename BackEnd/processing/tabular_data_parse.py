@@ -1,4 +1,5 @@
 from openpyxl import load_workbook, cell
+import json
 
 class parse_cell:
     def __init__(self, start, value, dtype, length):
@@ -54,6 +55,12 @@ class parse_sheet:
     def result(self):
         return self.parsedSheet
 
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, parse_cell):
+            # return a serializable representation of parse_cell
+            return obj.__dict__  # convert it to a dictionary
+        return json.JSONEncoder.default(self, obj)
 
 if __name__ == "__main__":
     s = parse_sheet("../public/test1.xlsx", "Sheet1")

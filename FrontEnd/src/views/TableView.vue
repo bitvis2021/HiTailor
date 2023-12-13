@@ -3666,7 +3666,7 @@ export default {
         .append("rect")
         .attr("class", "hover-helper")
         .style("fill", "#FFEC8B")
-        .style("fill-opacity", "30%");
+        .style("fill-opacity", "0%");
 
       if (type == "row") {
         helper
@@ -4174,6 +4174,8 @@ export default {
         var item = this.selectedTabularData[rindex][cindex];
         var range = { start: item.start, end: item.end };
         r.push(range);
+        if (item.value == null)
+          item.value = 'None'
         rvalue.push(item.value);
       }
       this.rowDistributionList.push(r);

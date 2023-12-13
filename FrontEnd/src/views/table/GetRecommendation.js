@@ -170,9 +170,17 @@ export function cal_recommendation_by_one_reference(rowPriority, colPriority, re
 
                 if (isSubtree) {    // two types of priority methods: same subtree
                     if (layer == 0) priority = 1    // first layer all same subtree
+                    else if (refername[0] == "&") { // choose the & node
+                        priority = 2
+                    }
                     else {
                         if (ranges[i].start >= referParentRange.start && ranges[i].end <= referParentRange.end) {
-                            priority = 1
+                            if (key[0] == "&") {
+                                priority = 2
+                            }
+                            else {
+                                priority = 1
+                            }   
                         }
                         else {
                             priority = 2

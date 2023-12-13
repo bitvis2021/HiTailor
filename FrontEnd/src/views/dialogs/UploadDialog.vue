@@ -40,7 +40,7 @@
 
 <script>
   import { mapState, mapMutations } from 'vuex'
-  import { getUploadData } from "../../communication/communicator.js"
+  // import { getUploadData } from "../../communication/communicator.js"
   import { parseTabularData } from "../../utils/tabularDataParser.js";
 
   export default {
@@ -96,18 +96,27 @@
         },
         handleUploadSuccess: function(res, file) {
           let self = this
-          if (res != "upload ok") {
-            console.log("upload error!")
-            return
-          }
-          getUploadData(file.name, 
-          function (processed_upload_data_str) {
-            let processed_upload_data = parseTabularData(processed_upload_data_str)[0]
-            console.log("processed_upload_data", processed_upload_data);
-            sysDatasetObj.updateUploadData(processed_upload_data);
+          // if (res != "upload ok") {
+          //   console.log("upload error!")
+          //   return
+          // }
+          // getUploadData(file.name, 
+          // function (processed_upload_data_str) {
+          //   let processed_upload_data = parseTabularData(processed_upload_data_str)[0]
+          //   console.log("processed_upload_data", processed_upload_data);
+          //   sysDatasetObj.updateUploadData(processed_upload_data);
+          //   self.$bus.$emit("update-selected-dataset")
+          //   self.$bus.$emit("close-upload-dialog")
+          // })
+          if (res != null) {
+            console.log("post-res", res)
+            // let processed_upload_data_str = res['data']
+            // let processed_upload_data = parseTabularData(processed_upload_data_str)[0]
+            // console.log("processed_upload_data", processed_upload_data);
+            sysDatasetObj.updateUploadData(res);
             self.$bus.$emit("update-selected-dataset")
             self.$bus.$emit("close-upload-dialog")
-          })
+          }
         },
     }
   }

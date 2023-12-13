@@ -128,6 +128,7 @@ import { Dataset } from "@/dataset/dataset.js";
 import DataDialog from "@/views/dialogs/DataDialog.vue";
 import UploadDialog from "@/views/dialogs/UploadDialog.vue";
 import ExportDialog from "@/views/dialogs/ExportDialog.vue";
+import axios from 'axios'
 import { mapState } from "vuex";
 
 export default {
@@ -142,6 +143,7 @@ export default {
   computed: {},
   data() {
     return {
+      server_address: 'http://127.0.0.1:14450',
       appName: "HiTailor",
       operationArray: ["Open Example Data", "Upload Your Data", "Export"],
       iconPath: [
@@ -179,22 +181,34 @@ export default {
     $.when(tabularDataDeferObj).then(function () {
       self.loadingData = false;
     });
-    let tabularDataList = ["*"];
+    // let tabularDataList = ["*"];
+    
     // initialize the tabular dataset
-    getTabularDataset(
-      tabularDataList,
-      function (processed_tabular_datalist_str) {
-        let processed_tabular_dataobj_list = parseTabularData(
-          processed_tabular_datalist_str
-        );
-        console.log(
-          "processed_tabular_dataobj_list",
-          processed_tabular_dataobj_list
-        );
-        sysDatasetObj.updateTabularDatasetList(processed_tabular_dataobj_list);
+    axios({
+        methods: 'get',
+        url: self.server_address + '/tabulardata',
+        timeout: 5000
+    })
+    .then((res) => {
+        console.log('tabularDatasetList', res)
+        sysDatasetObj.updateTabularDatasetList(res['data']);
         tabularDataDeferObj.resolve();
-      }
-    );
+    })
+
+    // getTabularDataset(
+    //   tabularDataList,
+    //   function (processed_tabular_datalist_str) {
+    //     let processed_tabular_dataobj_list = parseTabularData(
+    //       processed_tabular_datalist_str
+    //     );
+    //     console.log(
+    //       "processed_tabular_dataobj_list",
+    //       processed_tabular_dataobj_list
+    //     );
+    //     sysDatasetObj.updateTabularDatasetList(processed_tabular_dataobj_list);
+    //     tabularDataDeferObj.resolve();
+    //   }
+    // );
   },
   mounted: function () {
     let self = this;
