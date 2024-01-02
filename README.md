@@ -6,7 +6,6 @@ This repo contains the code for the HiTailor prototype system, which includes th
 ## Prototype System
 ![User Interface](images/interface.png)
 This picture shows the user interface of the Hitailor prototype system. It consists of four panels, including the transformation operator panel, tabular visualization panel, visualization template panel, and visualization configuration panel. These four interactive panels support the process of tabular data analysis.
-The prototype system is available at https://hitailor.github.io.
 
 #### Build and Run the Project
 To build and run this project on your own, you need to run the back-end and the front-end simultaneously.
